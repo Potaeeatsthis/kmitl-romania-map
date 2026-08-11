@@ -8,7 +8,7 @@ algorithm on the classic 20-city Romania road map.
 - **Languages:** Python, C++, and Rust
 
 The detailed project idea and mathematics are available in
-[`4-aug-2026_idea.md`](4-aug-2026_idea.md).
+[`docs/4-aug-2026_idea.md`](docs/4-aug-2026_idea.md).
 
 ## Current project status
 
@@ -25,12 +25,14 @@ The implementation is complete. The Python, C++, and Rust programs:
 
 ## Files
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `romania_search.py` | Python 3 implementation |
-| `romania_search.cpp` | C++17 implementation |
-| `romania_search.rs` | Rust 2021 implementation |
-| `4-aug-2026_idea.md` | Algorithm explanation and mathematical specification |
+| `src/romania_search.py` | Python 3 implementation |
+| `src/romania_search.cpp` | C++17 implementation |
+| `src/romania_search.rs` | Rust 2021 implementation |
+| `docs/4-aug-2026_idea.md` | Algorithm explanation and mathematical specification |
+| `assets/images/IMG_3390.JPG` | Project image asset |
+| `bin/` | Locally compiled executables (ignored by Git) |
 
 ## Current process
 
@@ -94,7 +96,7 @@ matrix library.
 ### Python
 
 ```bash
-python3 romania_search.py
+python3 src/romania_search.py
 ```
 
 ### C++
@@ -102,8 +104,8 @@ python3 romania_search.py
 Compile with optimization and run:
 
 ```bash
-g++ -std=c++17 -O2 romania_search.cpp -o romania_search_cpp
-./romania_search_cpp
+g++ -std=c++17 -O2 src/romania_search.cpp -o bin/romania_search_cpp
+./bin/romania_search_cpp
 ```
 
 ### Rust
@@ -111,8 +113,8 @@ g++ -std=c++17 -O2 romania_search.cpp -o romania_search_cpp
 Compile with optimization and run:
 
 ```bash
-rustc --edition=2021 -O romania_search.rs -o romania_search_rust
-./romania_search_rust
+rustc --edition=2021 -O src/romania_search.rs -o bin/romania_search_rust
+./bin/romania_search_rust
 ```
 
 ## Example
