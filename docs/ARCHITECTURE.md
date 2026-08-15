@@ -6,7 +6,8 @@ or on a server (Rust). This document records the logic of each, the file
 structure, and the trade-offs.
 
 The algorithms themselves are unchanged in both — the existing
-`romania_search.rs`, `.cpp`, and `.py` remain the reference implementations.
+`server/src/main.rs`, `reference/romania_search.cpp`, and
+`reference/romania_search.py` remain the reference implementations.
 
 ---
 
@@ -304,18 +305,18 @@ No network traffic after step 1.
 ### Structure
 
 ```
-romania/                        Cargo project
+server/                         Cargo project
 ├── Cargo.toml                  [lib] + two binaries
 └── src/
     ├── lib.rs                  graph, search, heuristic, trace  ← source of truth
     ├── bin/cli.rs              existing stdin UI + Instant benchmarks
     └── bin/server.rs           axum HTTP API
 
-web/                            unchanged from Option A, minus lib/search.ts
+project root/                   unchanged from Option A, minus lib/search.ts
 └── lib/api.ts                  fetch wrapper
 ```
 
-### Changes to `romania_search.rs`
+### Changes to `server/src/main.rs`
 
 | Current | Change |
 |---|---|

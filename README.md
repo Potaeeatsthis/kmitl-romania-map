@@ -8,7 +8,7 @@ algorithm on the classic 20-city Romania road map.
 - **Languages:** Python, C++, and Rust
 
 The detailed project idea and mathematics are available in
-[`docs/4-aug-2026_idea.md`](docs/4-aug-2026_idea.md).
+[`docs/ideas.md`](docs/ideas.md).
 
 ## Current project status
 
@@ -27,11 +27,15 @@ The implementation is complete. The Python, C++, and Rust programs:
 
 | Path | Purpose |
 |---|---|
-| `src/romania_search.py` | Python 3 implementation |
-| `src/romania_search.cpp` | C++17 implementation |
-| `src/romania_search.rs` | Rust 2021 implementation |
-| `docs/4-aug-2026_idea.md` | Algorithm explanation and mathematical specification |
-| `assets/images/IMG_3390.JPG` | Project image asset |
+| `app/` | Minimal Next.js App Router entry point |
+| `components/`, `stores/`, `lib/` | Path-comment placeholders for frontend features |
+| `package.json`, `tsconfig.json` | Next.js and TypeScript configuration |
+| `data/romania.geojson` | Empty GeoJSON placeholder |
+| `server/` | Existing Rust CLI in `main.rs`; remaining files are placeholders |
+| `reference/romania_search.py` | Python 3 reference implementation |
+| `reference/romania_search.cpp` | C++17 reference implementation |
+| `docs/ideas.md` | Algorithm explanation and mathematical specification |
+| `docs/ARCHITECTURE.md` | Web architecture notes |
 | `bin/` | Locally compiled executables (ignored by Git) |
 
 ## Current process
@@ -91,12 +95,19 @@ This grounded-Laplacian calculation is equivalent to the pseudoinverse formula
 described in the project specification, but it does not require an external
 matrix library.
 
-## Run the programs
+## Run the frontend
+
+```bash
+npm install
+npm run dev
+```
+
+## Run the reference programs
 
 ### Python
 
 ```bash
-python3 src/romania_search.py
+python3 reference/romania_search.py
 ```
 
 ### C++
@@ -104,16 +115,16 @@ python3 src/romania_search.py
 Compile with optimization and run:
 
 ```bash
-g++ -std=c++17 -O2 src/romania_search.cpp -o bin/romania_search_cpp
+g++ -std=c++17 -O2 reference/romania_search.cpp -o bin/romania_search_cpp
 ./bin/romania_search_cpp
 ```
 
 ### Rust
 
-Compile with optimization and run:
+Compile the relocated source and run:
 
 ```bash
-rustc --edition=2021 -O src/romania_search.rs -o bin/romania_search_rust
+rustc --edition=2021 -O server/src/main.rs -o bin/romania_search_rust
 ./bin/romania_search_rust
 ```
 
