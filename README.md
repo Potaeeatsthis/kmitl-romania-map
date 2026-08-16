@@ -128,6 +128,22 @@ rustc --edition=2021 -O server/src/main.rs -o bin/romania_search_rust
 ./bin/romania_search_rust
 ```
 
+## Verify before pushing
+
+The project's central claim is that three languages produce the same result. These checks
+enforce it, and CI runs exactly the same scripts:
+
+```bash
+npm run verify              # all three gates
+npm run verify:invariants   # one search(), engine stays wasm-safe, clean builds
+npm run verify:parity       # Rust, C++ and Python agree on every deterministic field
+npm run verify:correctness  # 400 pairs vs Dijkstra, admissibility, consistency
+npm run typecheck           # requires `npm install` first
+```
+
+Project rules, invariants and the build order live in [`CLAUDE.md`](CLAUDE.md). When
+something breaks, `/diagnose` matches it against [`docs/runbook.md`](docs/runbook.md).
+
 ## Example
 
 ```text
