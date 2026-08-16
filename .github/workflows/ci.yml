@@ -1,0 +1,89 @@
+name: CI
+
+# Gates the five invariants in CLAUDE.md. Every check here is a script in scripts/,
+# the same ones `/prevent` runs locally — this file holds no check logic of its own,
+# so a green local `npm run verify` means a green build.
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  correctness:
+    name: Invariants, parity, correctness
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # rust-toolchain.toml pins the version; rustup installs it on first use so
+      # every machine and this runner produce identical warnings and lints.
+      - name: Resolve pinned Rust toolchain
+        run: rustc --version && cargo --version
+
+      - name: Show compiler versions
+        run: g++ --version && python3 --version
+
+      # I1 (one search function), I4 (engine stays wasm-safe), and clean builds
+      # of all three implementations.
+      - name: Structural invariants
+        run: npm run verify:invariants
+
+      # I2 — Rust, C++ and Python must produce identical explored order and counters.
+      # The most serious failure in this project: drift is silent, and it invalidates
+      # every number in the report.
+      - name: Three-language parity
+        run: npm run verify:parity
+
+      # I3 — 400 pairs against an independent Dijkstra, plus admissibility and
+      # consistency on every goal and edge.
+      - name: Heuristic correctness
+        run: npm run verify:correctness
+
+  frontend:
+    name: Frontend types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+# --- Not yet enabled -------------------------------------------------------------
+#
+# cargo steps: blocked until build step 1 fills server/Cargo.toml. There is no library
+#   target today, so `cargo check`, `cargo test`, `cargo clippy -- -D warnings` and
+#   `cargo fmt --check` cannot run. When step 1 lands they are added to
+#   scripts/verify_invariants.sh rather than here, so /prevent picks them up too.
+#   See docs/runbook.md §1.
+#
+# deploy job: blocked until build steps 4 and 5. Needs wasm-pack to build the module
+#   and a frontend for `next build` with output: 'export' to publish to GitHub Pages.
