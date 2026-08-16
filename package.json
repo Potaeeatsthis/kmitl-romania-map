@@ -5,7 +5,12 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "verify:invariants": "bash scripts/verify_invariants.sh",
+    "verify:parity": "bash scripts/verify_parity.sh",
+    "verify:correctness": "python3 scripts/verify_correctness.py",
+    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness"
   },
   "dependencies": {
     "next": "16.3.1",
