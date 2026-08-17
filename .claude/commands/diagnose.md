@@ -8,9 +8,16 @@ steps in order.
 Scan the error for these known signatures. The table grows over time; a row here means
 this project actually hit that bug.
 
+Most rows are keyed on text you can paste. Some failures produce **no error at all** —
+they present as silence, or as a check that is merely reporting what it was built to
+report. Those rows are marked *(no error text)* and are matched on the observation
+instead, because nobody will ever arrive here with a string to search for.
+
 | Signature in the error | Rootcause | Runbook |
 |---|---|---|
 | `manifest is missing either a [package] or a [workspace]` + cargo | `empty-cargo-manifest` | §1 |
+| *(no error text)* Edits under `server/src/` produce no hook output; `--structural` never runs | `dead-posttooluse-hook` | §2 |
+| *(no error text)* `golden: FAIL` with a diff against `tests/golden/` | not a bug — read the diff before re-recording | §3 |
 
 ## Step 2 — Apply the known fix
 

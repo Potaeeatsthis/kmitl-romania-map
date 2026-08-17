@@ -1,0 +1,11 @@
+{
+  "id": "dead-posttooluse-hook",
+  "date": "2026-08-17",
+  "symptom": "No symptom in the usual sense -- the failure is silence. Editing a file under server/src/ produced no invariant feedback and no three-language reminder, indistinguishable from a clean edit. The --structural flag in scripts/verify_invariants.sh, which exists only to serve this hook, had never been called.",
+  "rootcause": "Two independent faults in the same hook. First, both PostToolUse commands branched on $CLAUDE_TOOL_INPUT_FILE_PATH, which Claude Code does not set -- the payload arrives as JSON on stdin and the edited path is .tool_input.file_path. The variable expanded empty, the case statement matched neither pattern, and the trailing `; true` guaranteed exit 0. Second, even with the path resolved the messages would not have reached anyone: on exit 0 a hook's stdout goes to the debug log, and text only reaches Claude via stderr with exit 2 or a JSON systemMessage field. Both hooks used plain echo with exit 0.",
+  "fix": "Moved the logic out of the inline JSON string into .claude/hooks/post_tool_use.sh, which reads the payload from stdin and parses .tool_input.file_path with python3 (jq is not a project dependency; python3 already is). An invariant violation now writes to stderr and exits 2; the parity reminder prints a JSON systemMessage and exits 0. The two hook entries collapsed into one, since both needed the same parse.",
+  "recurrence_risk": "medium",
+  "invariant": null,
+  "tags": ["hooks", "claude-code", "tooling", "silent-failure"],
+  "notes": "The wider lesson is that a check which fails by staying silent looks exactly like a check that passes. Anything whose only output is a warning needs a test that asserts the warning appears; scripts/verify_harness.sh now does that by running the command string read straight out of settings.json, so a copy cannot drift from the real hook."
+}

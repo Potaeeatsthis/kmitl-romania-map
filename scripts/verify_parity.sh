@@ -13,6 +13,7 @@
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
+. scripts/lib/rust_build.sh
 BIN="$(mktemp -d)"
 trap 'rm -rf "$BIN"' EXIT
 fail=0
@@ -35,11 +36,11 @@ done
 ROUTES+=("Sibiu|Sibiu")
 
 echo "Building all three implementations"
-rustc --edition=2021 -O server/src/main.rs -o "$BIN/rs" 2>"$BIN/build.log" \
-  || { echo "  FAIL rustc"; sed 's/^/       /' "$BIN/build.log"; exit 1; }
+rust_build "$BIN" "$BIN/build.log" cli \
+  || { echo "  FAIL $RUST_TOOL"; sed 's/^/       /' "$BIN/build.log"; exit 1; }
 g++ -std=c++17 -O2 reference/romania_search.cpp -o "$BIN/cpp" 2>>"$BIN/build.log" \
   || { echo "  FAIL g++"; sed 's/^/       /' "$BIN/build.log"; exit 1; }
-echo "  ok   rustc, g++, python3"
+echo "  ok   $RUST_TOOL, g++, python3"
 echo
 echo "Comparing ${#ROUTES[@]} routes across three languages"
 agreed=0
@@ -59,7 +60,7 @@ for route in "${ROUTES[@]}"; do
   goal="${route##*|}"
   input="$(printf '%s\n%s\n' "$start" "$goal")"
 
-  echo "$input" | "$BIN/rs"                        2>/dev/null | canon > "$BIN/out.rs"
+  echo "$input" | "$RUST_BIN"                      2>/dev/null | canon > "$BIN/out.rs"
   echo "$input" | "$BIN/cpp"                       2>/dev/null | canon > "$BIN/out.cpp"
   echo "$input" | python3 reference/romania_search.py 2>/dev/null | canon > "$BIN/out.py"
 

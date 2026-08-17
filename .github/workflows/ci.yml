@@ -56,6 +56,17 @@ jobs:
       - name: Heuristic correctness
         run: npm run verify:correctness
 
+      # The fixed point parity cannot provide: parity compares the three implementations
+      # to each other, so a change made to all three at once keeps it green. The road
+      # table lives in three encodings, so that is exactly what editing a road looks like.
+      - name: Golden baseline
+        run: npm run verify:golden
+
+      # Checks the harness itself is wired -- the PostToolUse hooks silently stopped
+      # firing once before, and nothing noticed. See docs/runbook.md §2.
+      - name: Harness wiring
+        run: npm run verify:harness
+
   frontend:
     name: Frontend types
     runs-on: ubuntu-latest
@@ -76,6 +87,12 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
+
+      # tsc --noEmit is not the same check as a real build: it does not catch
+      # "use client" boundary violations, invalid route segment exports, or a
+      # server-only import pulled into a client component.
+      - name: Build
+        run: npm run build
 
 # --- Not yet enabled -------------------------------------------------------------
 #

@@ -1,0 +1,20 @@
+Romania map (20 cities):
+Arad, Zerind, Oradea, Sibiu, Timisoara, Lugoj, Mehadia, Drobeta, Craiova, Rimnicu Vilcea, Pitesti, Fagaras, Bucharest, Giurgiu, Urziceni, Hirsova, Eforie, Vaslui, Iasi, Neamt
+Current city: Goal city: 
+Routes
+UCS:             Arad -> Sibiu -> Rimnicu Vilcea -> Pitesti -> Bucharest (cost 418 km)
+Current-flow A*: Arad -> Sibiu -> Rimnicu Vilcea -> Pitesti -> Bucharest (cost 418 km)
+
+Explored order
+UCS:             Arad -> Zerind -> Timisoara -> Sibiu -> Oradea -> Rimnicu Vilcea -> Lugoj -> Fagaras -> Mehadia -> Pitesti -> Craiova -> Drobeta -> Bucharest
+Current-flow A*: Arad -> Sibiu -> Zerind -> Rimnicu Vilcea -> Timisoara -> Oradea -> Fagaras -> Pitesti -> Bucharest
+
+Average search time over 5000 runs (heuristic build excluded)
+Algorithm           Runtime (us)   Expanded  Generated  Peak queue  Peak records    Memory (B)
+UCS<time>         13         14           4            40           286
+Current-flow A*<time>          9         13           6            33           272
+
+A* heuristic build:<time> us; logical numeric workspace: 9136 bytes
+Units: runtime is microseconds (us); logical search memory is bytes (B).
+Memory is a language-neutral count of stored fields; runtime/container overhead is excluded.
+Both algorithms found the same optimal route cost.

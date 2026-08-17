@@ -6,16 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'case \"$CLAUDE_TOOL_INPUT_FILE_PATH\" in *server/src/*) bash \"$CLAUDE_PROJECT_DIR/scripts/verify_invariants.sh\" --structural || echo \"⚠️  invariant broken — see above, or run /prevent\";; esac; true'"
-          }
-        ]
-      },
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'case \"$CLAUDE_TOOL_INPUT_FILE_PATH\" in *reference/romania_search.*|*server/src/*) echo \"↻ algorithm file touched — I2 requires the same change in all three languages. Run: npm run verify:parity\";; esac; true'"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post_tool_use.sh\""
           }
         ]
       }
@@ -28,6 +19,8 @@
       "Bash(npm run typecheck)",
       "Bash(bash scripts/verify_invariants.sh*)",
       "Bash(bash scripts/verify_parity.sh*)",
+      "Bash(bash scripts/verify_golden.sh*)",
+      "Bash(bash scripts/verify_harness.sh*)",
       "Bash(python3 scripts/verify_correctness.py)",
       "Bash(cargo check*)",
       "Bash(cargo test*)",

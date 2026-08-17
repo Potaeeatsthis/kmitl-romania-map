@@ -4,6 +4,7 @@
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
+. scripts/lib/rust_build.sh
 BIN="$(mktemp -d)"
 trap 'rm -rf "$BIN"' EXIT
 fail=0
@@ -78,10 +79,10 @@ fi
 
 echo
 echo "Builds"
-if rustc --edition=2021 -O -D warnings server/src/main.rs -o "$BIN/rs" 2>"$BIN/rs.log"; then
-  pass "rustc -D warnings"
+if rust_build "$BIN" "$BIN/rs.log" strict; then
+  pass "$RUST_TOOL -D warnings"
 else
-  bad "rustc failed"; sed 's/^/       /' "$BIN/rs.log"
+  bad "$RUST_TOOL failed"; sed 's/^/       /' "$BIN/rs.log"
 fi
 
 if g++ -std=c++17 -O2 -Wall -Wextra reference/romania_search.cpp -o "$BIN/cpp" 2>"$BIN/cpp.log"; then

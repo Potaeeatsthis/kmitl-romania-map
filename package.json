@@ -10,7 +10,9 @@
     "verify:invariants": "bash scripts/verify_invariants.sh",
     "verify:parity": "bash scripts/verify_parity.sh",
     "verify:correctness": "python3 scripts/verify_correctness.py",
-    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness"
+    "verify:golden": "bash scripts/verify_golden.sh",
+    "verify:harness": "bash scripts/verify_harness.sh",
+    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness"
   },
   "dependencies": {
     "next": "16.3.1",

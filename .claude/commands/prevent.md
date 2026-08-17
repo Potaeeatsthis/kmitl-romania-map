@@ -33,9 +33,10 @@ warning at line 19. It is reported as `warn`, not `FAIL`. Do not fix it as a dri
 npm run verify:parity
 ```
 
-Builds all three implementations and runs six routes through each, comparing only
-deterministic fields — route, explored order, expanded, generated, peak queue, peak
-records, memory. Runtimes are discarded because they vary between runs.
+Builds all three implementations and runs 41 routes through each — every city paired
+with the city 7 and 13 positions away, plus `Sibiu -> Sibiu` as a degenerate case —
+comparing only deterministic fields: route, explored order, expanded, generated, peak
+queue, peak records, memory. Runtimes are discarded because they vary between runs.
 
 **Pass:** `parity: PASS`
 **Fail:** a diff is printed per route. This is the most serious failure in the project —
@@ -55,15 +56,58 @@ All 400 start/goal pairs against an independent Dijkstra, plus admissibility
 **Fail:** an admissibility failure means A\* can return a non-optimal path. Treat it as
 a correctness bug, not a tuning issue.
 
-## Check 4 — Frontend types
+## Check 4 — Golden baseline
+
+```bash
+npm run verify:golden
+```
+
+Runs three routes through all three implementations and compares the **full CLI output**
+against `tests/golden/`, masking only the two runtime columns and the heuristic build
+time. Everything else is compared verbatim, column alignment included.
+
+This is the fixed point parity cannot provide. Check 2 compares the three
+implementations to *each other*, so a change applied to all three at once stays green —
+and since the road table lives in three separate encodings, editing a road is exactly
+that shape of change. It is also what makes build step 1's "byte-identical to today's
+output" criterion runnable at all.
+
+**Pass:** `golden: PASS`
+**Fail:** read the diff before doing anything. An intended output change is re-recorded
+with `bash scripts/verify_golden.sh --update`; an unintended number change is a
+regression. See `docs/runbook.md` §3 — never re-record to turn a check green.
+
+## Check 5 — Harness wiring
+
+```bash
+npm run verify:harness
+```
+
+Checks the tooling rather than the engine: that `.claude/settings.json` is valid JSON,
+that its PostToolUse hook actually reacts to an edit under `server/src/`, that it stays
+quiet on unrelated files, and that it never again branches on the nonexistent
+`CLAUDE_TOOL_INPUT*` variable. The command under test is read out of `settings.json`, so
+this cannot pass against a stale copy while the real hook is dead.
+
+**Pass:** `harness: PASS`
+**Fail:** the hook is not wired. See `docs/runbook.md` §2 — note that a hook can resolve
+the file path correctly and still be invisible, because on exit 0 its stdout goes to the
+debug log rather than to Claude.
+
+## Check 6 — Frontend types and build
 
 ```bash
 npm run typecheck
+npm run build
 ```
 
-**Pass:** no output, exit 0.
+`tsc --noEmit` does not catch what a real build catches — `"use client"` boundary
+violations, invalid route segment exports, a server-only import pulled into a client
+component. CI runs both for that reason.
 
-## Check 5 — Manual review, not automated
+**Pass:** no type errors, build completes.
+
+## Check 7 — Manual review, not automated
 
 No script covers these; check them by reading when the relevant files change:
 
@@ -71,6 +115,10 @@ No script covers these; check them by reading when the relevant files change:
   to ~100 µs in Chrome against a ~1 µs search. Benchmarks come from `bin/cli.rs`.
 - Any new dependency added to the algorithm itself. `wasm-bindgen` and `serde` are for
   the browser boundary only.
+- The priority-queue tie-break, `(f, g, city)` ascending in all three languages. No check
+  can police this: swapping to `(f, city, g)` was measured to produce identical explored
+  order on all 800 start/goal/algorithm combinations, so parity and golden both stay
+  green. It is caught by reading the diff or not at all.
 
 ## Everything at once
 
@@ -88,7 +136,9 @@ npm run verify
 | Invariants (I1, I4, builds) | ✅ / ❌ | N violations |
 | Parity (I2) | ✅ / ❌ | N routes differing |
 | Correctness (I3) | ✅ / ❌ | N violations |
-| Frontend types | ✅ / ❌ | N errors |
+| Golden baseline | ✅ / ❌ | N routes differing |
+| Harness wiring | ✅ / ❌ | N violations |
+| Frontend types and build | ✅ / ❌ | N errors |
 | Manual review | reviewed / not needed | — |
 ```
 
