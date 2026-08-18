@@ -1,6 +1,8 @@
 /bin/
 /node_modules/
 /.next/
+/wasm/target/
+/wasm/pkg/
 *.tsbuildinfo
 next-env.d.ts
 __pycache__/
