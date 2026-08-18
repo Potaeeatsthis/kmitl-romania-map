@@ -68,13 +68,10 @@ kmitl-romania-map/
 │   │   ├── lib.rs                    Wasm boundary and exported search()
 │   │   ├── graph.rs                  Cities, roads, and adjacency graph
 │   │   ├── metrics.rs                Search counters and result metrics
+│   │   ├── search.rs                 One shared UCS/A* search implementation
 │   │   ├── heuristics/
 │   │   │   ├── mod.rs
 │   │   │   └── current_flow.rs       Heuristic lookup/validation
-│   │   └── search/
-│   │       ├── mod.rs                Shared result and trace types
-│   │       ├── ucs.rs
-│   │       └── astar.rs
 │   └── tests/
 │       ├── ucs_tests.rs
 │       ├── astar_tests.rs
@@ -94,6 +91,10 @@ ignored by Git. It is not source code.
 ## Ownership boundaries
 
 - `wasm/` is the only implementation of UCS and A* used by the web app.
+- `wasm/src/search.rs` contains one parameterized search implementation. UCS
+  passes an all-zero heuristic, while A* passes the selected goal table from
+  `heuristics.json`. Queue ordering, tie-breaking, tracing, and metrics therefore
+  remain identical between the algorithms.
 - `wasm/data/heuristics.json` belongs to Rust. It should be embedded in the
   Wasm module at build time, so the browser does not make a second request.
 - `lib/wasm/client.ts` is the only TypeScript module that talks directly to
