@@ -679,14 +679,31 @@ The actual result may be different. The final report should use measured data ra
 
 ---
 
-## 23. Example Result Table
+## 23. Result Table
 
-| Route | Algorithm | Path Cost | Expanded Nodes | Max Frontier | Search Time |
+Measured, not illustrative. Produced by `cargo run --bin cli` and pinned by
+`wasm/tests/golden/`.
+
+| Route | Algorithm | Path Cost | Expanded Nodes | Generated | Max Frontier |
 |---|---:|---:|---:|---:|---:|
-| Arad to Bucharest | UCS | 418 | 13 | 6 | 0.45 ms |
-| Arad to Bucharest | Current-Flow A* | 418 | 9 | 5 | 0.31 ms |
+| Arad to Bucharest | UCS | 418 | 13 | 14 | 4 |
+| Arad to Bucharest | Current-Flow A* | 418 | 9 | 13 | 6 |
 
-The values above are only an example format. They are not experimental results.
+Across all 400 start/goal pairs: UCS expands 4200 nodes, current-flow A* expands 2436 —
+a 42.0% reduction, with zero cost mismatches against an independent Dijkstra.
+
+Two things in this table are worth noticing.
+
+**A\* holds a *larger* peak frontier than UCS** — 6 against 4 — while expanding fewer
+nodes. The heuristic makes A\* reach further ahead before committing, so more cities are
+in the queue at once even though fewer are ever removed from it. Expanding less does not
+mean storing less.
+
+**Search time is deliberately absent.** It is machine-dependent and, in compiled code,
+too small to measure honestly: the search runs in microseconds, and repeated runs on the
+same machine vary by about 2×. Expansion counts are exact integers, identical on every
+machine, which is why they are the comparison this project reports. See invariant I5 in
+`CLAUDE.md`.
 
 ---
 

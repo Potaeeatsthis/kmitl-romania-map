@@ -26,7 +26,7 @@ web page that animates both searches side by side and reports their metrics.
 
 | Part | State |
 |---|---|
-| `reference/romania_search.rs` | **Working baseline.** Transitional native implementation kept for comparison |
+| `reference/romania_search.rs` | **Working, but compiled by no gate.** Since the engine moved into the crate, `rust_build.sh` takes its cargo branch and the I1 grep takes its `wasm/src/search.rs` branch, so nothing builds or compares this file. Wire it into `verify:parity` or delete it |
 | `reference/romania_search.py` | **Working.** 238 lines, matches Rust exactly |
 | `reference/romania_search.cpp` | **Working.** 304 lines, matches Rust exactly |
 | `docs/ideas.md`, `docs/ARCHITECTURE.md` | **Written.** Algorithm maths and architecture analysis |
@@ -44,7 +44,7 @@ and counters.
 
 ---
 
-## Architecture — Option C, Rust compiled to WebAssembly
+## Architecture — Rust compiled to WebAssembly
 
 **Locked. Do not reopen this. The `wasm/` crate runs in the browser; do not add an HTTP backend.**
 
@@ -68,16 +68,16 @@ static files on GitHub Pages.
 
 **Why not the alternatives**, recorded so they stay closed:
 
-- **Option A — port the algorithm to TypeScript.** Rejected: the algorithm would exist
+- **Porting the algorithm to TypeScript.** Rejected: the algorithm would exist
   twice and drift, and drift silently invalidates the comparison the project is about.
-- **Option B — Rust HTTP backend.** Rejected: the requirement is to deploy once when
+- **A Rust HTTP backend.** Rejected: the requirement is to deploy once when
   finished and leave it. A server is not deployed once, it is kept running — it needs
   uptime, a renewed TLS certificate, and ~$6/month, and the project goes offline when
   funding stops. It is also *slower*: 30–200 ms of network for 0.4 µs of work. Its one
   real advantage — computing the 20 goal heuristics once instead of per visitor — is
-  taken away by precomputing them at build time under Option C.
+  taken away by precomputing them at build time, which the wasm build does.
 
-Option B becomes correct only if a live deployed service is itself required, or if the
+A backend becomes correct only if a live deployed service is itself required, or if the
 graph is ever scaled to the real Romanian road network (the heuristic is `O(V³)` time
 and `O(V²)` memory; browser-side precompute stops being viable well before that).
 
@@ -158,7 +158,7 @@ otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
 
 ## Key decisions (locked)
 
-- Architecture: Option C, Rust → WebAssembly, static hosting
+- Architecture: Rust → WebAssembly, static hosting on GitHub Pages
 - Priority-queue tie-break: `(f, g, city)` ascending, **identical in all three languages**.
   Keep it that way deliberately. No *behavioural* gate can police it: swapping the secondary
   keys to `(f, city, g)` was measured to produce identical explored order on all 800
@@ -247,8 +247,10 @@ python3 reference/romania_search.py
 - **`reference/romania_search.cpp` has one pre-existing `-Wall -Wextra` warning** — an unused
   `INF` constant at line 19. Reported by `verify:invariants`, deliberately non-fatal; do not
   "fix" it as a drive-by change.
-- **Benchmark output varies run to run** by up to 1.5× from CPU frequency ramp-up. Never
-  quote a single run; expansion counts are the reliable comparison.
+- **Benchmark output varies run to run.** `docs/ARCHITECTURE_DECISION.md` records 1.5×
+  from CPU frequency ramp-up; a spot check on 2026-08-20 saw A\* swing 2.534 → 5.323 µs
+  across three consecutive runs, so treat 2× as the realistic spread. Never quote a
+  single run; expansion counts are the reliable comparison.
 
 ---
 
