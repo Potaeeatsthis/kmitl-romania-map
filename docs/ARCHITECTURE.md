@@ -62,20 +62,26 @@ kmitl-romania-map/
 │       └── romania.geojson           Browser map data
 ├── wasm/                             Rust WebAssembly crate
 │   ├── Cargo.toml
+│   ├── build.rs                      Validates and embeds heuristics.json at compile time
 │   ├── data/
 │   │   └── heuristics.json           Precomputed A* heuristic table
 │   ├── src/
-│   │   ├── lib.rs                    Wasm boundary and exported search()
+│   │   ├── lib.rs                    Module list; the wasm boundary goes here
 │   │   ├── graph.rs                  Cities, roads, and adjacency graph
-│   │   ├── metrics.rs                Search counters and result metrics
+│   │   ├── metrics.rs                Search counters, trace step, result metrics
 │   │   ├── search.rs                 One shared UCS/A* search implementation
 │   │   ├── heuristics/
 │   │   │   ├── mod.rs
 │   │   │   └── current_flow.rs       Heuristic lookup/validation
+│   │   └── bin/
+│   │       └── cli.rs                Native stdin UI and benchmarks
 │   └── tests/
+│       ├── common/mod.rs             Independent Dijkstra, shared by the suites
 │       ├── ucs_tests.rs
 │       ├── astar_tests.rs
-│       └── heuristic_tests.rs
+│       ├── heuristic_tests.rs
+│       ├── trace_golden.rs           Trace compared against golden/
+│       └── golden/                   Recorded trace, one file per route/algorithm
 ├── reference/                        Standalone comparison implementations
 │   ├── romania_search.cpp
 │   ├── romania_search.py
