@@ -1,0 +1,37 @@
+# Who must approve a change to what.
+#
+# `master` requires one approving review. Without this file that review can come from
+# anyone, including someone who has never read the code being changed.
+#
+# Two effects, which are easy to confuse:
+#   1. Once this file is on the DEFAULT BRANCH, GitHub automatically requests a review
+#      from the matching owner on every PR touching their paths. No setting required --
+#      it starts happening as soon as the file reaches `master`.
+#   2. Turning on "Require review from Code Owners" in the ruleset makes that approval
+#      mandatory rather than merely requested.
+#
+# So merging this to `dev` does nothing; it has to reach `master` before effect 1 begins.
+#
+# An owner who lacks write access to the repository is ignored silently -- no error, the
+# rule simply never matches. Check handles before relying on a line.
+#
+# Last matching rule wins, so the specific paths at the bottom override the default.
+
+# Default owner for anything not claimed below.
+*                       @Potaeeatsthis
+
+# Verification harness, CI, and the deployment configuration.
+/scripts/               @KLAharris
+/.github/               @KLAharris
+/.claude/               @KLAharris
+
+# The engine. CLAUDE.md: two people inside wasm/src/ at the same time cannot work.
+# TODO: replace with the engine owner's handle.
+# /wasm/src/            @engine-owner
+
+# The interface.
+# TODO: replace with the frontend owner's handle.
+# /app/                 @frontend-owner
+# /components/          @frontend-owner
+# /lib/                 @frontend-owner
+# /stores/              @frontend-owner

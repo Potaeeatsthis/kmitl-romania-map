@@ -140,7 +140,19 @@ wasm/
 **Do not reintroduce `wasm/src/search/ucs.rs` or `wasm/src/search/astar.rs`.**
 They violate I1. Keep one `wasm/src/search.rs`.
 
-`npm run verify` checks I1–I4. I5 is a convention.
+`npm run verify` runs five gates and checks I1–I4. I5 is a convention.
+
+`npm run verify:mutation` is separate and deliberately not in that chain: it injects ten
+known bugs and asserts a gate goes red for each, which takes ~10 minutes. It runs weekly
+in CI, and it is what tells you whether the other five gates still work. One fault is
+recorded there as a documented blind spot rather than a failure: an edit to
+`reference/romania_search.rs`, which no gate compiles since the crate landed. Closing it
+is a decision rather than a patch — wire the file back into `verify:parity` as a fourth
+implementation, or delete it.
+
+Two checks in `verify:invariants` exist because behaviour cannot see the fault at all: the
+tie-break pin, and a list of test names that must still be present. Deleting a test
+otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
 
 ---
 
@@ -148,10 +160,13 @@ They violate I1. Keep one `wasm/src/search.rs`.
 
 - Architecture: Option C, Rust → WebAssembly, static hosting
 - Priority-queue tie-break: `(f, g, city)` ascending, **identical in all three languages**.
-  Keep it that way deliberately, because the automated gate cannot police it: swapping the
-  secondary keys to `(f, city, g)` was measured to produce identical explored order on all
-  800 start/goal/algorithm combinations, so no route sample detects the change. Parity
-  catches drift in *outcomes*; a tie-break edit that yields identical outcomes passes
+  Keep it that way deliberately. No *behavioural* gate can police it: swapping the secondary
+  keys to `(f, city, g)` was measured to produce identical explored order on all 800
+  start/goal/algorithm combinations, so no route sample detects the change. Parity catches
+  drift in *outcomes*; a tie-break edit that yields identical outcomes passes. So the Rust
+  ordering is pinned by source text instead — `verify:invariants` reads the `Ord` impl in
+  `wasm/src/search.rs` and fails if the three keys stop reading `f`, `g`, `city`. The C++
+  and Python tie-breaks remain unpinned and rely on this rule being read
 - The algorithm itself stays dependency-free; `wasm-bindgen` and `serde` are for the
   browser boundary only, never for the search or the heuristic
 - Heuristic tables are precomputed at build time and shipped as JSON; the browser never
@@ -196,11 +211,16 @@ When a bug is found, complete all four steps before reporting it fixed:
 ## Common commands
 
 ```bash
-npm run verify              # all three gates — run this before pushing
+npm run verify              # all five gates — run this before pushing
 npm run verify:invariants   # I1, I4, clean builds
 npm run verify:parity       # I2 — three languages agree
 npm run verify:correctness  # I3 — 400 pairs, admissibility, consistency
+npm run verify:golden       # full CLI output against tests/golden/
+npm run verify:harness      # the PostToolUse hook is wired and reacts
 npm run typecheck           # tsc --noEmit
+
+npm run verify:mutation     # ~10 min — do the gates above actually catch anything?
+bash scripts/verify_mutation.sh M3   # just one fault, while iterating
 
 # Run the three implementations (they prompt for two city names)
 cargo run --release --manifest-path wasm/Cargo.toml --bin cli
@@ -244,6 +264,12 @@ python3 reference/romania_search.py
   so it must be one person in one PR,
   **merged before anyone else starts Rust work**. Rust work and frontend work touch disjoint
   files and can run in parallel; two people inside `wasm/src/` at the same time cannot
-- Repository settings need admin, which only `Potaeeatsthis` has. Two are required and are
-  not yet enabled: branch protection on `master` requiring the `correctness` and `frontend`
-  checks, and Settings → Pages → Source: GitHub Actions (needed by build step 6)
+- Repository settings need admin, which only `Potaeeatsthis` has.
+  - **Enabled.** Both `master` and `dev` are protected: PR required, plus the two status
+    checks. Note they are required by *job name* — `Invariants, parity, correctness` and
+    `Frontend types` — not by the job ids `correctness` and `frontend`. `master` also
+    requires one approving review and an up-to-date branch; `dev` requires neither, so
+    feature work merges as soon as CI is green
+  - **Still needed.** Settings → Pages → Source: GitHub Actions, before build step 6
+  - **Optional.** Turn on "Require review from Code Owners" to make `.github/CODEOWNERS`
+    take effect; it is inert until then
