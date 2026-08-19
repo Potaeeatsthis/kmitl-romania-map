@@ -1,0 +1,1647 @@
+{
+  "ucs": {
+    "path": [
+      0,
+      3,
+      9,
+      10,
+      12
+    ],
+    "explored_order": [
+      0,
+      1,
+      4,
+      3,
+      2,
+      9,
+      5,
+      11,
+      6,
+      10,
+      8,
+      7,
+      12
+    ],
+    "trace": [
+      {
+        "expanded": 0,
+        "expanded_cost": 0,
+        "frontier": [
+          {
+            "city": 1,
+            "cost": 75,
+            "priority": 75.0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "priority": 118.0
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "priority": 140.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          }
+        ]
+      },
+      {
+        "expanded": 1,
+        "expanded_cost": 75,
+        "frontier": [
+          {
+            "city": 4,
+            "cost": 118,
+            "priority": 118.0
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "priority": 140.0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "priority": 146.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          }
+        ]
+      },
+      {
+        "expanded": 4,
+        "expanded_cost": 118,
+        "frontier": [
+          {
+            "city": 3,
+            "cost": 140,
+            "priority": 140.0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "priority": 146.0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 229.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          }
+        ]
+      },
+      {
+        "expanded": 3,
+        "expanded_cost": 140,
+        "frontier": [
+          {
+            "city": 2,
+            "cost": 146,
+            "priority": 146.0
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "priority": 220.0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 229.0
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 239.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 2,
+        "expanded_cost": 146,
+        "frontier": [
+          {
+            "city": 9,
+            "cost": 220,
+            "priority": 220.0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 229.0
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 239.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 9,
+        "expanded_cost": 220,
+        "frontier": [
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 229.0
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 239.0
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 317.0
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 366.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 5,
+        "expanded_cost": 229,
+        "frontier": [
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 239.0
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "priority": 299.0
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 317.0
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 366.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "parent": 5
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 11,
+        "expanded_cost": 239,
+        "frontier": [
+          {
+            "city": 6,
+            "cost": 299,
+            "priority": 299.0
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 317.0
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 366.0
+          },
+          {
+            "city": 12,
+            "cost": 450,
+            "priority": 450.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "parent": 5
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 450,
+            "parent": 11
+          }
+        ]
+      },
+      {
+        "expanded": 6,
+        "expanded_cost": 299,
+        "frontier": [
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 317.0
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 366.0
+          },
+          {
+            "city": 7,
+            "cost": 374,
+            "priority": 374.0
+          },
+          {
+            "city": 12,
+            "cost": 450,
+            "priority": 450.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "parent": 5
+          },
+          {
+            "city": 7,
+            "cost": 374,
+            "parent": 6
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 450,
+            "parent": 11
+          }
+        ]
+      },
+      {
+        "expanded": 10,
+        "expanded_cost": 317,
+        "frontier": [
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 366.0
+          },
+          {
+            "city": 7,
+            "cost": 374,
+            "priority": 374.0
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "priority": 418.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "parent": 5
+          },
+          {
+            "city": 7,
+            "cost": 374,
+            "parent": 6
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "parent": 10
+          }
+        ]
+      },
+      {
+        "expanded": 8,
+        "expanded_cost": 366,
+        "frontier": [
+          {
+            "city": 7,
+            "cost": 374,
+            "priority": 374.0
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "priority": 418.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "parent": 5
+          },
+          {
+            "city": 7,
+            "cost": 374,
+            "parent": 6
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "parent": 10
+          }
+        ]
+      },
+      {
+        "expanded": 7,
+        "expanded_cost": 374,
+        "frontier": [
+          {
+            "city": 12,
+            "cost": 418,
+            "priority": 418.0
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "parent": 5
+          },
+          {
+            "city": 7,
+            "cost": 374,
+            "parent": 6
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "parent": 10
+          }
+        ]
+      },
+      {
+        "expanded": 12,
+        "expanded_cost": 418,
+        "frontier": [],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 6,
+            "cost": 299,
+            "parent": 5
+          },
+          {
+            "city": 7,
+            "cost": 374,
+            "parent": 6
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "parent": 10
+          }
+        ]
+      }
+    ],
+    "cost": 418,
+    "expanded": 13,
+    "generated": 14,
+    "peak_frontier": 4,
+    "peak_records": 40,
+    "peak_payload_bytes": 286
+  },
+  "astar": {
+    "path": [
+      0,
+      3,
+      9,
+      10,
+      12
+    ],
+    "explored_order": [
+      0,
+      3,
+      1,
+      9,
+      4,
+      2,
+      11,
+      10,
+      12
+    ],
+    "trace": [
+      {
+        "expanded": 0,
+        "expanded_cost": 0,
+        "frontier": [
+          {
+            "city": 3,
+            "cost": 140,
+            "priority": 273.741213968169
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "priority": 298.597734690728
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "priority": 365.654882495184
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          }
+        ]
+      },
+      {
+        "expanded": 3,
+        "expanded_cost": 140,
+        "frontier": [
+          {
+            "city": 1,
+            "cost": 75,
+            "priority": 298.597734690728
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "priority": 339.98444753968397
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "priority": 365.654882495184
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 368.343211103818
+          },
+          {
+            "city": 2,
+            "cost": 291,
+            "priority": 511.890434155516
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 291,
+            "parent": 3
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 1,
+        "expanded_cost": 75,
+        "frontier": [
+          {
+            "city": 9,
+            "cost": 220,
+            "priority": 339.98444753968397
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "priority": 365.654882495184
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "priority": 366.890434155516
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 368.343211103818
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 9,
+        "expanded_cost": 220,
+        "frontier": [
+          {
+            "city": 4,
+            "cost": 118,
+            "priority": 365.654882495184
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "priority": 366.890434155516
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 368.343211103818
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 399.290157374498
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 513.143834686708
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 4,
+        "expanded_cost": 118,
+        "frontier": [
+          {
+            "city": 2,
+            "cost": 146,
+            "priority": 366.890434155516
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 368.343211103818
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 399.290157374498
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 487.012455561188
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 513.143834686708
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 2,
+        "expanded_cost": 146,
+        "frontier": [
+          {
+            "city": 11,
+            "cost": 239,
+            "priority": 368.343211103818
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 399.290157374498
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 487.012455561188
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 513.143834686708
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          }
+        ]
+      },
+      {
+        "expanded": 11,
+        "expanded_cost": 239,
+        "frontier": [
+          {
+            "city": 10,
+            "cost": 317,
+            "priority": 399.290157374498
+          },
+          {
+            "city": 12,
+            "cost": 450,
+            "priority": 450.0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 487.012455561188
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 513.143834686708
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 450,
+            "parent": 11
+          }
+        ]
+      },
+      {
+        "expanded": 10,
+        "expanded_cost": 317,
+        "frontier": [
+          {
+            "city": 12,
+            "cost": 418,
+            "priority": 418.0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 487.012455561188
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 513.143834686708
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "parent": 10
+          }
+        ]
+      },
+      {
+        "expanded": 12,
+        "expanded_cost": 418,
+        "frontier": [
+          {
+            "city": 5,
+            "cost": 229,
+            "priority": 487.012455561188
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "priority": 513.143834686708
+          }
+        ],
+        "discovered": [
+          {
+            "city": 0,
+            "cost": 0,
+            "parent": null
+          },
+          {
+            "city": 1,
+            "cost": 75,
+            "parent": 0
+          },
+          {
+            "city": 2,
+            "cost": 146,
+            "parent": 1
+          },
+          {
+            "city": 3,
+            "cost": 140,
+            "parent": 0
+          },
+          {
+            "city": 4,
+            "cost": 118,
+            "parent": 0
+          },
+          {
+            "city": 5,
+            "cost": 229,
+            "parent": 4
+          },
+          {
+            "city": 8,
+            "cost": 366,
+            "parent": 9
+          },
+          {
+            "city": 9,
+            "cost": 220,
+            "parent": 3
+          },
+          {
+            "city": 10,
+            "cost": 317,
+            "parent": 9
+          },
+          {
+            "city": 11,
+            "cost": 239,
+            "parent": 3
+          },
+          {
+            "city": 12,
+            "cost": 418,
+            "parent": 10
+          }
+        ]
+      }
+    ],
+    "cost": 418,
+    "expanded": 9,
+    "generated": 13,
+    "peak_frontier": 6,
+    "peak_records": 33,
+    "peak_payload_bytes": 272
+  }
+}

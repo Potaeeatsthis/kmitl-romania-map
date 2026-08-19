@@ -32,6 +32,7 @@ The Rust engine and the standalone Python and C++ reference programs:
 | `package.json`, `tsconfig.json` | Next.js and TypeScript configuration |
 | `public/data/romania.geojson` | Browser-served GeoJSON placeholder |
 | `wasm/` | Working Rust engine, native CLI, tests, trace, and precomputed heuristic data |
+| `wasm/src/bin/export_sample.rs` | Generates real UCS and A* JSON sample data for the frontend |
 | `reference/romania_search.rs` | Transitional native Rust baseline |
 | `reference/romania_search.py` | Python 3 reference implementation |
 | `reference/romania_search.cpp` | C++17 reference implementation |
@@ -130,6 +131,26 @@ Run the Cargo CLI:
 ```bash
 cargo run --release --manifest-path wasm/Cargo.toml --bin cli
 ```
+
+### Export frontend sample data
+
+The `export_sample` binary runs UCS and A* from Arad to Bucharest and writes the
+complete paths, animation traces, and metrics as JSON.
+
+Print the JSON:
+
+```bash
+cargo run --quiet --manifest-path wasm/Cargo.toml --bin export_sample
+```
+
+Save it as frontend sample data:
+
+```bash
+cargo run --quiet --manifest-path wasm/Cargo.toml --bin export_sample \
+  > public/data/data-search.json
+```
+
+The sample is calculated by Rust. The frontend only reads and displays it.
 
 ## Verify before pushing
 
