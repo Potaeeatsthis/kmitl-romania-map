@@ -10,8 +10,8 @@ use romania_search::search::search;
 const BENCHMARK_RUNS: usize = 5_000;
 
 fn benchmark(graph: &Graph, start: usize, goal: usize, heuristic: &[f64]) -> (SearchResult, f64) {
-    let result = search(graph, start, goal, heuristic)
-        .expect("no route exists between the selected cities");
+    let result =
+        search(graph, start, goal, heuristic).expect("no route exists between the selected cities");
     let mut checksum = 0usize;
     let began = Instant::now();
     for _ in 0..BENCHMARK_RUNS {
@@ -29,10 +29,17 @@ fn select_city(prompt: &str) -> usize {
         print!("{prompt}");
         io::stdout().flush().expect("failed to flush output");
         let mut answer = String::new();
-        if io::stdin().read_line(&mut answer).expect("failed to read input") == 0 {
+        if io::stdin()
+            .read_line(&mut answer)
+            .expect("failed to read input")
+            == 0
+        {
             panic!("Input ended");
         }
-        if let Some(city) = CITIES.iter().position(|name| name.eq_ignore_ascii_case(answer.trim())) {
+        if let Some(city) = CITIES
+            .iter()
+            .position(|name| name.eq_ignore_ascii_case(answer.trim()))
+        {
             return city;
         }
         println!("Unknown city. Enter one of the names shown above.");
@@ -40,11 +47,21 @@ fn select_city(prompt: &str) -> usize {
 }
 
 fn path_text(result: &SearchResult) -> String {
-    result.path.iter().map(|&city| CITIES[city]).collect::<Vec<_>>().join(" -> ")
+    result
+        .path
+        .iter()
+        .map(|&city| CITIES[city])
+        .collect::<Vec<_>>()
+        .join(" -> ")
 }
 
 fn explored_text(result: &SearchResult) -> String {
-    result.explored_order.iter().map(|&city| CITIES[city]).collect::<Vec<_>>().join(" -> ")
+    result
+        .explored_order
+        .iter()
+        .map(|&city| CITIES[city])
+        .collect::<Vec<_>>()
+        .join(" -> ")
 }
 
 fn print_row(name: &str, result: &SearchResult, time_us: f64) {
@@ -68,8 +85,7 @@ fn main() {
     let goal = select_city("Goal city: ");
 
     let build_start = Instant::now();
-    let heuristic = current_flow_heuristic(&graph, goal)
-        .expect("the road graph must be connected");
+    let heuristic = current_flow_heuristic(&graph, goal).expect("the road graph must be connected");
     let build_us = build_start.elapsed().as_secs_f64() * 1_000_000.0;
 
     let zeroes = vec![0.0; CITY_COUNT];
@@ -77,15 +93,29 @@ fn main() {
     let (astar, astar_us) = benchmark(&graph, start, goal, &heuristic.values);
 
     println!("\nRoutes");
-    println!("UCS:             {} (cost {} km)", path_text(&ucs), ucs.cost);
-    println!("Current-flow A*: {} (cost {} km)", path_text(&astar), astar.cost);
+    println!(
+        "UCS:             {} (cost {} km)",
+        path_text(&ucs),
+        ucs.cost
+    );
+    println!(
+        "Current-flow A*: {} (cost {} km)",
+        path_text(&astar),
+        astar.cost
+    );
     println!("\nExplored order");
     println!("UCS:             {}", explored_text(&ucs));
     println!("Current-flow A*: {}", explored_text(&astar));
     println!("\nAverage search time over {BENCHMARK_RUNS} runs (heuristic build excluded)");
     println!(
         "{:<18}{:>14}{:>11}{:>11}{:>12}{:>14}{:>14}",
-        "Algorithm", "Runtime (us)", "Expanded", "Generated", "Peak queue", "Peak records", "Memory (B)"
+        "Algorithm",
+        "Runtime (us)",
+        "Expanded",
+        "Generated",
+        "Peak queue",
+        "Peak records",
+        "Memory (B)"
     );
     print_row("UCS", &ucs, ucs_us);
     print_row("Current-flow A*", &astar, astar_us);

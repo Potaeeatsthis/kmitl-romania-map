@@ -3,6 +3,10 @@ use crate::graph::{Graph, CITY_COUNT};
 /// I4: engine code never panics. A disconnected graph is a value, not a crash.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HeuristicError {
+    InvalidGoal(usize),
+    WrongGraphSize { expected: usize, actual: usize },
+    InvalidRoad { city: usize, neighbor: usize },
+    ZeroDistance { city: usize, neighbor: usize },
     DisconnectedGraph,
 }
 
@@ -15,9 +19,31 @@ pub fn current_flow_heuristic(
     graph: &Graph,
     goal: usize,
 ) -> Result<HeuristicResult, HeuristicError> {
+    if goal >= CITY_COUNT {
+        return Err(HeuristicError::InvalidGoal(goal));
+    }
+    if graph.len() != CITY_COUNT {
+        return Err(HeuristicError::WrongGraphSize {
+            expected: CITY_COUNT,
+            actual: graph.len(),
+        });
+    }
+
     let mut laplacian = vec![vec![0.0; CITY_COUNT]; CITY_COUNT];
-    for a in 0..CITY_COUNT {
-        for &(b, distance) in &graph[a] {
+    for (a, roads) in graph.iter().enumerate() {
+        for &(b, distance) in roads {
+            if b >= CITY_COUNT {
+                return Err(HeuristicError::InvalidRoad {
+                    city: a,
+                    neighbor: b,
+                });
+            }
+            if distance == 0 {
+                return Err(HeuristicError::ZeroDistance {
+                    city: a,
+                    neighbor: b,
+                });
+            }
             let conductance = 1.0 / distance as f64;
             laplacian[a][a] += conductance;
             laplacian[a][b] -= conductance;
@@ -50,11 +76,22 @@ pub fn current_flow_heuristic(
             *value /= divisor;
         }
         for row in 0..n {
-            if row == column { continue; }
+            if row == column {
+                continue;
+            }
             let factor = augmented[row][column];
-            if factor == 0.0 { continue; }
-            for j in 0..(2 * n) {
-                augmented[row][j] -= factor * augmented[column][j];
+            if factor == 0.0 {
+                continue;
+            }
+            let (target_row, pivot_row) = if row < column {
+                let (before, from_pivot) = augmented.split_at_mut(column);
+                (&mut before[row], &from_pivot[0])
+            } else {
+                let (before, from_row) = augmented.split_at_mut(row);
+                (&mut from_row[0], &before[column])
+            };
+            for (target, pivot) in target_row.iter_mut().zip(pivot_row.iter()) {
+                *target -= factor * pivot;
             }
         }
     }
@@ -65,5 +102,8 @@ pub fn current_flow_heuristic(
         values[kept[i]] = augmented[i][n + i].max(0.0);
     }
     let workspace = CITY_COUNT * CITY_COUNT * 8 + n * (2 * n) * 8 + CITY_COUNT * 8;
-    Ok(HeuristicResult { values, logical_workspace_bytes: workspace })
+    Ok(HeuristicResult {
+        values,
+        logical_workspace_bytes: workspace,
+    })
 }

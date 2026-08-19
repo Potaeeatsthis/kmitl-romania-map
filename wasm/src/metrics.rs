@@ -21,7 +21,5 @@ pub fn update_peaks(
     *peak_frontier = (*peak_frontier).max(frontier_count);
     *peak_records = (*peak_records).max(frontier_count + discovered + settled_count * 2);
     // Language-neutral field payload, excluding container/object overhead.
-    *peak_payload = (*peak_payload).max(
-        frontier_count * 20 + discovered * 12 + settled_count * 5,
-    );
+    *peak_payload = (*peak_payload).max(frontier_count * 20 + discovered * 12 + settled_count * 5);
 }

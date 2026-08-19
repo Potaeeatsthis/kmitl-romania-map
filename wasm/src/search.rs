@@ -8,6 +8,12 @@ use crate::metrics::{update_peaks, SearchResult};
 /// because a panic inside the wasm module takes the whole page down with it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SearchError {
+    InvalidGraphSize { expected: usize, actual: usize },
+    InvalidStart(usize),
+    InvalidGoal(usize),
+    WrongHeuristicLength { expected: usize, actual: usize },
+    InvalidHeuristic(usize),
+    InvalidNeighbor { city: usize, neighbor: usize },
     NoRouteExists,
 }
 
@@ -31,7 +37,9 @@ impl Eq for QueueEntry {}
 impl Ord for QueueEntry {
     fn cmp(&self, other: &Self) -> Ordering {
         // Reverse comparisons because BinaryHeap is a max-heap.
-        other.f.total_cmp(&self.f)
+        other
+            .f
+            .total_cmp(&self.f)
             .then_with(|| other.g.cmp(&self.g))
             .then_with(|| other.city.cmp(&self.city))
     }
@@ -51,12 +59,42 @@ pub fn search(
     goal: usize,
     heuristic: &[f64],
 ) -> Result<SearchResult, SearchError> {
+    if graph.len() != CITY_COUNT {
+        return Err(SearchError::InvalidGraphSize {
+            expected: CITY_COUNT,
+            actual: graph.len(),
+        });
+    }
+    if start >= CITY_COUNT {
+        return Err(SearchError::InvalidStart(start));
+    }
+    if goal >= CITY_COUNT {
+        return Err(SearchError::InvalidGoal(goal));
+    }
+    if heuristic.len() != CITY_COUNT {
+        return Err(SearchError::WrongHeuristicLength {
+            expected: CITY_COUNT,
+            actual: heuristic.len(),
+        });
+    }
+    if let Some((city, _)) = heuristic
+        .iter()
+        .enumerate()
+        .find(|(_, value)| !value.is_finite() || **value < 0.0)
+    {
+        return Err(SearchError::InvalidHeuristic(city));
+    }
+
     let mut best = [u32::MAX; CITY_COUNT];
     let mut parent = [usize::MAX; CITY_COUNT];
     let mut settled = [false; CITY_COUNT];
     let mut frontier = BinaryHeap::new();
     best[start] = 0;
-    frontier.push(QueueEntry { f: heuristic[start], g: 0, city: start });
+    frontier.push(QueueEntry {
+        f: heuristic[start],
+        g: 0,
+        city: start,
+    });
 
     let mut expanded = 0usize;
     let mut generated = 1usize;
@@ -75,8 +113,12 @@ pub fn search(
         expanded += 1;
         explored_order.push(current);
         update_peaks(
-            frontier.len(), discovered, expanded,
-            &mut peak_frontier, &mut peak_records, &mut peak_payload,
+            frontier.len(),
+            discovered,
+            expanded,
+            &mut peak_frontier,
+            &mut peak_records,
+            &mut peak_payload,
         );
 
         if current == goal {
@@ -84,7 +126,9 @@ pub fn search(
             let mut node = goal;
             loop {
                 path.push(node);
-                if parent[node] == usize::MAX { break; }
+                if parent[node] == usize::MAX {
+                    break;
+                }
                 node = parent[node];
             }
             path.reverse();
@@ -101,10 +145,22 @@ pub fn search(
         }
 
         for &(neighbor, road_cost) in &graph[current] {
-            if settled[neighbor] { continue; }
-            let new_cost = entry.g + road_cost;
+            if neighbor >= CITY_COUNT {
+                return Err(SearchError::InvalidNeighbor {
+                    city: current,
+                    neighbor,
+                });
+            }
+            if settled[neighbor] {
+                continue;
+            }
+            let Some(new_cost) = entry.g.checked_add(road_cost) else {
+                continue;
+            };
             if new_cost < best[neighbor] {
-                if best[neighbor] == u32::MAX { discovered += 1; }
+                if best[neighbor] == u32::MAX {
+                    discovered += 1;
+                }
                 best[neighbor] = new_cost;
                 parent[neighbor] = current;
                 frontier.push(QueueEntry {
@@ -114,8 +170,12 @@ pub fn search(
                 });
                 generated += 1;
                 update_peaks(
-                    frontier.len(), discovered, expanded,
-                    &mut peak_frontier, &mut peak_records, &mut peak_payload,
+                    frontier.len(),
+                    discovered,
+                    expanded,
+                    &mut peak_frontier,
+                    &mut peak_records,
+                    &mut peak_payload,
                 );
             }
         }
