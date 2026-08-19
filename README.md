@@ -12,7 +12,7 @@ The detailed project idea and mathematics are available in
 
 ## Current project status
 
-The standalone Python, C++, and Rust reference programs:
+The Rust engine and the standalone Python and C++ reference programs:
 
 - use the same 20 cities, roads, and distances;
 - accept a current city and goal city from the user;
@@ -31,8 +31,8 @@ The standalone Python, C++, and Rust reference programs:
 | `components/`, `stores/`, `lib/` | Frontend placeholders grouped by UI, state, and Wasm integration responsibility |
 | `package.json`, `tsconfig.json` | Next.js and TypeScript configuration |
 | `public/data/romania.geojson` | Browser-served GeoJSON placeholder |
-| `wasm/` | Rust WebAssembly crate structure and heuristic-data placeholder |
-| `reference/romania_search.rs` | Existing native Rust CLI reference implementation |
+| `wasm/` | Working Rust engine, native CLI, tests, trace, and precomputed heuristic data |
+| `reference/romania_search.rs` | Transitional native Rust baseline |
 | `reference/romania_search.py` | Python 3 reference implementation |
 | `reference/romania_search.cpp` | C++17 reference implementation |
 | `docs/ideas.md` | Algorithm explanation and mathematical specification |
@@ -95,6 +95,9 @@ city to the goal.
 This grounded-Laplacian calculation is equivalent to the pseudoinverse formula
 described in the project specification, but it does not require an external
 matrix library.
+The Rust engine reads precomputed values from `wasm/data/heuristics.json`. Its build
+script validates and embeds that table, so the future browser build will not run the
+matrix inversion.
 
 ## Run the frontend
 
@@ -122,11 +125,10 @@ g++ -std=c++17 -O2 reference/romania_search.cpp -o bin/romania_search_cpp
 
 ### Rust
 
-Compile the reference source and run:
+Run the Cargo CLI:
 
 ```bash
-rustc --edition=2021 -O reference/romania_search.rs -o bin/romania_search_rust
-./bin/romania_search_rust
+cargo run --release --manifest-path wasm/Cargo.toml --bin cli
 ```
 
 ## Verify before pushing
@@ -135,11 +137,12 @@ The project's central claim is that three languages produce the same result. The
 enforce it, and CI runs exactly the same scripts:
 
 ```bash
-npm run verify              # all three gates
+npm run verify              # every harness gate
 npm run verify:invariants   # one search(), engine stays wasm-safe, clean builds
 npm run verify:parity       # Rust, C++ and Python agree on every deterministic field
 npm run verify:correctness  # 400 pairs vs Dijkstra, admissibility, consistency
 npm run typecheck           # requires `npm install` first
+cargo test --manifest-path wasm/Cargo.toml
 ```
 
 Project rules, invariants and the build order live in [`CLAUDE.md`](CLAUDE.md). When

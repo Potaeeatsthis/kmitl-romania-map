@@ -96,11 +96,5 @@ jobs:
 
 # --- Not yet enabled -------------------------------------------------------------
 #
-# cargo steps: blocked until build step 1 fills wasm/Cargo.toml. There is no library
-#   target today, so `cargo check`, `cargo test`, `cargo clippy -- -D warnings` and
-#   `cargo fmt --check` cannot run. When step 1 lands they are added to
-#   scripts/verify_invariants.sh rather than here, so /prevent picks them up too.
-#   See docs/runbook.md §1.
-#
 # deploy job: blocked until build steps 4 and 5. Needs wasm-pack to build the module
 #   and a frontend for `next build` with output: 'export' to publish to GitHub Pages.

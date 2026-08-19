@@ -1,7 +1,30 @@
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
+pub struct FrontierNode {
+    pub city: usize,
+    pub cost: u32,
+    pub priority: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DiscoveredNode {
+    pub city: usize,
+    pub cost: u32,
+    pub parent: Option<usize>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct SearchStep {
+    pub expanded: usize,
+    pub expanded_cost: u32,
+    pub frontier: Vec<FrontierNode>,
+    pub discovered: Vec<DiscoveredNode>,
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct SearchResult {
     pub path: Vec<usize>,
     pub explored_order: Vec<usize>,
+    pub trace: Vec<SearchStep>,
     pub cost: u32,
     pub expanded: usize,
     pub generated: usize,
@@ -20,6 +43,6 @@ pub fn update_peaks(
 ) {
     *peak_frontier = (*peak_frontier).max(frontier_count);
     *peak_records = (*peak_records).max(frontier_count + discovered + settled_count * 2);
-    // Language-neutral field payload, excluding container/object overhead.
+    // Language-neutral field payload, excluding container/object overhead and output trace.
     *peak_payload = (*peak_payload).max(frontier_count * 20 + discovered * 12 + settled_count * 5);
 }

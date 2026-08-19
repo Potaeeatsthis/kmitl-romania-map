@@ -35,27 +35,16 @@ structure was committed before the Cargo project was created.
 
 ### Fix
 
-This is the current expected state, not a regression. Build with `rustc`, as the README
-documents:
+This was the expected state before build step 1. The permanent fix is now implemented:
 
 ```bash
-mkdir -p bin
-rustc --edition=2021 -O reference/romania_search.rs -o bin/romania_search_rust
-./bin/romania_search_rust
+cargo check --manifest-path wasm/Cargo.toml
 ```
-
-The permanent fix is build step 1 in `CLAUDE.md` — write the manifest and move the engine from `reference/romania_search.rs` into the
-`wasm/` library plus `src/bin/cli.rs`. The `wasm/tests/` placeholders cannot work until
-then because Rust integration tests need a real library crate.
 
 ### Prevent
 
-Not gateable while it is the expected state — recorded as `automation_gap` in the
-rootcause file. CI builds with `rustc` rather than `cargo` for exactly this reason.
-
-Once step 1 lands: add `cargo check`, `cargo test`, `cargo clippy -- -D warnings` and
-`cargo fmt --check` to `scripts/verify_invariants.sh`, and this section becomes
-historical.
+This entry is historical. `npm run verify:invariants` now runs Cargo check, tests,
+Clippy with warnings denied, and the formatting check.
 
 ---
 
@@ -159,3 +148,54 @@ go green; that discards the only fixed point the project has.
 ### Prevent
 
 `npm run verify:golden`, wired into `npm run verify` and CI.
+
+---
+
+## §4 — `clippy-needless-range-loop`
+
+Rootcause file: [`rootcause/clippy-needless-range-loop.json`](rootcause/clippy-needless-range-loop.json)
+
+### Symptom
+
+`cargo clippy --all-targets -- -D warnings` reports
+`clippy::needless-range-loop` in a Rust test.
+
+### Diagnose
+
+Read the named loop. If its numeric index is mainly used to access the same collection,
+iterate over that collection directly and keep the index with `.enumerate()`.
+
+### Fix
+
+Replace `for index in 0..items.len()` plus `items[index]` with
+`for (index, item) in items.iter().enumerate()`.
+
+### Prevent
+
+`npm run verify:invariants` runs Cargo check, tests, Clippy with warnings denied, and
+the formatting check whenever `wasm/Cargo.toml` exists.
+
+---
+
+## §5 — `shared-integration-test-dead-code`
+
+Rootcause file: [`rootcause/shared-integration-test-dead-code.json`](rootcause/shared-integration-test-dead-code.json)
+
+### Symptom
+
+Clippy says a helper in `tests/common/mod.rs` is never used, even though another
+integration-test file calls it.
+
+### Diagnose
+
+Remember that each file in `tests/` is a separate crate. A shared module is compiled
+once for each test file that declares it, and one of those crates may not use every helper.
+
+### Fix
+
+Prefer smaller shared modules when useful. For a small test-only helper used by most
+suites, add a narrow documented `#[allow(dead_code)]` on that helper only.
+
+### Prevent
+
+`npm run verify:invariants` runs Clippy across all targets with warnings denied.
