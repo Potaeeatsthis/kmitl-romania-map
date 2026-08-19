@@ -16,7 +16,7 @@ pub struct DiscoveredNode {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct SearchStep {
-    pub expanded: usize,
+    pub expanded_city: usize,
     pub expanded_cost: u32,
     pub frontier: Vec<FrontierNode>,
     pub discovered: Vec<DiscoveredNode>,

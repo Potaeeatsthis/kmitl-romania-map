@@ -193,7 +193,7 @@ fn reconstruct_path(goal: usize, parent: &[usize]) -> Vec<usize> {
 }
 
 fn make_step(
-    expanded: usize,
+    expanded_city: usize,
     expanded_cost: u32,
     frontier: &BinaryHeap<QueueEntry>,
     best: &[u32],
@@ -233,7 +233,7 @@ fn make_step(
         .collect();
 
     SearchStep {
-        expanded,
+        expanded_city,
         expanded_cost,
         frontier,
         discovered,
