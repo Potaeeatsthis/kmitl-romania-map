@@ -18,6 +18,8 @@ instead, because nobody will ever arrive here with a string to search for.
 | `manifest is missing either a [package] or a [workspace]` + cargo | `empty-cargo-manifest` | §1 |
 | *(no error text)* Edits under `wasm/src/` produce no hook output; `--structural` never runs | `dead-posttooluse-hook` | §2 |
 | *(no error text)* `golden: FAIL` with a diff against `tests/golden/` | not a bug — read the diff before re-recording | §3 |
+| `clippy::needless-range-loop` | `clippy-needless-range-loop` | §4 |
+| `function … is never used` in `tests/common/mod.rs` | `shared-integration-test-dead-code` | §5 |
 
 ## Step 2 — Apply the known fix
 

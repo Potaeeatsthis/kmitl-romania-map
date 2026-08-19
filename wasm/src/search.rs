@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
 use crate::graph::{Graph, CITY_COUNT};
-use crate::metrics::{update_peaks, SearchResult};
+use crate::metrics::{update_peaks, DiscoveredNode, FrontierNode, SearchResult, SearchStep};
 
 /// I5/I4: this module never panics. A route failure is a value, not a crash,
 /// because a panic inside the wasm module takes the whole page down with it.
@@ -103,6 +103,7 @@ pub fn search(
     let mut peak_records = 2usize;
     let mut peak_payload = 32usize;
     let mut explored_order = Vec::new();
+    let mut trace = Vec::new();
 
     while let Some(entry) = frontier.pop() {
         let current = entry.city;
@@ -121,20 +122,53 @@ pub fn search(
             &mut peak_payload,
         );
 
-        if current == goal {
-            let mut path = Vec::new();
-            let mut node = goal;
-            loop {
-                path.push(node);
-                if parent[node] == usize::MAX {
-                    break;
+        if current != goal {
+            for &(neighbor, road_cost) in &graph[current] {
+                if neighbor >= CITY_COUNT {
+                    return Err(SearchError::InvalidNeighbor {
+                        city: current,
+                        neighbor,
+                    });
                 }
-                node = parent[node];
+                if settled[neighbor] {
+                    continue;
+                }
+                let Some(new_cost) = entry.g.checked_add(road_cost) else {
+                    continue;
+                };
+                if new_cost < best[neighbor] {
+                    if best[neighbor] == u32::MAX {
+                        discovered += 1;
+                    }
+                    best[neighbor] = new_cost;
+                    parent[neighbor] = current;
+                    frontier.push(QueueEntry {
+                        f: new_cost as f64 + heuristic[neighbor],
+                        g: new_cost,
+                        city: neighbor,
+                    });
+                    generated += 1;
+                    update_peaks(
+                        frontier.len(),
+                        discovered,
+                        expanded,
+                        &mut peak_frontier,
+                        &mut peak_records,
+                        &mut peak_payload,
+                    );
+                }
             }
-            path.reverse();
+        }
+
+        trace.push(make_step(
+            current, entry.g, &frontier, &best, &parent, &settled,
+        ));
+
+        if current == goal {
             return Ok(SearchResult {
-                path,
+                path: reconstruct_path(goal, &parent),
                 explored_order,
+                trace,
                 cost: entry.g,
                 expanded,
                 generated,
@@ -143,42 +177,65 @@ pub fn search(
                 peak_payload_bytes: peak_payload,
             });
         }
-
-        for &(neighbor, road_cost) in &graph[current] {
-            if neighbor >= CITY_COUNT {
-                return Err(SearchError::InvalidNeighbor {
-                    city: current,
-                    neighbor,
-                });
-            }
-            if settled[neighbor] {
-                continue;
-            }
-            let Some(new_cost) = entry.g.checked_add(road_cost) else {
-                continue;
-            };
-            if new_cost < best[neighbor] {
-                if best[neighbor] == u32::MAX {
-                    discovered += 1;
-                }
-                best[neighbor] = new_cost;
-                parent[neighbor] = current;
-                frontier.push(QueueEntry {
-                    f: new_cost as f64 + heuristic[neighbor],
-                    g: new_cost,
-                    city: neighbor,
-                });
-                generated += 1;
-                update_peaks(
-                    frontier.len(),
-                    discovered,
-                    expanded,
-                    &mut peak_frontier,
-                    &mut peak_records,
-                    &mut peak_payload,
-                );
-            }
-        }
     }
     Err(SearchError::NoRouteExists)
+}
+
+fn reconstruct_path(goal: usize, parent: &[usize]) -> Vec<usize> {
+    let mut path = vec![goal];
+    let mut current = goal;
+    while parent[current] != usize::MAX {
+        current = parent[current];
+        path.push(current);
+    }
+    path.reverse();
+    path
+}
+
+fn make_step(
+    expanded: usize,
+    expanded_cost: u32,
+    frontier: &BinaryHeap<QueueEntry>,
+    best: &[u32],
+    parent: &[usize],
+    settled: &[bool],
+) -> SearchStep {
+    let mut visible_frontier: Vec<_> = frontier
+        .iter()
+        .filter(|entry| entry.g == best[entry.city] && !settled[entry.city])
+        .copied()
+        .collect();
+    visible_frontier.sort_by(|left, right| {
+        left.f
+            .total_cmp(&right.f)
+            .then_with(|| left.g.cmp(&right.g))
+            .then_with(|| left.city.cmp(&right.city))
+    });
+    visible_frontier.dedup_by_key(|entry| entry.city);
+
+    let frontier = visible_frontier
+        .into_iter()
+        .map(|entry| FrontierNode {
+            city: entry.city,
+            cost: entry.g,
+            priority: entry.f,
+        })
+        .collect();
+    let discovered = best
+        .iter()
+        .enumerate()
+        .filter(|(_, cost)| **cost != u32::MAX)
+        .map(|(city, &cost)| DiscoveredNode {
+            city,
+            cost,
+            parent: (parent[city] != usize::MAX).then_some(parent[city]),
+        })
+        .collect();
+
+    SearchStep {
+        expanded,
+        expanded_cost,
+        frontier,
+        discovered,
+    }
 }

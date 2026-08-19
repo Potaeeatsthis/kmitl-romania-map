@@ -18,7 +18,9 @@ Covers three things:
   differing only by the heuristic array passed in.
 - **I4** — no `println!`, `eprintln!`, `Instant`, `black_box` or `io::` in engine code.
   Those belong to `bin/cli.rs`; `Instant` panics on `wasm32`.
-- **Builds** — `rustc -D warnings`, `g++ -Wall -Wextra`, `python3 -m py_compile`.
+- **Builds** — clean Rust, C++, and Python builds. Once the Cargo crate exists, this also
+  runs `cargo check`, `cargo test`, `cargo clippy -- -D warnings`, and
+  `cargo fmt --check`.
 
 **Pass:** `invariants: PASS`
 **Fail:** each violation is printed with its file and line. An I1 failure usually means
