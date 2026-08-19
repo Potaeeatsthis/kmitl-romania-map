@@ -24,7 +24,7 @@
     ],
     "trace": [
       {
-        "expanded": 0,
+        "expanded_city": 0,
         "expanded_cost": 0,
         "frontier": [
           {
@@ -67,7 +67,7 @@
         ]
       },
       {
-        "expanded": 1,
+        "expanded_city": 1,
         "expanded_cost": 75,
         "frontier": [
           {
@@ -115,7 +115,7 @@
         ]
       },
       {
-        "expanded": 4,
+        "expanded_city": 4,
         "expanded_cost": 118,
         "frontier": [
           {
@@ -168,7 +168,7 @@
         ]
       },
       {
-        "expanded": 3,
+        "expanded_city": 3,
         "expanded_cost": 140,
         "frontier": [
           {
@@ -236,7 +236,7 @@
         ]
       },
       {
-        "expanded": 2,
+        "expanded_city": 2,
         "expanded_cost": 146,
         "frontier": [
           {
@@ -299,7 +299,7 @@
         ]
       },
       {
-        "expanded": 9,
+        "expanded_city": 9,
         "expanded_cost": 220,
         "frontier": [
           {
@@ -377,7 +377,7 @@
         ]
       },
       {
-        "expanded": 5,
+        "expanded_city": 5,
         "expanded_cost": 229,
         "frontier": [
           {
@@ -460,7 +460,7 @@
         ]
       },
       {
-        "expanded": 11,
+        "expanded_city": 11,
         "expanded_cost": 239,
         "frontier": [
           {
@@ -548,7 +548,7 @@
         ]
       },
       {
-        "expanded": 6,
+        "expanded_city": 6,
         "expanded_cost": 299,
         "frontier": [
           {
@@ -641,7 +641,7 @@
         ]
       },
       {
-        "expanded": 10,
+        "expanded_city": 10,
         "expanded_cost": 317,
         "frontier": [
           {
@@ -729,7 +729,7 @@
         ]
       },
       {
-        "expanded": 8,
+        "expanded_city": 8,
         "expanded_cost": 366,
         "frontier": [
           {
@@ -812,7 +812,7 @@
         ]
       },
       {
-        "expanded": 7,
+        "expanded_city": 7,
         "expanded_cost": 374,
         "frontier": [
           {
@@ -890,7 +890,7 @@
         ]
       },
       {
-        "expanded": 12,
+        "expanded_city": 12,
         "expanded_cost": 418,
         "frontier": [],
         "discovered": [
@@ -990,7 +990,7 @@
     ],
     "trace": [
       {
-        "expanded": 0,
+        "expanded_city": 0,
         "expanded_cost": 0,
         "frontier": [
           {
@@ -1033,7 +1033,7 @@
         ]
       },
       {
-        "expanded": 3,
+        "expanded_city": 3,
         "expanded_cost": 140,
         "frontier": [
           {
@@ -1101,7 +1101,7 @@
         ]
       },
       {
-        "expanded": 1,
+        "expanded_city": 1,
         "expanded_cost": 75,
         "frontier": [
           {
@@ -1164,7 +1164,7 @@
         ]
       },
       {
-        "expanded": 9,
+        "expanded_city": 9,
         "expanded_cost": 220,
         "frontier": [
           {
@@ -1242,7 +1242,7 @@
         ]
       },
       {
-        "expanded": 4,
+        "expanded_city": 4,
         "expanded_cost": 118,
         "frontier": [
           {
@@ -1325,7 +1325,7 @@
         ]
       },
       {
-        "expanded": 2,
+        "expanded_city": 2,
         "expanded_cost": 146,
         "frontier": [
           {
@@ -1403,7 +1403,7 @@
         ]
       },
       {
-        "expanded": 11,
+        "expanded_city": 11,
         "expanded_cost": 239,
         "frontier": [
           {
@@ -1486,7 +1486,7 @@
         ]
       },
       {
-        "expanded": 10,
+        "expanded_city": 10,
         "expanded_cost": 317,
         "frontier": [
           {
@@ -1564,7 +1564,7 @@
         ]
       },
       {
-        "expanded": 12,
+        "expanded_city": 12,
         "expanded_cost": 418,
         "frontier": [
           {

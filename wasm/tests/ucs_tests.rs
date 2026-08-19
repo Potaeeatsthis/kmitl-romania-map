@@ -53,13 +53,13 @@ fn trace_records_one_complete_frame_per_expansion() {
         result
             .trace
             .iter()
-            .map(|step| step.expanded)
+            .map(|step| step.expanded_city)
             .collect::<Vec<_>>(),
         result.explored_order
     );
 
     let first = &result.trace[0];
-    assert_eq!(first.expanded, 0);
+    assert_eq!(first.expanded_city, 0);
     assert_eq!(first.expanded_cost, 0);
     assert_eq!(
         first
@@ -87,7 +87,7 @@ fn trace_records_one_complete_frame_per_expansion() {
         .trace
         .last()
         .expect("trace must contain the goal frame");
-    assert_eq!(last.expanded, 12);
+    assert_eq!(last.expanded_city, 12);
     assert_eq!(last.expanded_cost, 418);
     assert!(last.frontier.iter().all(|node| node.city != 12));
 }
