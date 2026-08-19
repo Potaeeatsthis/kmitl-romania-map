@@ -1,0 +1,20 @@
+Romania map (20 cities):
+Arad, Zerind, Oradea, Sibiu, Timisoara, Lugoj, Mehadia, Drobeta, Craiova, Rimnicu Vilcea, Pitesti, Fagaras, Bucharest, Giurgiu, Urziceni, Hirsova, Eforie, Vaslui, Iasi, Neamt
+Current city: Goal city: 
+Routes
+UCS:             Sibiu (cost 0 km)
+Current-flow A*: Sibiu (cost 0 km)
+
+Explored order
+UCS:             Sibiu
+Current-flow A*: Sibiu
+
+Average search time over 5000 runs (heuristic build excluded)
+Algorithm           Runtime (us)   Expanded  Generated  Peak queue  Peak records    Memory (B)
+UCS<time>          1          1           1             3            32
+Current-flow A*<time>          1          1           1             3            32
+
+A* heuristic build:<time> us; logical numeric workspace: 9136 bytes
+Units: runtime is microseconds (us); logical search memory is bytes (B).
+Memory is a language-neutral count of stored fields; runtime/container overhead is excluded.
+Both algorithms found the same optimal route cost.
