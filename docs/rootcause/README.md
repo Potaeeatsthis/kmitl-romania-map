@@ -20,7 +20,8 @@ less trustworthy.
   "recurrence_risk": "low | medium | high",
   "invariant": "I1 | I2 | I3 | I4 | I5 | null",
   "automation_gap": "Optional — if CI cannot catch this, explain why",
-  "tags": ["cargo", "wasm", "parity", "heuristic", "..."]
+  "tags": ["cargo", "wasm", "parity", "heuristic", "..."],
+  "notes": "Optional — anything that does not fit the fields above"
 }
 ```
 
