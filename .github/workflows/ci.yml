@@ -17,11 +17,24 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+# Neither job writes anything: they read the tree and run checks. The deploy job added
+# at build step 6 needs `pages: write` and `id-token: write` -- grant those on that job
+# alone rather than widening this default.
+permissions:
+  contents: read
+
 jobs:
   correctness:
     name: Invariants, parity, correctness
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    # Each verify script builds Rust into its own mktemp directory, so a full run used
+    # to compile the crate four times and keep nothing between runs. Setting this makes
+    # every script share one directory that the cache step below can restore.
+    # Locally the variable is unset and the scripts keep their throwaway directories.
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/.cargo-target
 
     steps:
       - name: Checkout
@@ -34,6 +47,18 @@ jobs:
 
       # rust-toolchain.toml pins the version; rustup installs it on first use so
       # every machine and this runner produce identical warnings and lints.
+      # Keyed on the lockfile and the pinned toolchain: a dependency or a Rust version
+      # change invalidates it, anything else reuses the previous run's artifacts.
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ github.workspace }}/.cargo-target
+          key: cargo-${{ runner.os }}-${{ hashFiles('wasm/Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: cargo-${{ runner.os }}-
+
       - name: Resolve pinned Rust toolchain
         run: rustc --version && cargo --version
 
