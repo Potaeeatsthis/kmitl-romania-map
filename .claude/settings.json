@@ -1,0 +1,34 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post_tool_use.sh\""
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npm run verify)",
+      "Bash(npm run verify:*)",
+      "Bash(npm run typecheck)",
+      "Bash(bash scripts/verify_invariants.sh*)",
+      "Bash(bash scripts/verify_parity.sh*)",
+      "Bash(bash scripts/verify_golden.sh*)",
+      "Bash(bash scripts/verify_harness.sh*)",
+      "Bash(python3 scripts/verify_correctness.py)",
+      "Bash(cargo check*)",
+      "Bash(cargo test*)",
+      "Bash(cargo clippy*)",
+      "Bash(cargo fmt*)",
+      "Bash(rustc --edition=2021*)",
+      "Bash(g++ -std=c++17*)",
+      "Bash(python3 -m py_compile*)"
+    ]
+  }
+}

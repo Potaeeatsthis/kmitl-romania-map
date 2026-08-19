@@ -1,0 +1,11 @@
+{
+  "id": "empty-cargo-manifest",
+  "date": "2026-08-16",
+  "symptom": "Every cargo command in wasm/ fails immediately with: error: failed to parse manifest at `wasm/Cargo.toml` — Caused by: manifest is missing either a `[package]` or a `[workspace]`",
+  "rootcause": "wasm/Cargo.toml is tracked in git but is 0 bytes. The directory layout advertises a Cargo project — src/lib-style modules and a tests/ folder — but no manifest was ever written, so cargo has nothing to parse. The Rust source and test placeholders under wasm/ are also empty.",
+  "fix": "Not a bug in the code — the Cargo project has not been created yet. Build with rustc as the README documents: `mkdir -p bin && rustc --edition=2021 -O reference/romania_search.rs -o bin/romania_search_rust`. Completing the manifest is build step 1, which moves the engine from reference/romania_search.rs into the wasm library and adds src/bin/cli.rs.",
+  "recurrence_risk": "low",
+  "invariant": null,
+  "automation_gap": "Cannot be gated in CI while it is the expected state. CI deliberately builds with rustc rather than cargo for this reason. Once step 1 lands, `cargo check` joins scripts/verify_invariants.sh and this entry becomes historical.",
+  "tags": ["cargo", "build", "scaffolding", "step-1"]
+}
