@@ -84,7 +84,7 @@ npm run verify:harness
 ```
 
 Checks the tooling rather than the engine: that `.claude/settings.json` is valid JSON,
-that its PostToolUse hook actually reacts to an edit under `server/src/`, that it stays
+that its PostToolUse hook actually reacts to an edit under `wasm/src/`, that it stays
 quiet on unrelated files, and that it never again branches on the nonexistent
 `CLAUDE_TOOL_INPUT*` variable. The command under test is read out of `settings.json`, so
 this cannot pass against a stale copy while the real hook is dead.

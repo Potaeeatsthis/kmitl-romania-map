@@ -14,10 +14,10 @@ Rootcause file: [`rootcause/empty-cargo-manifest.json`](rootcause/empty-cargo-ma
 
 ### Symptom
 
-Any cargo command run inside `server/` fails immediately:
+Any cargo command run inside `wasm/` fails immediately:
 
 ```
-error: failed to parse manifest at `/…/server/Cargo.toml`
+error: failed to parse manifest at `/…/wasm/Cargo.toml`
 
 Caused by:
   manifest is missing either a `[package]` or a `[workspace]`
@@ -26,11 +26,11 @@ Caused by:
 ### Diagnose
 
 ```bash
-wc -c server/Cargo.toml          # 0 → this is the cause
-git ls-files server | while read f; do [ -s "$f" ] || echo "EMPTY: $f"; done
+wc -c wasm/Cargo.toml          # 0 → this is the cause
+git ls-files wasm | while read f; do [ -s "$f" ] || echo "EMPTY: $f"; done
 ```
 
-Twelve further files under `server/` are also empty. This is expected: the directory
+The Rust source and test placeholders under `wasm/` are also empty. This is expected: the directory
 structure was committed before the Cargo project was created.
 
 ### Fix
@@ -40,14 +40,13 @@ documents:
 
 ```bash
 mkdir -p bin
-rustc --edition=2021 -O server/src/main.rs -o bin/romania_search_rust
+rustc --edition=2021 -O reference/romania_search.rs -o bin/romania_search_rust
 ./bin/romania_search_rust
 ```
 
-The permanent fix is build step 1 in `CLAUDE.md` — write the manifest and split
-`main.rs` into `lib.rs` + `src/bin/cli.rs`. Note that `server/tests/` cannot work until
-then either: Rust integration tests may only `use` a **library** crate, and `main.rs` is
-a binary, which exports nothing.
+The permanent fix is build step 1 in `CLAUDE.md` — write the manifest and move the engine from `reference/romania_search.rs` into the
+`wasm/` library plus `src/bin/cli.rs`. The `wasm/tests/` placeholders cannot work until
+then because Rust integration tests need a real library crate.
 
 ### Prevent
 
@@ -67,7 +66,7 @@ Rootcause file: [`rootcause/dead-posttooluse-hook.json`](rootcause/dead-posttool
 ### Symptom
 
 **There is no error message.** This failure presents as silence: you edit a file under
-`server/src/`, and nothing appears — no invariant check, no reminder that I2 needs the
+`wasm/src/`, and nothing appears — no invariant check, no reminder that I2 needs the
 same change in all three languages. A working hook and a dead hook look identical from
 the outside, which is why this survived from the day it was written.
 
@@ -106,7 +105,7 @@ untestable, which is how this went unnoticed. The script parses stdin with `pyth
 `npm run verify:harness`, wired into `npm run verify` and CI. It reads the command
 string out of `.claude/settings.json` and runs it against a synthetic payload, so it
 tests the real hook rather than a copy that could drift from it. It asserts the hook
-reacts to a `server/src/` path, stays quiet on an unrelated one, and that
+reacts to a `wasm/src/` path, stays quiet on an unrelated one, and that
 `settings.json` never mentions `CLAUDE_TOOL_INPUT*` again.
 
 Deliberately a separate script from `verify_invariants.sh`: the hook calls that script,

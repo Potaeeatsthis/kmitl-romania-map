@@ -89,7 +89,7 @@ echo "Hook behaviour"
 # Redirect from a file rather than piping: a hook that ignores stdin makes the writer
 # die with EPIPE, and under `set -o pipefail` that nonzero status would look like the
 # hook reacting when it did nothing at all.
-payload "$ROOT/server/src/main.rs" > "$BIN/engine.json"
+payload "$ROOT/wasm/src/search.rs" > "$BIN/engine.json"
 payload "$ROOT/README.md"          > "$BIN/other.json"
 
 while IFS= read -r command; do
@@ -118,9 +118,9 @@ while IFS= read -r command; do
   if [ "$healthy" -eq 0 ]; then
     : # already reported; an engine-file result means nothing while the command is broken
   elif [ -n "$engine_out" ] || [ "$engine_status" -ne 0 ]; then
-    pass "reacts to an edit under server/src/"
+    pass "reacts to an edit under wasm/src/"
   else
-    bad "silent on an edit under server/src/ -- the hook is not wired to anything"
+    bad "silent on an edit under wasm/src/ -- the hook is not wired to anything"
     echo "       command: $command"
   fi
 done < "$BIN/commands"

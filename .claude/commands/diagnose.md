@@ -16,7 +16,7 @@ instead, because nobody will ever arrive here with a string to search for.
 | Signature in the error | Rootcause | Runbook |
 |---|---|---|
 | `manifest is missing either a [package] or a [workspace]` + cargo | `empty-cargo-manifest` | §1 |
-| *(no error text)* Edits under `server/src/` produce no hook output; `--structural` never runs | `dead-posttooluse-hook` | §2 |
+| *(no error text)* Edits under `wasm/src/` produce no hook output; `--structural` never runs | `dead-posttooluse-hook` | §2 |
 | *(no error text)* `golden: FAIL` with a diff against `tests/golden/` | not a bug — read the diff before re-recording | §3 |
 
 ## Step 2 — Apply the known fix
@@ -50,7 +50,7 @@ cannot answer the question.
 2. `git log --oneline -5` — what changed recently
 3. `git diff HEAD~1` — what those changes were
 4. Check the relevant config: `package.json`, `.github/workflows/ci.yml`,
-   `scripts/verify_*.sh`, `server/Cargo.toml`
+   `scripts/verify_*.sh`, `wasm/Cargo.toml`
 5. Grep the failing symbol across the repository
 
 Then, if it is still unclear, branch on where it fails:

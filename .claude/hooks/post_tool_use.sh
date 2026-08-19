@@ -42,7 +42,7 @@ root="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "$0")/../.." && pwd)}"
 # I1 and I4 are grep-based, so this is fast enough to run on every keystroke-level edit.
 # --structural skips the compilers for the same reason.
 case "$file_path" in
-  */server/src/*)
+  */wasm/src/*)
     if ! out="$(bash "$root/scripts/verify_invariants.sh" --structural 2>&1)"; then
       {
         echo "Invariant check failed after editing $file_path"
@@ -55,8 +55,8 @@ case "$file_path" in
 esac
 
 case "$file_path" in
-  */reference/romania_search.*|*/server/src/*)
-    printf '%s\n' '{"systemMessage":"Algorithm file touched - I2 requires the same change in all three languages (server/src, reference/romania_search.py, reference/romania_search.cpp). Run: npm run verify:parity"}'
+  */reference/romania_search.*|*/wasm/src/*)
+    printf '%s\n' '{"systemMessage":"Algorithm file touched - I2 requires matching behavior in Rust, Python, and C++ (wasm/src and reference/romania_search.* during migration). Run: npm run verify:parity"}'
     ;;
 esac
 

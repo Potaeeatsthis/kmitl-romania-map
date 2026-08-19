@@ -26,14 +26,14 @@ web page that animates both searches side by side and reports their metrics.
 
 | Part | State |
 |---|---|
-| `server/src/main.rs` | **Working.** 319 lines: engine + terminal UI + benchmark harness |
+| `reference/romania_search.rs` | **Working.** 319 lines: engine + terminal UI + benchmark harness |
 | `reference/romania_search.py` | **Working.** 238 lines, matches Rust exactly |
 | `reference/romania_search.cpp` | **Working.** 304 lines, matches Rust exactly |
 | `docs/ideas.md`, `docs/ARCHITECTURE.md` | **Written.** Algorithm maths and architecture analysis |
-| `server/Cargo.toml` | **Empty (0 bytes).** No cargo command works yet |
-| `server/src/{graph,api,metrics}.rs`, `search/`, `heuristics/`, `tests/` | **Empty (0 bytes).** 12 placeholder files |
+| `wasm/Cargo.toml` | **Empty (0 bytes).** No cargo command works yet |
+| `wasm/src/*.rs`, `wasm/src/heuristics/`, `wasm/tests/` | **Empty (0 bytes).** Rust/Wasm placeholders only |
 | `components/`, `lib/`, `stores/` | **Empty.** Each file holds only its own path as a comment |
-| `data/romania.geojson` | **Empty (0 bytes)** |
+| `public/data/romania.geojson` | **Empty (0 bytes)** |
 | `app/page.tsx` | Renders the words "KMITL Romania Map" and nothing else |
 
 Verified across all 400 start/goal pairs: 0 cost mismatches against an independent
@@ -45,14 +45,14 @@ and counters.
 
 ## Architecture — Option C, Rust compiled to WebAssembly
 
-**Locked. Do not reopen this, and do not start filling in `server/src/api.rs`.**
+**Locked. Do not reopen this. The `wasm/` crate runs in the browser; do not add an HTTP backend.**
 
 The engine stays in Rust and compiles two ways: a native binary for the terminal and
 benchmarks, and a `.wasm` module that runs inside the visitor's browser. Hosting is
 static files on GitHub Pages.
 
 ```
-                 server/src/lib.rs
+                 wasm/src/lib.rs
                  (graph · search · heuristic · trace)
                         /            \
               cargo build          wasm-pack build
@@ -86,13 +86,14 @@ and `O(V²)` memory; browser-side precompute stops being viable well before that
 
 Six steps. Each has a check that must pass before the next begins.
 
-1. **Make `server/` a real Cargo project.** Fill `Cargo.toml`; split `main.rs` into
-   `lib.rs` + `graph.rs` + `search.rs` + `heuristic.rs` and `src/bin/cli.rs`; convert
+1. **Make `wasm/` a real Cargo project.** Fill `Cargo.toml`; move the engine from
+   `reference/romania_search.rs` into `lib.rs`, `graph.rs`, the single `search.rs`,
+   `heuristics/current_flow.rs`, and `src/bin/cli.rs`; convert
    `panic!("No route exists…")` to a `Result`; delete unused placeholders.
    → *check:* `cargo run --bin cli` output byte-identical to today's.
 2. **Record the trace.** A frontier snapshot per expansion, inside `search()`.
    → *check:* trace length equals `expanded` (13 UCS, 9 A\* on Arad→Bucharest).
-3. **Fill `server/tests/`.** Port `scripts/verify_correctness.py` to `cargo test`.
+3. **Fill `wasm/tests/`.** Port `scripts/verify_correctness.py` to `cargo test`.
    → *check:* `cargo test` green.
 4. **Cross to WebAssembly.** `wasm-bindgen` wrapper plus build-time heuristic tables.
    → *check:* wasm results match the native CLI on all 400 pairs.
@@ -105,18 +106,21 @@ Six steps. Each has a check that must pass before the next begins.
 Target layout after step 4:
 
 ```
-server/
-├── Cargo.toml          [package] [lib] [[bin]]
+wasm/
+├── Cargo.toml                    [package] [lib] [[bin]]
+├── data/
+│   └── heuristics.json           precomputed A* tables
 ├── src/
-│   ├── lib.rs          ties the modules together
-│   ├── graph.rs        CITIES, Graph, make_graph
-│   ├── search.rs       ONE search() — UCS and A* both
-│   ├── heuristic.rs    current_flow_heuristic
-│   ├── trace.rs        animation timeline
-│   ├── wasm.rs         wasm-bindgen boundary
+│   ├── lib.rs                    modules + wasm-bindgen boundary
+│   ├── graph.rs                  CITIES, Graph, make_graph
+│   ├── search.rs                 ONE search() — UCS and A* both
+│   ├── metrics.rs                counters and result metrics
+│   ├── heuristics/
+│   │   ├── mod.rs
+│   │   └── current_flow.rs       heuristic lookup and validation
 │   └── bin/
-│       ├── cli.rs      stdin UI, benchmarks
-│       └── export.rs   writes heuristics.json + benchmarks.json
+│       ├── cli.rs                stdin UI, native benchmarks
+│       └── export.rs             writes heuristic/benchmark data
 └── tests/
 ```
 
@@ -132,8 +136,8 @@ server/
 | **I4** | Engine code uses no `std::io`, `std::time`, `println!`, `eprintln!` or `black_box` — those belong to `bin/cli.rs` | `Instant` panics on `wasm32`, so a leak breaks the browser build at runtime rather than at compile time |
 | **I5** | Runtime numbers come from native runs only, never from a browser | Chrome coarsens `performance.now()` to ~100 µs as a Spectre mitigation, against a ~1 µs search. Report expansion counts — they are exact integers, identical on every machine |
 
-**Do not create `server/src/search/ucs.rs` and `server/src/search/astar.rs`.** The empty
-placeholders invite this and it violates I1. One `search.rs`.
+**Do not reintroduce `wasm/src/search/ucs.rs` or `wasm/src/search/astar.rs`.**
+They violate I1. Keep one `wasm/src/search.rs`.
 
 `npm run verify` checks I1–I4. I5 is a convention.
 
@@ -151,7 +155,7 @@ placeholders invite this and it violates I1. One `search.rs`.
   browser boundary only, never for the search or the heuristic
 - Heuristic tables are precomputed at build time and shipped as JSON; the browser never
   runs Gauss-Jordan
-- Benchmarks are produced natively by `bin/cli.rs`, committed as `benchmarks.json`
+- Benchmarks are produced natively by `wasm/src/bin/cli.rs`, committed as `benchmarks.json`
 - The SVG schematic graph is the primary view; MapLibre is an optional enhancement layered
   on a project that already works
 - `search()` returns `Result`, never `panic!`, once step 1 lands — a panic in wasm takes
@@ -199,7 +203,7 @@ npm run typecheck           # tsc --noEmit
 
 # Run the three implementations (they prompt for two city names)
 mkdir -p bin
-rustc --edition=2021 -O server/src/main.rs -o bin/romania_search_rust && ./bin/romania_search_rust
+rustc --edition=2021 -O reference/romania_search.rs -o bin/romania_search_rust && ./bin/romania_search_rust
 g++ -std=c++17 -O2 reference/romania_search.cpp -o bin/romania_search_cpp && ./bin/romania_search_cpp
 python3 reference/romania_search.py
 ```
@@ -211,7 +215,7 @@ After step 1 lands, add `cargo test`, `cargo clippy -- -D warnings` and
 
 ## Known gotchas
 
-- **`cargo` does not work.** `server/Cargo.toml` is 0 bytes; every cargo command fails with
+- **`cargo` does not work.** `wasm/Cargo.toml` is 0 bytes; every cargo command fails with
   `manifest is missing either a [package] or a [workspace]`. Build with `rustc` until step 1.
 - **`python3 reference/romania_search.py` fails if the working directory has moved.** Shell
   state can persist between commands; use an absolute path or `cd` to the repo root first.
@@ -233,13 +237,14 @@ After step 1 lands, add `cargo test`, `cargo clippy -- -D warnings` and
 
 - Remote is `Potaeeatsthis/kmitl-romania-map`; default branch `master`, work happens on `dev`
   and feature branches
-- Branch names: `feat/step<N>-<name>`, e.g. `feat/step1-cargo-restructure`
+- Branch names: `feat/step<N>-<name>`, e.g. `feat/step1-wasm-crate`
 - Conventional commits: `feat:`, `fix:`, `test:`, `chore:`, `docs:`
 - One PR per build step; CI must be green before merge
 - **Claude does not commit or push unless explicitly told to**
-- The step-1 restructure moves every line of `main.rs`, so it must be one person in one PR,
+- The step-1 restructure moves the engine from `reference/romania_search.rs` into `wasm/`,
+  so it must be one person in one PR,
   **merged before anyone else starts Rust work**. Rust work and frontend work touch disjoint
-  files and can run in parallel; two people inside `server/src/` at the same time cannot
+  files and can run in parallel; two people inside `wasm/src/` at the same time cannot
 - Repository settings need admin, which only `Potaeeatsthis` has. Two are required and are
   not yet enabled: branch protection on `master` requiring the `correctness` and `frontend`
   checks, and Settings → Pages → Source: GitHub Actions (needed by build step 6)
