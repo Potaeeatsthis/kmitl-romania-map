@@ -1,0 +1,13 @@
+[package]
+name = "romania-search"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "romania_search"
+path = "src/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "cli"
+path = "src/bin/cli.rs"
