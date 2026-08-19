@@ -12,7 +12,7 @@ The detailed project idea and mathematics are available in
 
 ## Current project status
 
-The implementation is complete. The Python, C++, and Rust programs:
+The standalone Python, C++, and Rust reference programs:
 
 - use the same 20 cities, roads, and distances;
 - accept a current city and goal city from the user;
@@ -28,10 +28,11 @@ The implementation is complete. The Python, C++, and Rust programs:
 | Path | Purpose |
 |---|---|
 | `app/` | Minimal Next.js App Router entry point |
-| `components/`, `stores/`, `lib/` | Path-comment placeholders for frontend features |
+| `components/`, `stores/`, `lib/` | Frontend placeholders grouped by UI, state, and Wasm integration responsibility |
 | `package.json`, `tsconfig.json` | Next.js and TypeScript configuration |
-| `data/romania.geojson` | Empty GeoJSON placeholder |
-| `server/` | Existing Rust CLI in `main.rs`; remaining files are placeholders |
+| `public/data/romania.geojson` | Browser-served GeoJSON placeholder |
+| `wasm/` | Rust WebAssembly crate structure and heuristic-data placeholder |
+| `reference/romania_search.rs` | Existing native Rust CLI reference implementation |
 | `reference/romania_search.py` | Python 3 reference implementation |
 | `reference/romania_search.cpp` | C++17 reference implementation |
 | `docs/ideas.md` | Algorithm explanation and mathematical specification |
@@ -121,10 +122,10 @@ g++ -std=c++17 -O2 reference/romania_search.cpp -o bin/romania_search_cpp
 
 ### Rust
 
-Compile the relocated source and run:
+Compile the reference source and run:
 
 ```bash
-rustc --edition=2021 -O server/src/main.rs -o bin/romania_search_rust
+rustc --edition=2021 -O reference/romania_search.rs -o bin/romania_search_rust
 ./bin/romania_search_rust
 ```
 
