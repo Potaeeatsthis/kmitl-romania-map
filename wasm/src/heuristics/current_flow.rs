@@ -1,5 +1,7 @@
 use crate::graph::{Graph, CITY_COUNT};
 
+include!(concat!(env!("OUT_DIR"), "/current_flow_table.rs"));
+
 /// I4: engine code never panics. A disconnected graph is a value, not a crash.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HeuristicError {
@@ -13,6 +15,13 @@ pub enum HeuristicError {
 pub struct HeuristicResult {
     pub values: Vec<f64>,
     pub logical_workspace_bytes: usize,
+}
+
+pub fn current_flow_for_goal(goal: usize) -> Result<&'static [f64], HeuristicError> {
+    if goal >= CITY_COUNT {
+        return Err(HeuristicError::InvalidGoal(goal));
+    }
+    Ok(&CURRENT_FLOW_HEURISTICS[goal])
 }
 
 pub fn current_flow_heuristic(

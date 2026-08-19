@@ -26,12 +26,13 @@ web page that animates both searches side by side and reports their metrics.
 
 | Part | State |
 |---|---|
-| `reference/romania_search.rs` | **Working.** 319 lines: engine + terminal UI + benchmark harness |
+| `reference/romania_search.rs` | **Working baseline.** Transitional native implementation kept for comparison |
 | `reference/romania_search.py` | **Working.** 238 lines, matches Rust exactly |
 | `reference/romania_search.cpp` | **Working.** 304 lines, matches Rust exactly |
 | `docs/ideas.md`, `docs/ARCHITECTURE.md` | **Written.** Algorithm maths and architecture analysis |
-| `wasm/Cargo.toml` | **Empty (0 bytes).** No cargo command works yet |
-| `wasm/src/*.rs`, `wasm/src/heuristics/`, `wasm/tests/` | **Empty (0 bytes).** Rust/Wasm placeholders only |
+| `wasm/Cargo.toml`, `wasm/src/bin/cli.rs` | **Working.** Native Cargo library and CLI |
+| `wasm/src/*.rs`, `wasm/src/heuristics/` | **Working.** Shared UCS/A* engine with an animation trace |
+| `wasm/tests/` | **Working.** All-pairs optimality, heuristic, and trace tests |
 | `components/`, `lib/`, `stores/` | **Empty.** Each file holds only its own path as a comment |
 | `public/data/romania.geojson` | **Empty (0 bytes)** |
 | `app/page.tsx` | Renders the words "KMITL Romania Map" and nothing else |
@@ -158,8 +159,8 @@ They violate I1. Keep one `wasm/src/search.rs`.
 - Benchmarks are produced natively by `wasm/src/bin/cli.rs`, committed as `benchmarks.json`
 - The SVG schematic graph is the primary view; MapLibre is an optional enhancement layered
   on a project that already works
-- `search()` returns `Result`, never `panic!`, once step 1 lands — a panic in wasm takes
-  down the whole page
+- `search()` returns `Result`, never `panic!` — a panic in wasm would take down the
+  whole page
 
 ---
 
@@ -202,21 +203,19 @@ npm run verify:correctness  # I3 — 400 pairs, admissibility, consistency
 npm run typecheck           # tsc --noEmit
 
 # Run the three implementations (they prompt for two city names)
+cargo run --release --manifest-path wasm/Cargo.toml --bin cli
 mkdir -p bin
-rustc --edition=2021 -O reference/romania_search.rs -o bin/romania_search_rust && ./bin/romania_search_rust
 g++ -std=c++17 -O2 reference/romania_search.cpp -o bin/romania_search_cpp && ./bin/romania_search_cpp
 python3 reference/romania_search.py
 ```
 
-After step 1 lands, add `cargo test`, `cargo clippy -- -D warnings` and
-`cargo fmt --check`, and extend `scripts/verify_invariants.sh` to call them.
 
 ---
 
 ## Known gotchas
 
-- **`cargo` does not work.** `wasm/Cargo.toml` is 0 bytes; every cargo command fails with
-  `manifest is missing either a [package] or a [workspace]`. Build with `rustc` until step 1.
+- **`heuristics.json` is compiled by `wasm/build.rs`.** Cargo validates and embeds the
+  table; malformed data fails the build before the engine runs.
 - **`python3 reference/romania_search.py` fails if the working directory has moved.** Shell
   state can persist between commands; use an absolute path or `cd` to the repo root first.
 - **`bin/` must exist** before `rustc -o bin/…` or `g++ -o bin/…` — it is gitignored, so a

@@ -118,5 +118,6 @@ SearchControls
     -> MapView + ResultsChart
 ```
 
-This document defines structure and responsibility only. The Wasm interface,
-algorithms, state actions, animation, and charts have not been implemented yet.
+The native Rust engine, heuristic table, trace, and correctness tests are implemented.
+The `wasm-bindgen` interface, Zustand actions, map animation, and charts are still
+future work.

@@ -85,6 +85,35 @@ else
   bad "$RUST_TOOL failed"; sed 's/^/       /' "$BIN/rs.log"
 fi
 
+if [ -s wasm/Cargo.toml ]; then
+  if cargo check --all-targets --manifest-path wasm/Cargo.toml \
+      --target-dir "$BIN/cargo-target" >"$BIN/cargo-check.log" 2>&1; then
+    pass "cargo check --all-targets"
+  else
+    bad "cargo check failed"; sed 's/^/       /' "$BIN/cargo-check.log"
+  fi
+
+  if cargo test --all-targets --manifest-path wasm/Cargo.toml \
+      --target-dir "$BIN/cargo-target" >"$BIN/cargo-test.log" 2>&1; then
+    pass "cargo test --all-targets"
+  else
+    bad "cargo test failed"; sed 's/^/       /' "$BIN/cargo-test.log"
+  fi
+
+  if cargo clippy --all-targets --manifest-path wasm/Cargo.toml \
+      --target-dir "$BIN/cargo-target" -- -D warnings >"$BIN/clippy.log" 2>&1; then
+    pass "cargo clippy --all-targets -- -D warnings"
+  else
+    bad "cargo clippy failed"; sed 's/^/       /' "$BIN/clippy.log"
+  fi
+
+  if cargo fmt --manifest-path wasm/Cargo.toml -- --check >"$BIN/fmt.log" 2>&1; then
+    pass "cargo fmt --check"
+  else
+    bad "cargo fmt failed"; sed 's/^/       /' "$BIN/fmt.log"
+  fi
+fi
+
 if g++ -std=c++17 -O2 -Wall -Wextra reference/romania_search.cpp -o "$BIN/cpp" 2>"$BIN/cpp.log"; then
   n=$(grep -c 'warning:' "$BIN/cpp.log" || true)
   if [ "$n" -gt 0 ]; then
