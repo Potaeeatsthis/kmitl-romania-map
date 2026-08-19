@@ -147,7 +147,7 @@ Save it as frontend sample data:
 
 ```bash
 cargo run --quiet --manifest-path wasm/Cargo.toml --bin export_sample \
-  > public/data/data-search.json
+  > public/data/arad-bucharest-search.json
 ```
 
 The sample is calculated by Rust. The frontend only reads and displays it.
