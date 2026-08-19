@@ -64,11 +64,7 @@ fn validate_city_order(source: &str) {
     let after_start = &city_section[start + 1..];
     let end = after_start.find(']').expect("cities array must close");
 
-    let actual: Vec<_> = after_start[..end]
-        .split('"')
-        .skip(1)
-        .step_by(2)
-        .collect();
+    let actual: Vec<_> = after_start[..end].split('"').skip(1).step_by(2).collect();
 
     assert_eq!(actual, CITIES, "heuristic city order must match the graph");
 }
