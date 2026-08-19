@@ -58,22 +58,18 @@ fn validate_city_order(source: &str) {
     let cities_key = source
         .find("\"cities\"")
         .expect("heuristics.json needs cities");
-    let values_key = source
-        .find("\"values_by_goal\"")
-        .expect("heuristics.json needs values_by_goal");
-    assert!(
-        cities_key < values_key,
-        "cities must come before values_by_goal"
-    );
 
-    let city_section = &source[cities_key..values_key];
+    let city_section = &source[cities_key..];
     let start = city_section.find('[').expect("cities must be an array");
-    let end = city_section.rfind(']').expect("cities array must close");
-    let actual: Vec<_> = city_section[start + 1..end]
+    let after_start = &city_section[start + 1..];
+    let end = after_start.find(']').expect("cities array must close");
+
+    let actual: Vec<_> = after_start[..end]
         .split('"')
         .skip(1)
         .step_by(2)
         .collect();
+
     assert_eq!(actual, CITIES, "heuristic city order must match the graph");
 }
 
