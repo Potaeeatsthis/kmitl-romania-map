@@ -72,6 +72,68 @@ else
   echo "$hits" | sed 's/^/       /'
 fi
 
+echo
+echo "Test inventory"
+# Deleting a test makes the suite *greener*, so nothing else in this harness notices.
+# Measured: removing trace_records_one_complete_frame_per_expansion left cargo test and
+# every verify script passing (scripts/verify_mutation.sh, M8).
+#
+# Renaming a test on purpose means editing this list too -- which is the point. The edit
+# shows up in the diff, where a reviewer can see coverage being moved rather than lost.
+REQUIRED_TESTS="
+ucs_finds_the_known_optimal_route
+ucs_matches_an_independent_solver_for_every_city_pair
+trace_records_one_complete_frame_per_expansion
+invalid_inputs_return_errors_instead_of_panicking
+current_flow_astar_finds_the_known_optimal_route
+current_flow_astar_is_optimal_for_every_city_pair
+current_flow_table_is_admissible_and_zero_at_every_goal
+current_flow_table_is_consistent_on_every_road
+embedded_table_matches_runtime_heuristic
+embedded_table_rejects_an_invalid_goal
+ucs_trace_matches_the_committed_golden
+astar_trace_matches_the_committed_golden
+"
+missing=""
+for name in $REQUIRED_TESTS; do
+  grep -rqE "^fn $name\\(" wasm/tests/*.rs 2>/dev/null || missing="$missing $name"
+done
+if [ -z "$missing" ]; then
+  count=$(echo $REQUIRED_TESTS | wc -w | tr -d ' ')
+  pass "all $count required tests are present"
+else
+  bad "tests missing -- deleted, or renamed without updating this list:"
+  for name in $missing; do echo "         $name"; done
+fi
+
+echo
+echo "Locked decision — priority-queue tie-break"
+# CLAUDE.md locks the tie-break at (f, g, city). Swapping the secondary keys to
+# (f, city, g) was measured to produce identical explored order on all 800 start/goal/
+# algorithm combinations, so no behavioural gate can see it (verify_mutation.sh, M3).
+# Behaviour cannot police this, so the source text does.
+#
+# Only the BinaryHeap ordering is checked here. make_step() has a second comparator, for
+# the order the frontier is displayed in each trace frame; that one is pinned by the
+# committed trace goldens instead, because a change there is visible in the output.
+#
+# The C++ and Python tie-breaks are equally invisible to behavioural gates. They are not
+# checked here: three greps over three encodings to pin one decision is more brittleness
+# than it buys, and those two are reference implementations rather than the engine.
+if [ -s wasm/src/search.rs ]; then
+  order=$(sed -n '/impl Ord for QueueEntry/,/^}/p' wasm/src/search.rs \
+          | grep -oE 'total_cmp\(&self\.f\)|other\.g\.cmp\(&self\.g\)|other\.city\.cmp\(&self\.city\)' \
+          | paste -sd'|' -)
+  expected='total_cmp(&self.f)|other.g.cmp(&self.g)|other.city.cmp(&self.city)'
+  if [ "$order" = "$expected" ]; then
+    pass "QueueEntry orders by (f, g, city)"
+  else
+    bad "tie-break changed -- CLAUDE.md locks (f, g, city)"
+    echo "         expected: $expected"
+    echo "         found:    ${order:-<no comparison keys matched>}"
+  fi
+fi
+
 if [ "$STRUCTURAL_ONLY" -eq 1 ]; then
   [ "$fail" -eq 0 ] || echo "invariants: FAIL"
   exit "$fail"
@@ -86,22 +148,24 @@ else
 fi
 
 if [ -s wasm/Cargo.toml ]; then
+  # Same directory rust_build uses, so check/test/clippy reuse the build it just did.
+  CARGO_TARGET="${CARGO_TARGET_DIR:-$BIN/cargo-target}"
   if cargo check --all-targets --manifest-path wasm/Cargo.toml \
-      --target-dir "$BIN/cargo-target" >"$BIN/cargo-check.log" 2>&1; then
+      --target-dir "$CARGO_TARGET" >"$BIN/cargo-check.log" 2>&1; then
     pass "cargo check --all-targets"
   else
     bad "cargo check failed"; sed 's/^/       /' "$BIN/cargo-check.log"
   fi
 
   if cargo test --all-targets --manifest-path wasm/Cargo.toml \
-      --target-dir "$BIN/cargo-target" >"$BIN/cargo-test.log" 2>&1; then
+      --target-dir "$CARGO_TARGET" >"$BIN/cargo-test.log" 2>&1; then
     pass "cargo test --all-targets"
   else
     bad "cargo test failed"; sed 's/^/       /' "$BIN/cargo-test.log"
   fi
 
   if cargo clippy --all-targets --manifest-path wasm/Cargo.toml \
-      --target-dir "$BIN/cargo-target" -- -D warnings >"$BIN/clippy.log" 2>&1; then
+      --target-dir "$CARGO_TARGET" -- -D warnings >"$BIN/clippy.log" 2>&1; then
     pass "cargo clippy --all-targets -- -D warnings"
   else
     bad "cargo clippy failed"; sed 's/^/       /' "$BIN/clippy.log"

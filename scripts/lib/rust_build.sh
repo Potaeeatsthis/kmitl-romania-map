@@ -15,15 +15,20 @@
 rust_build() {
   local workdir="$1" log="$2" mode="$3"
 
+  # CI sets CARGO_TARGET_DIR so every script shares one cached directory instead of
+  # compiling the crate from scratch four times per run. Unset locally, so each script
+  # keeps using its own throwaway directory and nothing is left behind.
+  local target_dir="${CARGO_TARGET_DIR:-$workdir/target}"
+
   if [ -s wasm/Cargo.toml ]; then
     RUST_TOOL="cargo"
-    RUST_BIN="$workdir/target/release/cli"
+    RUST_BIN="$target_dir/release/cli"
     if [ "$mode" = "strict" ]; then
       RUSTFLAGS="-D warnings" cargo build --release --all-targets \
-        --manifest-path wasm/Cargo.toml --target-dir "$workdir/target" 2>"$log" || return 1
+        --manifest-path wasm/Cargo.toml --target-dir "$target_dir" 2>"$log" || return 1
     else
       cargo build --release --bin cli \
-        --manifest-path wasm/Cargo.toml --target-dir "$workdir/target" 2>"$log" || return 1
+        --manifest-path wasm/Cargo.toml --target-dir "$target_dir" 2>"$log" || return 1
     fi
   else
     RUST_TOOL="rustc"
