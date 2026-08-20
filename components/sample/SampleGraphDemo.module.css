@@ -127,13 +127,14 @@
 }
 
 .searchTree line {
-  stroke-width: 3;
+  stroke-width: 1.5;
   stroke-linecap: round;
   stroke-dasharray: 5 5;
   opacity: 0.55;
 }
 
-.finalPath line { stroke-width: 6; stroke-linecap: round; opacity: 0.9; }
+.expandedTree line { stroke-width: 2; stroke-linecap: round; opacity: 1; }
+.finalPath line { stroke-width: 3; stroke-linecap: round; opacity: 1; }
 .ucsTree, .ucsPath { stroke: var(--green-mid); }
 .astarTree, .astarPath { stroke: var(--green-bright); }
 
@@ -153,6 +154,15 @@
   stroke-width: 7px;
   stroke-linejoin: round;
 }
+
+.city .cityLabelBackground {
+  stroke: none;
+  transition: fill 0.25s;
+}
+
+.city .labelAstar { fill: #ddeb9d; }
+.city .labelUcs { fill: #a0c878; }
+.city .labelBoth { fill: url(#shared-label-highlight); }
 
 .expanded rect { fill: var(--green-soft); stroke: #67977a; }
 .frontierUcs rect { fill: var(--surface); stroke: var(--green-mid); stroke-width: 4; }
@@ -243,12 +253,16 @@
 .swatchExpanded,
 .swatchUcs,
 .swatchAstar,
+.swatchUcsHighlight,
+.swatchAstarHighlight,
 .swatchPath { flex: 0 0 auto; width: 14px; height: 14px; }
 
 .swatchCity { border: 1px solid #7da58e; background: var(--surface); }
 .swatchExpanded { background: var(--green-soft); }
 .swatchUcs { border: 3px solid var(--green-mid); }
 .swatchAstar { border: 3px solid var(--green-bright); }
+.swatchUcsHighlight { background: #a0c878; }
+.swatchAstarHighlight { background: #ddeb9d; }
 .swatchPath { background: #62c98d; }
 
 .countyLines path {
