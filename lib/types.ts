@@ -1,3 +1,4 @@
+// lib/types.ts
 export interface FrontierNode {
   city: number;
   cost: number;
