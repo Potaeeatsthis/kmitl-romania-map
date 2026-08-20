@@ -113,6 +113,9 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
+      - name: Verify frontend sample contract
+        run: npm run verify:frontend-sample
+
       # tsc --noEmit is not the same check as a real build: it does not catch
       # "use client" boundary violations, invalid route segment exports, or a
       # server-only import pulled into a client component.

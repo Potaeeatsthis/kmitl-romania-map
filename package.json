@@ -7,13 +7,14 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
+    "verify:frontend-sample": "node scripts/verify_frontend_sample.mjs",
     "verify:invariants": "bash scripts/verify_invariants.sh",
     "verify:parity": "bash scripts/verify_parity.sh",
     "verify:correctness": "python3 scripts/verify_correctness.py",
     "verify:golden": "bash scripts/verify_golden.sh",
     "verify:harness": "bash scripts/verify_harness.sh",
     "verify:mutation": "bash scripts/verify_mutation.sh",
-    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness"
+    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness && npm run verify:frontend-sample"
   },
   "dependencies": {
     "next": "16.3.1",
