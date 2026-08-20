@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
 import sampleData from "../../public/data/arad-bucharest-search.json";
-import type { DiscoveredNode, SearchResponse, SearchResult } from "../../lib/types";
+import type { DiscoveredNode, SearchResponse } from "../../lib/types";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import styles from "./SampleGraphDemo.module.css";
 
@@ -107,6 +107,14 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
     <section className={styles.content}>
       <div className={styles.mapPanel}>
         <svg className={styles.map} viewBox="120 60 900 630" aria-label="Animated Romania road graph" role="img">
+          <defs>
+            <linearGradient id="shared-label-highlight" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#A0C878" />
+              <stop offset="50%" stopColor="#A0C878" />
+              <stop offset="50%" stopColor="#DDEB9D" />
+              <stop offset="100%" stopColor="#DDEB9D" />
+            </linearGradient>
+          </defs>
           <g className={styles.countyLines}>
             {countyOutlines.map((d, i) => (
               <path key={i} d={d} />
@@ -125,8 +133,10 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
 
           <SearchTreeLines discovered={ucsFrame.discovered} cityById={cityById} className={styles.ucsTree} offset={-2} />
           <SearchTreeLines discovered={astarFrame.discovered} cityById={cityById} className={styles.astarTree} offset={2} />
-          {ucsComplete && <PathLines result={data.ucs} cityById={cityById} className={styles.ucsPath} offset={-3} />}
-          {astarComplete && <PathLines result={data.astar} cityById={cityById} className={styles.astarPath} offset={3} />}
+          <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} cityById={cityById} className={styles.ucsPath} offset={-3} />
+          <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} cityById={cityById} className={styles.astarPath} offset={3} />
+          {ucsComplete && <PathLines path={data.ucs.path} cityById={cityById} className={styles.ucsPath} offset={-3} />}
+          {astarComplete && <PathLines path={data.astar.path} cityById={cityById} className={styles.astarPath} offset={3} />}
 
           <g className={styles.roadLabels}>
             {romaniaGraph.roads.map(([from, to, distance]) => {
@@ -140,6 +150,23 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
 
           {romaniaGraph.cities.map((city) => {
             const offset = labelOffsets[city.id] ?? { x: 0, y: 22 };
+            const labelX = city.x + offset.x;
+            const labelY = city.y + offset.y;
+            const isTwoLineLabel = city.id === 9;
+            const labelWidth = (isTwoLineLabel ? 7 : city.name.length) * 6.6 + 10;
+            const ucsLabelHighlighted = ucsComplete
+              ? data.ucs.path.includes(city.id)
+              : ucsFrame.expanded_city === city.id;
+            const astarLabelHighlighted = astarComplete
+              ? data.astar.path.includes(city.id)
+              : astarFrame.expanded_city === city.id;
+            const labelHighlightClass = ucsLabelHighlighted && astarLabelHighlighted
+              ? styles.labelBoth
+              : astarLabelHighlighted
+                ? styles.labelAstar
+                : ucsLabelHighlighted
+                  ? styles.labelUcs
+                  : "";
             const inUcsFrontier = ucsFrontier.has(city.id);
             const inAstarFrontier = astarFrontier.has(city.id);
             const classes = [
@@ -152,8 +179,25 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
 
             return (
               <g key={city.id} className={classes}>
+                {labelHighlightClass && (
+                  <rect
+                    className={[styles.cityLabelBackground, labelHighlightClass].join(" ")}
+                    x={labelX - labelWidth / 2}
+                    y={labelY - (isTwoLineLabel ? 17 : 13)}
+                    width={labelWidth}
+                    height={isTwoLineLabel ? 28 : 18}
+                    rx="3"
+                  />
+                )}
                 <rect x={city.x - 5} y={city.y - 5} width="10" height="10" rx="2" />
-                <text x={city.x + offset.x} y={city.y + offset.y}>{city.name}</text>
+                <text x={labelX} y={labelY}>
+                  {city.id === 9 ? (
+                    <>
+                      <tspan x={labelX} y={labelY - 6}>Rimnicu</tspan>
+                      <tspan x={labelX} y={labelY + 6}>Vilcea</tspan>
+                    </>
+                  ) : city.name}
+                </text>
               </g>
             );
           })}
@@ -182,6 +226,8 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
           <Legend className={styles.swatchExpanded} label="Expanded" />
           <Legend className={styles.swatchUcs} label="UCS frontier / tree" />
           <Legend className={styles.swatchAstar} label="A* frontier / tree" />
+          <Legend className={styles.swatchUcsHighlight} label="UCS city highlight" />
+          <Legend className={styles.swatchAstarHighlight} label="A* city highlight" />
           <Legend className={styles.swatchPath} label="Final optimal path" />
         </div>
       </aside>
@@ -221,11 +267,21 @@ function SearchTreeLines({ discovered, cityById, className, offset }: { discover
   );
 }
 
-function PathLines({ result, cityById, className, offset }: { result: SearchResult; cityById: Map<number, CityPosition>; className: string; offset: number }) {
+function ExpandedTreeLines({ discovered, expanded, cityById, className, offset }: { discovered: DiscoveredNode[]; expanded: Set<number>; cityById: Map<number, CityPosition>; className: string; offset: number }) {
+  return (
+    <g className={styles.expandedTree}>
+      {discovered.map((node) => node.parent === null || !expanded.has(node.city) ? null : (
+        <GraphLine key={node.parent + "-" + node.city} from={node.parent} to={node.city} cityById={cityById} className={className} offset={offset} />
+      ))}
+    </g>
+  );
+}
+
+function PathLines({ path, cityById, className, offset }: { path: number[]; cityById: Map<number, CityPosition>; className: string; offset: number }) {
   return (
     <g className={styles.finalPath}>
-      {result.path.slice(0, -1).map((city, index) => (
-        <GraphLine key={`${city}-${result.path[index + 1]}`} from={city} to={result.path[index + 1]} cityById={cityById} className={className} offset={offset} />
+      {path.slice(0, -1).map((city, index) => (
+        <GraphLine key={city + "-" + path[index + 1]} from={city} to={path[index + 1]} cityById={cityById} className={className} offset={offset} />
       ))}
     </g>
   );
