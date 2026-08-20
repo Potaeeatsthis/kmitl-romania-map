@@ -166,12 +166,13 @@ The project's central claim is that three languages produce the same result. The
 enforce it, and CI runs exactly the same scripts:
 
 ```bash
-npm run verify              # the five gates below, in order
+npm run verify              # all verification gates below, in order
 npm run verify:invariants   # one search(), wasm-safe engine, tie-break, test inventory, builds
 npm run verify:parity       # Rust, C++ and Python agree on every deterministic field
 npm run verify:correctness  # 400 pairs vs Dijkstra, admissibility, consistency
 npm run verify:golden       # full CLI output against tests/golden/
 npm run verify:harness      # the PostToolUse hook is wired and reacts
+npm run verify:frontend-sample # Rust JSON matches the frontend trace contract
 npm run typecheck           # requires `npm install` first
 cargo test --manifest-path wasm/Cargo.toml
 ```

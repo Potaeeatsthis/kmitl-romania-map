@@ -64,7 +64,7 @@ fn render(result: &SearchResult) -> String {
         writeln!(
             out,
             "{index:02} expanded={} cost={} | frontier {} | discovered {}",
-            step.expanded,
+            step.expanded_city,
             step.expanded_cost,
             frontier.join(","),
             discovered.join(",")

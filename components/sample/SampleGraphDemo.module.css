@@ -1,0 +1,168 @@
+.page {
+  min-height: 100vh;
+  padding: 30px 4vw 42px;
+  color: #18251f;
+  background: radial-gradient(circle at 88% 4%, #e5f0e7 0, transparent 26%), #f4f3ed;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.header {
+  max-width: 1400px;
+  margin: 0 auto 22px;
+  padding-bottom: 18px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  border-bottom: 1px solid #d8ddd4;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  color: #2e8b57;
+  font: 700 11px Arial, sans-serif;
+  letter-spacing: 0.14em;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(34px, 4.5vw, 54px);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.status {
+  margin: 0;
+  color: #53605a;
+  font-size: 13px;
+}
+
+.content {
+  max-width: 1400px;
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.6fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.mapPanel,
+.panel {
+  border: 1px solid #d8ddd4;
+  background: rgba(251, 250, 245, 0.94);
+  box-shadow: 0 12px 30px rgba(24, 37, 31, 0.05);
+}
+
+.mapPanel { padding: 8px; }
+
+.map {
+  display: block;
+  width: 100%;
+  min-height: 590px;
+  background-color: #fdfdfb;
+  background-image: linear-gradient(#edf0eb 1px, transparent 1px), linear-gradient(90deg, #edf0eb 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.roads line { stroke: #a7ada9; stroke-width: 1.5; }
+.roads text { fill: #53605a; font: 10px Arial, sans-serif; text-anchor: middle; }
+
+.searchTree line {
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 5 5;
+  opacity: 0.7;
+}
+
+.finalPath line { stroke-width: 6; stroke-linecap: round; opacity: 0.9; }
+.ucsTree, .ucsPath { stroke: #3cb371; }
+.astarTree, .astarPath { stroke: #2f6f7e; }
+
+.city rect {
+  fill: #e8c39e;
+  stroke: #c9a47f;
+  stroke-width: 1;
+  transition: fill 0.25s, stroke 0.25s;
+}
+
+.city text {
+  fill: #18251f;
+  font-size: 11px;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #fdfdfb;
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.expanded rect { fill: #a0aec0; stroke: #7d8997; }
+.frontierUcs rect { fill: #e8c39e; stroke: #3cb371; stroke-width: 4; }
+.frontierAstar rect { fill: #e8c39e; stroke: #2f6f7e; stroke-width: 4; }
+.frontierBoth rect { fill: #e8c39e; stroke: #6a5acd; stroke-width: 4; }
+.active rect { fill: #ffd166; stroke: #a86f00; stroke-width: 4; }
+.path rect { fill: #7bd8a0; stroke: #236b44; stroke-width: 2; }
+
+.panel { padding: 26px 24px; }
+.panel h2 { margin: 0 0 22px; font-size: 24px; font-weight: 500; line-height: 1.15; }
+
+.progress { height: 6px; overflow: hidden; background: #dfe4de; }
+.progress span { display: block; height: 100%; background: #2e8b57; transition: width 0.25s; }
+
+.currentGrid,
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 22px;
+  border-top: 1px solid #d8ddd4;
+  border-left: 1px solid #d8ddd4;
+}
+
+.currentGrid div,
+.metrics div {
+  min-width: 0;
+  padding: 13px 10px;
+  border-right: 1px solid #d8ddd4;
+  border-bottom: 1px solid #d8ddd4;
+}
+
+.currentGrid span,
+.metrics span {
+  display: block;
+  color: #718078;
+  font-size: 10px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.currentGrid strong,
+.metrics strong {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.metrics strong { font-size: 21px; }
+.legend { margin-top: 22px; padding-top: 16px; border-top: 1px solid #d8ddd4; }
+.legendRow { display: flex; align-items: center; gap: 10px; margin-top: 9px; color: #53605a; font: 12px Arial, sans-serif; }
+
+.swatchCity,
+.swatchExpanded,
+.swatchUcs,
+.swatchAstar,
+.swatchPath { flex: 0 0 auto; width: 14px; height: 14px; }
+
+.swatchCity { background: #e8c39e; }
+.swatchExpanded { background: #a0aec0; }
+.swatchUcs { border: 3px solid #3cb371; }
+.swatchAstar { border: 3px solid #2f6f7e; }
+.swatchPath { background: #7bd8a0; }
+
+@media (max-width: 850px) {
+  .header { display: block; }
+  .status { margin-top: 14px; }
+  .content { grid-template-columns: 1fr; }
+  .map { min-height: 430px; }
+}
