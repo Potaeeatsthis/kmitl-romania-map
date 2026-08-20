@@ -12,15 +12,18 @@ command and `.github/workflows/ci.yml`, so there is one definition to update.
 npm run verify:invariants
 ```
 
-Covers three things:
+Covers five things:
 
 - **I1** — exactly one `search()` function. UCS and A\* must stay the same function,
   differing only by the heuristic array passed in.
 - **I4** — no `println!`, `eprintln!`, `Instant`, `black_box` or `io::` in engine code.
   Those belong to `bin/cli.rs`; `Instant` panics on `wasm32`.
-- **Builds** — clean Rust, C++, and Python builds. Once the Cargo crate exists, this also
-  runs `cargo check`, `cargo test`, `cargo clippy -- -D warnings`, and
-  `cargo fmt --check`.
+- **Test inventory** — a fixed list of `#[test]` names must still exist. Deleting a test
+  otherwise makes the suite *greener*, so nothing else notices coverage disappearing.
+- **Tie-break** — the `Ord` impl in `search.rs` must still order by `f`, then `g`, then
+  `city`. Behaviour cannot police this, so the source text is read instead.
+- **Builds** — clean Rust, C++, and Python builds, plus `cargo check`, `cargo test`,
+  `cargo clippy -- -D warnings`, and `cargo fmt --check`.
 
 **Pass:** `invariants: PASS`
 **Fail:** each violation is printed with its file and line. An I1 failure usually means
@@ -74,10 +77,16 @@ and since the road table lives in three separate encodings, editing a road is ex
 that shape of change. It is also what makes build step 1's "byte-identical to today's
 output" criterion runnable at all.
 
+There is a **second** golden set with a different update command: `wasm/tests/golden/`
+records every frame of the search trace and is compared by `cargo test`, inside Check 1.
+It catches a change to how `make_step()` sorts or dedupes the frontier — which would
+shift every middle frame of the animation while leaving the CLI output untouched.
+
 **Pass:** `golden: PASS`
-**Fail:** read the diff before doing anything. An intended output change is re-recorded
-with `bash scripts/verify_golden.sh --update`; an unintended number change is a
-regression. See `docs/runbook.md` §3 — never re-record to turn a check green.
+**Fail:** read the diff before doing anything. An intended change is re-recorded — CLI
+output with `bash scripts/verify_golden.sh --update`, the trace with
+`UPDATE_GOLDEN=1 cargo test --manifest-path wasm/Cargo.toml`. An unintended number change
+is a regression. See `docs/runbook.md` §3 — never re-record to turn a check green.
 
 ## Check 5 — Harness wiring
 
@@ -117,10 +126,34 @@ No script covers these; check them by reading when the relevant files change:
   to ~100 µs in Chrome against a ~1 µs search. Benchmarks come from `bin/cli.rs`.
 - Any new dependency added to the algorithm itself. `wasm-bindgen` and `serde` are for
   the browser boundary only.
-- The priority-queue tie-break, `(f, g, city)` ascending in all three languages. No check
-  can police this: swapping to `(f, city, g)` was measured to produce identical explored
-  order on all 800 start/goal/algorithm combinations, so parity and golden both stay
-  green. It is caught by reading the diff or not at all.
+- The **C++ and Python** tie-breaks. Swapping to `(f, city, g)` was measured to produce
+  identical explored order on all 800 start/goal/algorithm combinations, so parity and
+  golden both stay green — no behavioural check can see it. The Rust ordering is now
+  pinned by source text in Check 1; the other two encodings are not, and rely on this
+  rule being read.
+
+## Check 8 — Do the checks above actually catch anything?
+
+```bash
+npm run verify:mutation
+```
+
+Not part of `npm run verify` — it takes about ten minutes, because it rebuilds the crate
+once per injected fault. It runs weekly in CI (`.github/workflows/mutation.yml`) and on
+demand.
+
+Injects ten known bugs into a throwaway worktree and asserts a gate goes red for each.
+This is the only check that catches a gate which has quietly stopped working, or one that
+was added but never actually caught anything.
+
+**Pass:** `mutation: PASS`
+**Fail:** a fault expected to be caught was missed — a gate has stopped working. A fault
+expected to be missed that is now caught is reported as an improvement, not a failure;
+update its expectation in the script.
+
+*One documented blind spot:* M9, an edit to `reference/romania_search.rs`, which no gate
+compiles since the engine moved into the crate. Closing it is a decision — wire the file
+back into `verify:parity`, or delete it.
 
 ## Everything at once
 
@@ -141,6 +174,7 @@ npm run verify
 | Golden baseline | ✅ / ❌ | N routes differing |
 | Harness wiring | ✅ / ❌ | N violations |
 | Frontend types and build | ✅ / ❌ | N errors |
+| Mutation (if run) | ✅ / ❌ | N faults missed |
 | Manual review | reviewed / not needed | — |
 ```
 

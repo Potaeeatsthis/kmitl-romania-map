@@ -30,8 +30,10 @@ wc -c wasm/Cargo.toml          # 0 → this is the cause
 git ls-files wasm | while read f; do [ -s "$f" ] || echo "EMPTY: $f"; done
 ```
 
-The Rust source and test placeholders under `wasm/` are also empty. This is expected: the directory
-structure was committed before the Cargo project was created.
+At the time, the Rust source and test placeholders under `wasm/` were empty too — the
+directory structure had been committed before the Cargo project was created. All of them
+are populated now; this section is kept as the record of the failure, not as a
+description of the current tree.
 
 ### Fix
 
@@ -145,9 +147,33 @@ never bless output that only one of them produces.
 Unintended change — fix the code, not the baseline. Never re-record to make a red check
 go green; that discards the only fixed point the project has.
 
+### The trace goldens are a separate set with a separate command
+
+`wasm/tests/golden/` records every frame of the search trace — the frontier and discovered
+lists at each expansion — for two routes under both algorithms. It is compared by
+`cargo test`, which runs inside `verify:invariants`, **not** by `verify:golden`.
+
+A failure looks like this, and names the frame that moved:
+
+```
+arad-bucharest (astar) differs at line 4
+```
+
+It catches a change to how `make_step()` sorts or dedupes the frontier: the CLI output is
+unaffected, `trace.len()` is unchanged, explored order is unchanged, so every other check
+stays green while every middle frame of the animation is different.
+
+Re-record an intended change with a **different** command from the one above:
+
+```bash
+UPDATE_GOLDEN=1 cargo test --manifest-path wasm/Cargo.toml
+git diff wasm/tests/golden/
+```
+
 ### Prevent
 
-`npm run verify:golden`, wired into `npm run verify` and CI.
+`npm run verify:golden` for the CLI output and `cargo test` for the trace, both wired into
+`npm run verify` and CI.
 
 ---
 

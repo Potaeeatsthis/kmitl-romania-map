@@ -37,7 +37,12 @@ The Rust engine and the standalone Python and C++ reference programs:
 | `reference/romania_search.py` | Python 3 reference implementation |
 | `reference/romania_search.cpp` | C++17 reference implementation |
 | `docs/ideas.md` | Algorithm explanation and mathematical specification |
-| `docs/ARCHITECTURE.md` | Web architecture notes |
+| `docs/ARCHITECTURE.md` | Runtime flow and ownership boundaries |
+| `docs/ARCHITECTURE_DECISION.md` | Why Rust → WebAssembly, and why the alternatives are closed |
+| `docs/runbook.md` | Known failures: symptom → diagnose → fix → prevent |
+| `scripts/` | The verification harness that `npm run verify` and CI both call |
+| `tests/golden/` | Recorded CLI output; `wasm/tests/golden/` records the search trace |
+| `.claude/` | The PostToolUse hook and the `/diagnose` and `/prevent` commands |
 | `bin/` | Locally compiled executables (ignored by Git) |
 
 ## Current process
@@ -96,9 +101,11 @@ city to the goal.
 This grounded-Laplacian calculation is equivalent to the pseudoinverse formula
 described in the project specification, but it does not require an external
 matrix library.
-The Rust engine reads precomputed values from `wasm/data/heuristics.json`. Its build
-script validates and embeds that table, so the future browser build will not run the
-matrix inversion.
+`wasm/build.rs` validates `wasm/data/heuristics.json` and embeds all twenty goal tables
+into the crate at compile time, so the future browser build will never run the matrix
+inversion. Today that embedded table is read by the test suite through
+`current_flow_for_goal()`; the native CLI still computes the heuristic at runtime with
+`current_flow_heuristic()`, and a test asserts the two agree to 1e-8.
 
 ## Run the frontend
 
@@ -120,6 +127,7 @@ python3 reference/romania_search.py
 Compile with optimization and run:
 
 ```bash
+mkdir -p bin    # gitignored, so a fresh clone does not have it
 g++ -std=c++17 -O2 reference/romania_search.cpp -o bin/romania_search_cpp
 ./bin/romania_search_cpp
 ```
@@ -158,12 +166,20 @@ The project's central claim is that three languages produce the same result. The
 enforce it, and CI runs exactly the same scripts:
 
 ```bash
-npm run verify              # every harness gate
-npm run verify:invariants   # one search(), engine stays wasm-safe, clean builds
+npm run verify              # the five gates below, in order
+npm run verify:invariants   # one search(), wasm-safe engine, tie-break, test inventory, builds
 npm run verify:parity       # Rust, C++ and Python agree on every deterministic field
 npm run verify:correctness  # 400 pairs vs Dijkstra, admissibility, consistency
+npm run verify:golden       # full CLI output against tests/golden/
+npm run verify:harness      # the PostToolUse hook is wired and reacts
 npm run typecheck           # requires `npm install` first
 cargo test --manifest-path wasm/Cargo.toml
+```
+
+Separately, and not part of `npm run verify` because it takes about ten minutes:
+
+```bash
+npm run verify:mutation     # inject ten known bugs; assert a gate goes red for each
 ```
 
 Project rules, invariants and the build order live in [`CLAUDE.md`](CLAUDE.md). When

@@ -1,0 +1,38 @@
+name: Mutation
+
+# Answers the question the other workflow cannot: do the gates in ci.yml actually catch
+# anything? scripts/verify_mutation.sh introduces nine realistic bugs and checks that at
+# least one gate goes red for each. It detects a newly added check that catches nothing,
+# and an existing check that has quietly stopped working -- which has happened here
+# before (docs/runbook.md section 2).
+#
+# Weekly rather than per-PR: it rebuilds the crate once per injected fault, so a run
+# costs minutes rather than seconds. Also runnable on demand from the Actions tab.
+
+on:
+  schedule:
+    # Mondays, 03:00 UTC.
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    name: Fault injection
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show compiler versions
+        run: rustc --version && g++ --version && python3 --version
+
+      # Deliberately not cached: each mutation edits the sources the gates compile, so
+      # most of the work cannot be reused between faults anyway, and a stale cache here
+      # would be indistinguishable from a gate that stopped working.
+      - name: Fault injection
+        run: bash scripts/verify_mutation.sh
