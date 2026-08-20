@@ -111,12 +111,13 @@
 }
 
 .roads line { stroke: #91aa9c; stroke-width: 1.5; }
-.roads text {
+.roadLabels text {
   fill: var(--muted);
   font: 10px var(--font-interface);
   paint-order: stroke;
   stroke: var(--surface);
-  stroke-width: 3px;
+  stroke-width: 5px;
+  stroke-linejoin: round;
   text-anchor: middle;
 }
 
@@ -124,7 +125,7 @@
   stroke-width: 3;
   stroke-linecap: round;
   stroke-dasharray: 5 5;
-  opacity: 0.7;
+  opacity: 0.55;
 }
 
 .finalPath line { stroke-width: 6; stroke-linecap: round; opacity: 0.9; }
@@ -144,7 +145,7 @@
   text-anchor: middle;
   paint-order: stroke;
   stroke: var(--surface);
-  stroke-width: 4px;
+  stroke-width: 5px;
   stroke-linejoin: round;
 }
 
@@ -218,5 +219,5 @@
   .status { margin-top: 14px; }
   .content { grid-template-columns: 1fr; }
   .map { min-width: 710px; min-height: 0; aspect-ratio: 710 / 500; }
-  .roads text { display: none; }
+  .roadLabels { display: none; }
 }

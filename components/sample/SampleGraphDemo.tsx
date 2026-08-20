@@ -70,16 +70,11 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
       <div className={styles.mapPanel}>
         <svg className={styles.map} viewBox="85 90 710 500" aria-label="Animated Romania road graph" role="img">
           <g className={styles.roads}>
-            {romaniaGraph.roads.map(([from, to, distance]) => {
+            {romaniaGraph.roads.map(([from, to]) => {
               const start = cityById.get(from);
               const end = cityById.get(to);
               if (!start || !end) return null;
-              return (
-                <g key={`${from}-${to}`}>
-                  <line x1={start.x} y1={start.y} x2={end.x} y2={end.y} />
-                  <text x={(start.x + end.x) / 2} y={(start.y + end.y) / 2 - 5}>{distance}</text>
-                </g>
-              );
+              return <line key={from + "-" + to} x1={start.x} y1={start.y} x2={end.x} y2={end.y} />;
             })}
           </g>
 
@@ -87,6 +82,16 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
           <SearchTreeLines discovered={astarFrame.discovered} cityById={cityById} className={styles.astarTree} offset={2} />
           {ucsComplete && <PathLines result={data.ucs} cityById={cityById} className={styles.ucsPath} offset={-3} />}
           {astarComplete && <PathLines result={data.astar} cityById={cityById} className={styles.astarPath} offset={3} />}
+
+          <g className={styles.roadLabels}>
+            {romaniaGraph.roads.map(([from, to, distance]) => {
+              const start = cityById.get(from);
+              const end = cityById.get(to);
+              if (!start || !end) return null;
+              const position = roadLabelPosition(start, end);
+              return <text key={from + "-" + to} x={position.x} y={position.y}>{distance}</text>;
+            })}
+          </g>
 
           {romaniaGraph.cities.map((city) => {
             const offset = labelOffsets[city.id] ?? { x: 0, y: 22 };
@@ -148,6 +153,18 @@ function Legend({ className, label }: { className: string; label: string }) {
 }
 
 type CityPosition = (typeof romaniaGraph.cities)[number];
+
+function roadLabelPosition(start: CityPosition, end: CityPosition) {
+  const deltaX = end.x - start.x;
+  const deltaY = end.y - start.y;
+  const length = Math.hypot(deltaX, deltaY) || 1;
+  const offset = 13;
+
+  return {
+    x: (start.x + end.x) / 2 - (deltaY / length) * offset,
+    y: (start.y + end.y) / 2 + (deltaX / length) * offset,
+  };
+}
 
 function SearchTreeLines({ discovered, cityById, className, offset }: { discovered: DiscoveredNode[]; cityById: Map<number, CityPosition>; className: string; offset: number }) {
   return (
