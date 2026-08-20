@@ -1,13 +1,15 @@
 # Web Application Architecture
 
-Design notes for the interactive version of this project. Two architectures were
-considered for **where the search actually runs**: in the browser (TypeScript),
-or on a server (Rust). This document records the logic of each, the file
-structure, and the trade-offs.
+**Decided: the engine is Rust compiled to WebAssembly, served as static files.**
+That decision is locked in `CLAUDE.md`. This document is the record of how it was
+reached — the measurements, and why the two alternatives are closed. It is not a menu.
 
-The algorithms themselves are unchanged in both — the existing
-`server/src/main.rs`, `reference/romania_search.cpp`, and
-`reference/romania_search.py` remain the reference implementations.
+Three architectures were considered for **where the search actually runs**: in the
+browser as TypeScript, on a server as Rust, or in the browser as Rust compiled to
+WebAssembly. The algorithm itself is unchanged in all three.
+
+The engine now lives in `wasm/src/`, with `reference/romania_search.cpp` and
+`reference/romania_search.py` kept as the parity implementations.
 
 ---
 
@@ -16,6 +18,15 @@ The algorithms themselves are unchanged in both — the existing
 Arad → Bucharest, on the existing code. C++ built with `g++ -O2`, Rust with
 `rustc -O`. Medians across repeated process launches — **not** single runs, for
 reasons given in "Measurement warnings" below.
+
+> **These figures predate the animation trace.** They were measured on the engine as it
+> stood in `reference/romania_search.rs`, before `search()` began recording a frontier
+> snapshot at every expansion. Re-measured on 2026-08-20, Arad → Bucharest: the
+> pre-trace engine runs at 0.52–0.85 µs, the shipped crate at 3.1–3.6 µs. The gap is not
+> a build artefact — the crate was built at `opt-level 3` against the reference's
+> `opt-level 2` — and is most likely the two `Vec` allocations `make_step()` performs per
+> expansion, though that has not been isolated by an experiment. The counts below are
+> unaffected, which is the reason invariant I5 reports expansions rather than time.
 
 | Operation | C++ | Rust | Python |
 |---|---|---|---|
@@ -122,7 +133,7 @@ Break-even = build cost ÷ saving per query:
 For a single query the current-flow heuristic is strictly a net loss in every
 language. It only makes sense amortised across many queries to the same goal —
 which is the argument for precomputing it once, whether at server boot
-(Option B) or at build time.
+or at build time. The wasm build does it at build time.
 
 ### Architecture: network dominates everything
 
@@ -135,7 +146,7 @@ which is the argument for precomputing it once, whether at server boot
 The compute differences between these are measured in microseconds; the network
 difference is measured in **hundreds of milliseconds**. A backend is three to
 four orders of magnitude slower end-to-end, and no amount of Rust changes that
-— which is why the justification for Option B is heuristic amortisation and
+— which is why the case for a backend rested on heuristic amortisation and
 single-source-of-truth, never speed.
 
 ### Measurement warnings
@@ -153,7 +164,7 @@ single-source-of-truth, never speed.
 
 ---
 
-## Concept shared by both options: the trace
+## The concept the architecture rests on: the trace
 
 The animation cannot be reconstructed from a finished search result. The final
 `explored_order` records *which* nodes were expanded and in what order, but not
@@ -172,14 +183,14 @@ Roughly 13 steps for UCS, 9 for A*. A few KB total.
 
 The UI then animates by advancing a single `stepIndex` through this array.
 Pause, rewind, scrub, and speed control are all just index changes — no
-recomputation, and in Option B, no additional network calls.
+recomputation, and with a backend, no additional network calls either.
 
-**This applies to both architectures.** It is the single most important
+**This applies whichever architecture is used.** It is the single most important
 structural decision in the project.
 
 ---
 
-## Option A — TypeScript in the browser (no backend)
+## Rejected — TypeScript in the browser
 
 The algorithms are ported to TypeScript and run on the visitor's device.
 
@@ -242,7 +253,7 @@ Static files only. No server exists at runtime.
 
 ---
 
-## Option B — Rust backend
+## Rejected — a Rust HTTP backend
 
 The existing Rust becomes the single source of truth and is served over HTTP.
 
@@ -312,11 +323,11 @@ server/                         Cargo project
     ├── bin/cli.rs              existing stdin UI + Instant benchmarks
     └── bin/server.rs           axum HTTP API
 
-project root/                   unchanged from Option A, minus lib/search.ts
+project root/                   as the TypeScript port, minus lib/search.ts
 └── lib/api.ts                  fetch wrapper
 ```
 
-### Changes to `server/src/main.rs`
+### Changes the engine would have needed
 
 | Current | Change |
 |---|---|
@@ -375,25 +386,32 @@ no nginx, certbot, systemd, or SSH hardening to maintain.
 
 ---
 
-## Option C — Rust compiled to WebAssembly
+## Chosen — Rust compiled to WebAssembly
 
-Worth recording as a middle path: compile `lib.rs` to WASM and run the same Rust
-in the browser. Single source of truth *and* no server.
+Compile the engine to `wasm32-unknown-unknown` and run the same Rust in the browser:
+one implementation of the algorithm, and no server to keep alive.
 
-Caveats: `std::time::Instant` panics on `wasm32-unknown-unknown`, so `benchmark()`
-must stay out of the WASM build; the JS↔WASM boundary crossing costs roughly as
-much as the 1 µs search itself, so expect no speedup; and Vitest tests must
-`await` module init.
+Two caveats recorded here have since been answered:
+
+- `std::time::Instant` panics on `wasm32-unknown-unknown`, so `benchmark()` stays in
+  `bin/cli.rs`. That is now invariant I4, enforced by `npm run verify:invariants`.
+- The heuristic is **not** recomputed per visitor. All twenty goal tables are computed
+  at build time and embedded by `wasm/build.rs`, so the browser never runs
+  Gauss-Jordan. This removed the only real advantage a backend had.
+
+Still true: the JS↔WASM boundary crossing costs roughly as much as the 1 µs search
+itself, so expect no speedup from running in the browser; and tests must `await`
+module init.
 
 ---
 
 ## Comparison
 
-| | A — TypeScript | B — Rust backend | C — Rust + WASM |
+| | TypeScript in the browser | Rust HTTP backend | **Rust + WebAssembly** |
 |---|---|---|---|
 | Latency per query | ~0 | 30–200 ms | ~0 |
 | Single algorithm implementation | ❌ | ✅ | ✅ |
-| Heuristic amortised | ❌ | ✅ | ❌ |
+| Heuristic amortised | ❌ | ✅ at boot | ✅ at build time |
 | Hosting cost | free | ~$6/mo after credit | free |
 | Still working in 2 years | ✅ | only if funded | ✅ |
 | Works offline | ✅ | ❌ | ✅ |
@@ -403,7 +421,7 @@ much as the 1 µs search itself, so expect no speedup; and Vitest tests must
 
 ---
 
-## Constant across all options
+## Constant regardless
 
 **Benchmarks stay native.** Runtime timings come from `bin/cli.rs` run on bare
 metal, exported to `benchmarks.json`, committed, and charted by Recharts.
@@ -433,18 +451,19 @@ limit and needs object storage.
 
 ---
 
-## Recommendation
+## Decision
 
-Start with **Option A**. It is the smallest thing that fully satisfies the
-assignment, it has no failure modes, and it keeps the submitted URL working
-indefinitely at zero cost.
+**Rust compiled to WebAssembly**, locked in `CLAUDE.md`.
 
-Adopt **Option B** if the deployed Rust is itself a goal of the project, and
-document the heuristic-amortisation argument as its justification — that is a
-real engineering rationale rather than a retrofitted one.
+An earlier draft of this file recommended the TypeScript port, as the smallest thing
+that satisfied the assignment. That was overturned: the algorithm would exist twice and
+drift, and drift silently invalidates the comparison this project is about. Precomputing
+the heuristic at build time then removed the backend's only genuine advantage, leaving it
+with nothing but its costs — ~$6/month, 30–200 ms of network for 0.4 µs of work, and a
+site that goes dark when funding stops.
 
-**Option B becomes the correct choice regardless** if the graph is ever scaled
-to the real Romanian road network. The heuristic's O(V³) time and O(V²) memory
+**A backend becomes correct again** if a live deployed service is itself a goal, or
+if the graph is ever scaled to the real Romanian road network. The heuristic's O(V³) time and O(V²) memory
 make browser-side precompute infeasible well before that point:
 
 | V | Inversion | Memory |
@@ -453,6 +472,5 @@ make browser-side precompute infeasible well before that point:
 | 1,000 | ~1 s | 8 MB |
 | 10,000 | ~15 min | 800 MB |
 
-If Option B is chosen for the submitted version, keep a local fallback so the
-site degrades to a working state rather than an error screen when the API is
-unreachable.
+If a backend is ever adopted, keep a local fallback so the site degrades to a working
+state rather than an error screen when the API is unreachable.

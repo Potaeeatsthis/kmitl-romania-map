@@ -26,7 +26,7 @@ web page that animates both searches side by side and reports their metrics.
 
 | Part | State |
 |---|---|
-| `reference/romania_search.rs` | **Working baseline.** Transitional native implementation kept for comparison |
+| `reference/romania_search.rs` | **Working, but compiled by no gate.** Since the engine moved into the crate, `rust_build.sh` takes its cargo branch and the I1 grep takes its `wasm/src/search.rs` branch, so nothing builds or compares this file. Wire it into `verify:parity` or delete it |
 | `reference/romania_search.py` | **Working.** 238 lines, matches Rust exactly |
 | `reference/romania_search.cpp` | **Working.** 304 lines, matches Rust exactly |
 | `docs/ideas.md`, `docs/ARCHITECTURE.md` | **Written.** Algorithm maths and architecture analysis |
@@ -44,7 +44,7 @@ and counters.
 
 ---
 
-## Architecture — Option C, Rust compiled to WebAssembly
+## Architecture — Rust compiled to WebAssembly
 
 **Locked. Do not reopen this. The `wasm/` crate runs in the browser; do not add an HTTP backend.**
 
@@ -68,16 +68,16 @@ static files on GitHub Pages.
 
 **Why not the alternatives**, recorded so they stay closed:
 
-- **Option A — port the algorithm to TypeScript.** Rejected: the algorithm would exist
+- **Porting the algorithm to TypeScript.** Rejected: the algorithm would exist
   twice and drift, and drift silently invalidates the comparison the project is about.
-- **Option B — Rust HTTP backend.** Rejected: the requirement is to deploy once when
+- **A Rust HTTP backend.** Rejected: the requirement is to deploy once when
   finished and leave it. A server is not deployed once, it is kept running — it needs
   uptime, a renewed TLS certificate, and ~$6/month, and the project goes offline when
   funding stops. It is also *slower*: 30–200 ms of network for 0.4 µs of work. Its one
   real advantage — computing the 20 goal heuristics once instead of per visitor — is
-  taken away by precomputing them at build time under Option C.
+  taken away by precomputing them at build time, which the wasm build does.
 
-Option B becomes correct only if a live deployed service is itself required, or if the
+A backend becomes correct only if a live deployed service is itself required, or if the
 graph is ever scaled to the real Romanian road network (the heuristic is `O(V³)` time
 and `O(V²)` memory; browser-side precompute stops being viable well before that).
 
@@ -140,18 +140,33 @@ wasm/
 **Do not reintroduce `wasm/src/search/ucs.rs` or `wasm/src/search/astar.rs`.**
 They violate I1. Keep one `wasm/src/search.rs`.
 
-`npm run verify` checks I1–I4. I5 is a convention.
+`npm run verify` runs five gates and checks I1–I4. I5 is a convention.
+
+`npm run verify:mutation` is separate and deliberately not in that chain: it injects ten
+known bugs and asserts a gate goes red for each, which takes ~10 minutes. It runs weekly
+in CI, and it is what tells you whether the other five gates still work. One fault is
+recorded there as a documented blind spot rather than a failure: an edit to
+`reference/romania_search.rs`, which no gate compiles since the crate landed. Closing it
+is a decision rather than a patch — wire the file back into `verify:parity` as a fourth
+implementation, or delete it.
+
+Two checks in `verify:invariants` exist because behaviour cannot see the fault at all: the
+tie-break pin, and a list of test names that must still be present. Deleting a test
+otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
 
 ---
 
 ## Key decisions (locked)
 
-- Architecture: Option C, Rust → WebAssembly, static hosting
+- Architecture: Rust → WebAssembly, static hosting on GitHub Pages
 - Priority-queue tie-break: `(f, g, city)` ascending, **identical in all three languages**.
-  Keep it that way deliberately, because the automated gate cannot police it: swapping the
-  secondary keys to `(f, city, g)` was measured to produce identical explored order on all
-  800 start/goal/algorithm combinations, so no route sample detects the change. Parity
-  catches drift in *outcomes*; a tie-break edit that yields identical outcomes passes
+  Keep it that way deliberately. No *behavioural* gate can police it: swapping the secondary
+  keys to `(f, city, g)` was measured to produce identical explored order on all 800
+  start/goal/algorithm combinations, so no route sample detects the change. Parity catches
+  drift in *outcomes*; a tie-break edit that yields identical outcomes passes. So the Rust
+  ordering is pinned by source text instead — `verify:invariants` reads the `Ord` impl in
+  `wasm/src/search.rs` and fails if the three keys stop reading `f`, `g`, `city`. The C++
+  and Python tie-breaks remain unpinned and rely on this rule being read
 - The algorithm itself stays dependency-free; `wasm-bindgen` and `serde` are for the
   browser boundary only, never for the search or the heuristic
 - Heuristic tables are precomputed at build time and shipped as JSON; the browser never
@@ -196,11 +211,16 @@ When a bug is found, complete all four steps before reporting it fixed:
 ## Common commands
 
 ```bash
-npm run verify              # all three gates — run this before pushing
+npm run verify              # all five gates — run this before pushing
 npm run verify:invariants   # I1, I4, clean builds
 npm run verify:parity       # I2 — three languages agree
 npm run verify:correctness  # I3 — 400 pairs, admissibility, consistency
+npm run verify:golden       # full CLI output against tests/golden/
+npm run verify:harness      # the PostToolUse hook is wired and reacts
 npm run typecheck           # tsc --noEmit
+
+npm run verify:mutation     # ~10 min — do the gates above actually catch anything?
+bash scripts/verify_mutation.sh M3   # just one fault, while iterating
 
 # Run the three implementations (they prompt for two city names)
 cargo run --release --manifest-path wasm/Cargo.toml --bin cli
@@ -227,8 +247,10 @@ python3 reference/romania_search.py
 - **`reference/romania_search.cpp` has one pre-existing `-Wall -Wextra` warning** — an unused
   `INF` constant at line 19. Reported by `verify:invariants`, deliberately non-fatal; do not
   "fix" it as a drive-by change.
-- **Benchmark output varies run to run** by up to 1.5× from CPU frequency ramp-up. Never
-  quote a single run; expansion counts are the reliable comparison.
+- **Benchmark output varies run to run.** `docs/ARCHITECTURE_DECISION.md` records 1.5×
+  from CPU frequency ramp-up; a spot check on 2026-08-20 saw A\* swing 2.534 → 5.323 µs
+  across three consecutive runs, so treat 2× as the realistic spread. Never quote a
+  single run; expansion counts are the reliable comparison.
 
 ---
 
@@ -244,6 +266,12 @@ python3 reference/romania_search.py
   so it must be one person in one PR,
   **merged before anyone else starts Rust work**. Rust work and frontend work touch disjoint
   files and can run in parallel; two people inside `wasm/src/` at the same time cannot
-- Repository settings need admin, which only `Potaeeatsthis` has. Two are required and are
-  not yet enabled: branch protection on `master` requiring the `correctness` and `frontend`
-  checks, and Settings → Pages → Source: GitHub Actions (needed by build step 6)
+- Repository settings need admin, which only `Potaeeatsthis` has.
+  - **Enabled.** Both `master` and `dev` are protected: PR required, plus the two status
+    checks. Note they are required by *job name* — `Invariants, parity, correctness` and
+    `Frontend types` — not by the job ids `correctness` and `frontend`. `master` also
+    requires one approving review and an up-to-date branch; `dev` requires neither, so
+    feature work merges as soon as CI is green
+  - **Still needed.** Settings → Pages → Source: GitHub Actions, before build step 6
+  - **Optional.** Turn on "Require review from Code Owners" to make `.github/CODEOWNERS`
+    take effect; it is inert until then

@@ -12,6 +12,7 @@
     "verify:correctness": "python3 scripts/verify_correctness.py",
     "verify:golden": "bash scripts/verify_golden.sh",
     "verify:harness": "bash scripts/verify_harness.sh",
+    "verify:mutation": "bash scripts/verify_mutation.sh",
     "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness"
   },
   "dependencies": {
