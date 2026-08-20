@@ -11,13 +11,13 @@ const sample = sampleData as SearchResponse;
 const FRAME_DURATION_MS = 850;
 
 const labelOffsets: Record<number, { x: number; y: number }> = {
-  0: { x: -18, y: -12 }, 1: { x: 18, y: 18 }, 2: { x: 0, y: 20 },
-  3: { x: 0, y: 22 }, 4: { x: -4, y: 22 }, 5: { x: 0, y: -12 },
-  6: { x: -4, y: 22 }, 7: { x: 0, y: 22 }, 8: { x: 0, y: -12 },
-  9: { x: 24, y: -10 }, 10: { x: 24, y: 22 }, 11: { x: 0, y: -12 },
-  12: { x: 0, y: 22 }, 13: { x: 0, y: 22 }, 14: { x: 18, y: -14 },
-  15: { x: 0, y: 22 }, 16: { x: 0, y: 22 }, 17: { x: 0, y: 22 },
-  18: { x: 0, y: -12 }, 19: { x: 0, y: 22 },
+  0: { x: -22, y: -14 }, 1: { x: 22, y: 20 }, 2: { x: 0, y: 24 },
+  3: { x: 0, y: 25 }, 4: { x: -4, y: 25 }, 5: { x: 0, y: -14 },
+  6: { x: -4, y: 25 }, 7: { x: 0, y: 25 }, 8: { x: 0, y: -14 },
+  9: { x: 32, y: -12 }, 10: { x: 30, y: 25 }, 11: { x: 0, y: -14 },
+  12: { x: 0, y: 25 }, 13: { x: 0, y: 25 }, 14: { x: 24, y: -16 },
+  15: { x: 0, y: 25 }, 16: { x: 0, y: 25 }, 17: { x: 0, y: 25 },
+  18: { x: 0, y: -14 }, 19: { x: 0, y: 25 },
 };
 
 export default function SampleGraphDemo() {
@@ -36,11 +36,15 @@ export default function SampleGraphDemo() {
       <header className={styles.header}>
         <div>
           <p className={styles.kicker}>RUST TRACE / ARAD TO BUCHAREST</p>
-          <h1 className={styles.title}>Romania search lab</h1>
+          <h1 className={styles.title}>Romania search</h1>
         </div>
-        <p className={styles.status}>
-          {animationComplete ? "Animation complete" : `Auto-playing frame ${step + 1} of ${timelineLength}`}
-        </p>
+        {animationComplete ? (
+          <button className={[styles.status, styles.replay].join(" ")} type="button" onClick={() => setStep(0)}>
+            Animation complete — replay
+          </button>
+        ) : (
+          <p className={styles.status}>Auto-playing frame {step + 1} of {timelineLength}</p>
+        )}
       </header>
       <DemoContent data={sample} step={step} timelineLength={timelineLength} />
     </main>
@@ -64,7 +68,7 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
   return (
     <section className={styles.content}>
       <div className={styles.mapPanel}>
-        <svg className={styles.map} viewBox="0 0 920 650" aria-label="Animated Romania road graph" role="img">
+        <svg className={styles.map} viewBox="85 90 710 500" aria-label="Animated Romania road graph" role="img">
           <g className={styles.roads}>
             {romaniaGraph.roads.map(([from, to, distance]) => {
               const start = cityById.get(from);
@@ -98,7 +102,7 @@ function DemoContent({ data, step, timelineLength }: { data: SearchResponse; ste
 
             return (
               <g key={city.id} className={classes}>
-                <rect x={city.x - 9} y={city.y - 9} width="18" height="18" rx="2" />
+                <rect x={city.x - 10} y={city.y - 10} width="20" height="20" rx="3" />
                 <text x={city.x + offset.x} y={city.y + offset.y}>{city.name}</text>
               </g>
             );
