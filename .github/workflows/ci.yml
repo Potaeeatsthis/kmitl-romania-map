@@ -117,6 +117,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Resolve pinned Rust toolchain and Wasm target
+        run: rustc --version && rustup target list --installed
+
+      - name: Cache wasm-pack
+        uses: actions/cache@v4
+        with:
+          path: /home/runner/.cargo/bin/wasm-pack
+          key: wasm-pack-linux-0.15.0
+
+      - name: Install wasm-pack
+        run: command -v wasm-pack > /dev/null || cargo install wasm-pack --version 0.15.0 --locked
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -128,5 +140,5 @@ jobs:
 
 # --- Not yet enabled -------------------------------------------------------------
 #
-# deploy job: blocked until build steps 4 and 5. Needs wasm-pack to build the module
-#   and a frontend for `next build` with output: 'export' to publish to GitHub Pages.
+# deploy job: remains Step 6 work. The frontend build already produces the Wasm module
+#   and a static export; deployment still needs Pages permissions and upload/deploy actions.

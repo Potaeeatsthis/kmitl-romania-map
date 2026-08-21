@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ["127.0.0.1"],
   // Build step 6 publishes to GitHub Pages, which serves static files only. Setting
   // this now rather than at step 6 means `next build` fails the moment someone adds
   // something that cannot be exported -- a route handler, a dynamic segment without
