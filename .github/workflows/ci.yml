@@ -92,6 +92,13 @@ jobs:
       - name: Harness wiring
         run: npm run verify:harness
 
+      # The committed sample the browser animates, checked against the engine that
+      # generated it, plus the road table lib/romaniaGraph.ts duplicates. Lives here
+      # rather than in `frontend` because it runs the exporter: this job already has
+      # the pinned toolchain and a warm CARGO_TARGET_DIR, so the crate is built by now.
+      - name: Frontend sample freshness
+        run: npm run verify:frontend-sample
+
   frontend:
     name: Frontend types
     runs-on: ubuntu-latest
@@ -112,9 +119,6 @@ jobs:
 
       - name: Typecheck
         run: npm run typecheck
-
-      - name: Verify frontend sample contract
-        run: npm run verify:frontend-sample
 
       # tsc --noEmit is not the same check as a real build: it does not catch
       # "use client" boundary violations, invalid route segment exports, or a
