@@ -3,8 +3,8 @@
 
 import { useEffect, useState } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
-import sampleData from "../../public/data/arad-bucharest-search.json";
 import type { DiscoveredNode, SearchResponse } from "../../lib/types";
+import sampleData from "../../public/data/arad-bucharest-search.json";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import styles from "./SampleGraphDemo.module.css";
 
@@ -194,7 +194,7 @@ const runSearch = async (
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <p className={styles.kicker}>RUST TRACE / ARAD TO BUCHAREST</p>
+          <p className={styles.kicker}>RUST TRACE</p>
           <h1 className={styles.title}>Romania search</h1>
         </div>
       </header>
@@ -301,7 +301,7 @@ function DemoContent({
   return (
     <section className={styles.content}>
       <div className={styles.mapPanel}>
-        <svg className={styles.map} viewBox="150 60 900 630" aria-label="Animated Romania road graph" role="img">
+        <svg className={styles.map}   viewBox="120 50 900 650" preserveAspectRatio="xMidYMid meet" aria-label="Animated Romania road graph" role="img">
           <defs>
             <linearGradient id="shared-label-highlight" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#A0C878" />
@@ -316,6 +316,25 @@ function DemoContent({
             ))}
           </g>
           <path className={styles.countryOutline} d={COUNTRY_OUTLINE_PATH} />
+
+          <g className={styles.roads}>
+            {romaniaGraph.roads.map(([from, to]) => {
+              const start = cityById.get(from);
+              const end = cityById.get(to);
+
+              if (!start || !end) return null;
+
+              return (
+                <line
+                  key={from + "-" + to}
+                  x1={start.x}
+                  y1={start.y}
+                  x2={end.x}
+                  y2={end.y}
+                />
+              );
+            })}
+          </g>
 
           {ucsFrame && (
             <SearchTreeLines
@@ -449,7 +468,7 @@ function DemoContent({
             );
           })}
         </svg>
-        <div className={styles.mapLegend}>
+        <div className={styles.legend}>
           <p className={styles.kicker}>TRACE LEGEND</p>
 
           <Legend className={styles.swatchCity} label="Not discovered" />
@@ -469,9 +488,11 @@ function DemoContent({
       </div>
 
       <aside className={styles.panel}>
-        <p className={styles.kicker}>ROUTE</p>
-
-        <h2>Choose your route</h2>
+      <p className={styles.kicker}>ROUTE</p>
+      <h2>Choose your route</h2>
+      <p className={styles.helperText}>
+        Select a starting point and destination.
+      </p>
 
         <div className={styles.routeSelector}>
           <CitySearch
@@ -572,72 +593,91 @@ function CitySearch({
   selectedCity: number | null;
   onSelect: (cityId: number) => void;
 }) {
-  const [query, setQuery] = useState("");
-
   const selectedCityObject =
     selectedCity !== null
-      ? romaniaGraph.cities.find(
-          (city) => city.id === selectedCity
-        )
+      ? romaniaGraph.cities.find((city) => city.id === selectedCity)
       : null;
 
-  const filteredCities = romaniaGraph.cities.filter((city) =>
-    city.name.toLowerCase().includes(query.toLowerCase())
-  );
+  const [query, setQuery] = useState(selectedCityObject?.name ?? "");
 
-  const displayValue =
-    query !== ""
-      ? query
-      : selectedCityObject?.name ?? "";
+  useEffect(() => {
+    setQuery(selectedCityObject?.name ?? "");
+  }, [selectedCity]);
+
+  const normalize = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s]/g, "");
+
+  const findBestCity = (value: string) => {
+    const normalized = normalize(value);
+
+    if (!normalized) return null;
+
+    // Exact match
+    const exact = romaniaGraph.cities.find(
+      (city) => normalize(city.name) === normalized
+    );
+
+    if (exact) return exact;
+
+    // Starts-with match
+    const startsWith = romaniaGraph.cities.find(
+      (city) => normalize(city.name).startsWith(normalized)
+    );
+
+    if (startsWith) return startsWith;
+
+    // Fuzzy match
+    let bestCity = null;
+    let bestDistance = Infinity;
+
+    for (const city of romaniaGraph.cities) {
+      const distance = levenshteinDistance(
+        normalized,
+        normalize(city.name)
+      );
+
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestCity = city;
+      }
+    }
+
+    if (bestDistance <= Math.max(2, Math.floor(normalized.length * 0.4))) {
+      return bestCity;
+    }
+
+    return null;
+  };
+
+  const handleChange = (value: string) => {
+    setQuery(value);
+
+    const city = findBestCity(value);
+
+    if (city) {
+      onSelect(city.id);
+    }
+  };
 
   return (
     <div className={styles.citySearch}>
       <label>
         <span>{label}</span>
 
-        <input
-          type="text"
-          value={displayValue}
-          placeholder="Search city..."
-          onChange={(e) => {
-            setQuery(e.target.value);
-          }}
-          onFocus={() => {
-            // Keep the selected city visible.
-            // User can manually delete/change it if needed.
-            if (selectedCityObject && query === "") {
-              setQuery(selectedCityObject.name);
-            }
-          }}
-        />
-      </label>
-
-      {query && (
-        <div className={styles.searchResults}>
-          {filteredCities.length > 0 ? (
-            filteredCities.map((city) => (
-              <button
-                key={city.id}
-                type="button"
-                onClick={() => {
-                  onSelect(city.id);
-
-                  // Clear search query.
-                  // The selected city name will now come
-                  // from selectedCityObject.
-                  setQuery("");
-                }}
-              >
-                {city.name}
-              </button>
-            ))
-          ) : (
-            <div className={styles.noResults}>
-              No city found
-            </div>
-          )}
+        <div className={styles.inputWrapper}>
+          <input
+            type="text"
+            value={query}
+            placeholder="Type a city..."
+            onChange={(e) => handleChange(e.target.value)}
+            autoComplete="off"
+            spellCheck={false}
+          />
         </div>
-      )}
+      </label>
     </div>
   );
 }

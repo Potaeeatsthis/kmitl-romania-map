@@ -1,156 +1,171 @@
 .page {
   --ink: #102a1e;
   --muted: #526d60;
+
   --green: #137a47;
   --green-dark: #0b5631;
   --green-bright: #00ed64;
   --green-mid: hsl(163, 100%, 20%);
+
   --green-soft: #cfe7d8;
   --green-pale: #edf8f1;
+
   --line: #c9dfd2;
   --surface: #ffffff;
+
+  width: 100%;
   height: 100dvh;
-  overflow: hidden;
+  box-sizing: border-box;
+
   display: flex;
   flex-direction: column;
-  padding: 48px 7vw 40px;
+
+  padding: clamp(20px, 4vh, 44px) clamp(20px, 5vw, 7vw);
+
+  overflow: hidden;
+
   color: var(--ink);
-  background: var(--green-pale);
+  background:
+    radial-gradient(
+      circle at 85% 10%,
+      rgba(0, 237, 100, 0.08),
+      transparent 28%
+    ),
+    var(--green-pale);
+
   font-family: var(--font-interface);
-  box-sizing: border-box;
 }
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
 
 .header {
   flex: 0 0 auto;
-  max-width: 1700px;
+
   width: 100%;
+  max-width: 1700px;
+
   margin: 0 auto 16px;
   padding-bottom: 14px;
+
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   justify-content: space-between;
+
   gap: 28px;
+
   border-bottom: 1px solid var(--line);
 }
 
 .kicker {
   margin: 0 0 clamp(4px, 0.8vh, 8px);
+
   color: var(--green);
-  font: 400 clamp(9px, 1vh, 11px)/1.3 var(--font-interface);
+
+  font: 500 clamp(9px, 1vh, 11px) / 1.3 var(--font-interface);
+
   letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
 .title {
   margin: 0;
+
   font-size: clamp(33px, 4.5vw, 55px);
   font-weight: 400;
   line-height: 1;
+  letter-spacing: -0.025em;
 }
 
-.status {
-  display: inline-flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  min-height: 44px;
-  margin: 0;
-  color: var(--muted);
-  font: 13px var(--font-interface);
-}
-
-.replay {
-  padding: 0 4px;
-  border: 0;
-  color: var(--green-mid);
-  background: transparent;
-  cursor: pointer;
-  text-decoration: underline;
-  text-decoration-color: var(--green-bright);
-  text-underline-offset: 5px;
-}
-
-.replay:hover {
-  color: var(--green);
-}
-
-.replay:focus-visible {
-  outline: 2px solid var(--green-bright);
-  outline-offset: 4px;
-}
 
 .content {
   flex: 1 1 auto;
-  min-height: 0;
+
   min-width: 0;
-  max-width: 1400px;
+  min-height: 0;
+
   width: 100%;
-  margin: 0 auto 32px;
+  max-width: 1400px;
+
+  margin: 0 auto;
+
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 0.5fr);
+
+  /*
+   * KEEP THIS POSITION:
+   * Map = left
+   * Sidebar = right
+   */
+  grid-template-columns:
+    minmax(0, 3fr)
+    minmax(300px, 1fr);
+
   gap: 18px;
-  align-items: stretch;
+
   overflow: hidden;
 }
 
-.mapPanel,
-.panel {
-  min-width: 0;
-  min-height: 0;
-  border: 1px solid var(--line);
-  background: var(--surface);
-  box-shadow: 0 12px 30px rgba(19, 122, 71, 0.08);
-  overflow: hidden;
-}
 
 .mapPanel {
   position: relative;
+  min-width: 0;
+  min-height: 0;
+
   padding: 0;
+
   display: flex;
   overflow: hidden;
+
+  border: 1px solid var(--line);
+  background: var(--surface);
+
+  box-shadow:
+    0 12px 30px rgba(19, 122, 71, 0.08);
 }
 
 .map {
   display: block;
+
   width: 100%;
   height: 100%;
+
+  flex: 1 1 auto;
+
   background-color: var(--surface);
-  background-image: linear-gradient(#e4f1e9 1px, transparent 1px), linear-gradient(90deg, #e4f1e9 1px, transparent 1px);
+
+  background-image:
+    linear-gradient(
+      rgba(228, 241, 233, 0.7) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(228, 241, 233, 0.7) 1px,
+      transparent 1px
+    );
+
   background-size: 30px 30px;
   background-position: center center;
 }
 
-.mapLegend {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 10;
 
-  padding: 12px 14px;
-
-  border: 1px solid var(--line);
-  border-radius: 8px;
-
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 6px 18px rgba(19, 122, 71, 0.08);
-
-  backdrop-filter: blur(6px);
+.roads line {
+  stroke: #91aa9c;
+  stroke-width: 1.5;
 }
 
-.mapLegend .kicker {
-  margin-bottom: 8px;
-}
-
-.mapLegend .legendRow {
-  margin-top: 5px;
-}
-
-.roads line { stroke: #91aa9c; stroke-width: 1.5; }
 .roadLabels text {
   fill: var(--muted);
+
   font: 10px var(--font-interface);
+
   paint-order: stroke;
   stroke: var(--surface);
   stroke-width: 5px;
   stroke-linejoin: round;
+
   text-anchor: middle;
 }
 
@@ -161,22 +176,46 @@
   opacity: 0.55;
 }
 
-.expandedTree line { stroke-width: 2; stroke-linecap: round; opacity: 1; }
-.finalPath line { stroke-width: 3; stroke-linecap: round; opacity: 1; }
-.ucsTree, .ucsPath { stroke: var(--green-mid); }
-.astarTree, .astarPath { stroke: var(--green-bright); }
+.expandedTree line {
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: 1;
+}
+
+.finalPath line {
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 1;
+}
+
+.ucsTree,
+.ucsPath {
+  stroke: var(--green-mid);
+}
+
+.astarTree,
+.astarPath {
+  stroke: var(--green-bright);
+}
+
 
 .city rect {
   fill: var(--surface);
+
   stroke: #7da58e;
   stroke-width: 1.5;
-  transition: fill 0.25s, stroke 0.25s;
+
+  transition:
+    fill 0.2s ease,
+    stroke 0.2s ease;
 }
 
 .city text {
   fill: var(--ink);
+
   font-size: 11px;
   text-anchor: middle;
+
   paint-order: stroke;
   stroke: none;
   stroke-width: 7px;
@@ -185,113 +224,58 @@
 
 .city .cityLabelBackground {
   stroke: none;
-  transition: fill 0.25s;
+
+  transition:
+    fill 0.2s ease;
 }
 
-.city .labelAstar { fill: #ddeb9d; }
-.city .labelUcs { fill: #a0c878; }
-.city .labelBoth { fill: url(#shared-label-highlight); }
-
-.expanded rect { fill: var(--green-soft); stroke: #67977a; }
-.frontierUcs rect { fill: var(--surface); stroke: var(--green-mid); stroke-width: 4; }
-.frontierAstar rect { fill: var(--surface); stroke: var(--green-bright); stroke-width: 4; }
-.frontierBoth rect { fill: var(--green-pale); stroke: var(--green-dark); stroke-width: 4; }
-.active rect { fill: #83d7a5; stroke: var(--green-dark); stroke-width: 4; }
-.path rect { fill: #62c98d; stroke: var(--green-dark); stroke-width: 2; }
-
-.panel {
-  padding: clamp(14px, 2.4vh, 26px) clamp(16px, 2vw, 24px);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+.city .labelAstar {
+  fill: #ddeb9d;
 }
 
-.panel h2 {
-  margin: 0 0 clamp(10px, 1.8vh, 22px);
-  font-size: clamp(16px, 2.4vh, 24px);
-  font-weight: 400;
-  line-height: 1.15;
+.city .labelUcs {
+  fill: #a0c878;
 }
 
-.progress {
-  height: 5px;
-  overflow: hidden;
-  background: var(--green-soft);
-  flex: 0 0 auto;
-}
-.progress span { display: block; height: 100%; background: var(--green); transition: width 0.25s; }
-
-.currentGrid,
-.metrics {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  margin-top: clamp(10px, 1.8vh, 22px);
-  border-top: 1px solid var(--line);
-  border-left: 1px solid var(--line);
-  flex: 0 0 auto;
+.city .labelBoth {
+  fill: url(#shared-label-highlight);
 }
 
-.currentGrid div,
-.metrics div {
-  min-width: 0;
-  padding: clamp(6px, 1.1vh, 13px) 10px;
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+.expanded rect {
+  fill: var(--green-soft);
+  stroke: #67977a;
 }
 
-.currentGrid span,
-.metrics span {
-  display: block;
-  color: var(--muted);
-  font-size: clamp(8px, 1vh, 10px);
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.frontierUcs rect {
+  fill: var(--surface);
+  stroke: var(--green-mid);
+  stroke-width: 4;
 }
 
-.currentGrid strong,
-.metrics strong {
-  display: block;
-  margin-top: clamp(3px, 0.6vh, 6px);
-  overflow-wrap: anywhere;
-  font-size: clamp(12px, 1.7vh, 17px);
-  font-weight: 400;
+.frontierAstar rect {
+  fill: var(--surface);
+  stroke: var(--green-bright);
+  stroke-width: 4;
 }
 
-.metrics strong { font-size: clamp(14px, 2.2vh, 21px); }
-
-.legend {
-  margin-top: clamp(10px, 1.8vh, 22px);
-  padding-top: clamp(8px, 1.4vh, 16px);
-  border-top: 1px solid var(--line);
-  flex: 1 1 auto;
-  overflow: hidden;
+.frontierBoth rect {
+  fill: var(--green-pale);
+  stroke: var(--green-dark);
+  stroke-width: 4;
 }
 
-.legendRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: clamp(4px, 0.9vh, 9px);
-  color: var(--muted);
-  font-size: clamp(10px, 1.2vh, 12px);
+.active rect {
+  fill: #83d7a5;
+  stroke: var(--green-dark);
+  stroke-width: 4;
 }
 
-.swatchCity,
-.swatchExpanded,
-.swatchUcs,
-.swatchAstar,
-.swatchUcsHighlight,
-.swatchAstarHighlight,
-.swatchPath { flex: 0 0 auto; width: 14px; height: 14px; }
+.path rect {
+  fill: #62c98d;
+  stroke: var(--green-dark);
+  stroke-width: 2;
+}
 
-.swatchCity { border: 1px solid #7da58e; background: var(--surface); }
-.swatchExpanded { background: var(--green-soft); }
-.swatchUcs { border: 3px solid var(--green-mid); }
-.swatchAstar { border: 3px solid var(--green-bright); }
-.swatchUcsHighlight { background: #a0c878; }
-.swatchAstarHighlight { background: #ddeb9d; }
-.swatchPath { background: #62c98d; }
 
 .countyLines path {
   fill: var(--green-soft);
@@ -305,35 +289,222 @@
   stroke-width: 0;
 }
 
+
+.panel {
+  min-width: 0;
+  min-height: 0;
+
+  box-sizing: border-box;
+
+  padding: clamp(16px, 2.2vh, 24px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border: 1px solid var(--line);
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  box-shadow:
+    0 10px 25px rgba(19, 122, 71, 0.06),
+    0 2px 6px rgba(19, 122, 71, 0.04);
+
+  backdrop-filter: blur(8px);
+}
+
+.panel h2 {
+  margin: 0 0 8px;
+
+  font-size: clamp(18px, 2.4vh, 24px);
+  font-weight: 400;
+
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+}
+
+.helperText {
+  margin: 0 0 16px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+
+.citySearch {
+  position: relative;
+}
+
+.citySearch label {
+  display: block;
+}
+
+.citySearch label > span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--muted);
+
+  font-size: 8px;
+  font-weight: 600;
+
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.citySearch input {
+  width: 100%;
+  height: 38px;
+
+  box-sizing: border-box;
+
+  padding: 0 11px;
+
+  border: 1px solid var(--line);
+  border-radius: 6px;
+
+  background: var(--surface);
+
+  color: var(--ink);
+
+  font-family: inherit;
+  font-size: 12px;
+
+  outline: none;
+
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.citySearch input:hover {
+  border-color: #8db9a0;
+}
+
+.citySearch input:focus {
+  border-color: var(--green);
+
+  background: #fcfffd;
+
+  box-shadow:
+    0 0 0 3px rgba(19, 122, 71, 0.1);
+}
+
+
+.searchResults {
+  position: absolute;
+
+  top: calc(100% + 5px);
+  left: 0;
+  right: 0;
+
+  z-index: 50;
+
+  max-height: 180px;
+
+  overflow-y: auto;
+
+  padding: 4px;
+
+  border: 1px solid var(--line);
+  border-radius: 7px;
+
+  background: var(--surface);
+
+  box-shadow:
+    0 10px 25px rgba(16, 42, 30, 0.12);
+}
+
+.searchResults button {
+  width: 100%;
+
+  padding: 8px 9px;
+
+  border: 0;
+  border-radius: 5px;
+
+  background: transparent;
+
+  color: var(--ink);
+
+  text-align: left;
+  font-family: inherit;
+  font-size: 11px;
+
+  cursor: pointer;
+}
+
+.searchResults button:hover {
+  background: var(--green-pale);
+  color: var(--green-dark);
+}
+
+.noResults {
+  padding: 9px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+}
+
+
+.animationControls {
+  margin-top: 18px;
+  padding-top: 15px;
+
+  border-top: 1px solid var(--line);
+}
+
+.animationControls .kicker {
+  margin-bottom: 8px;
+}
+
 .controls {
   display: flex;
+
   align-items: center;
+
   gap: 6px;
 }
 
 .controlButton {
   width: 34px;
   height: 34px;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
 
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  flex: 0 0 auto;
+
+  border: 1px solid var(--line);
   border-radius: 7px;
 
-  background: transparent;
-  color: inherit;
+  background: var(--surface);
+
+  color: var(--green-dark);
 
   cursor: pointer;
+
   transition:
     background 0.15s ease,
     border-color 0.15s ease,
+    box-shadow 0.15s ease,
     transform 0.15s ease;
 }
 
 .controlButton:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--green-pale);
+  border-color: #8db9a0;
+
+  box-shadow:
+    0 3px 8px rgba(19, 122, 71, 0.08);
 }
 
 .controlButton:active {
@@ -341,15 +512,358 @@
 }
 
 .controlButton:focus-visible {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--green-bright);
   outline-offset: 2px;
 }
 
 .status {
-  margin-left: 8px;
+  margin-left: auto;
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  font-variant-numeric: tabular-nums;
 }
 
-.citySearch input,
-.searchResults button {
-  font-family: inherit;
+
+.progress {
+  height: 4px;
+
+  margin-top: 10px;
+
+  overflow: hidden;
+
+  background: var(--green-soft);
+
+  border-radius: 999px;
+
+  flex: 0 0 auto;
 }
+
+.progress span {
+  display: block;
+
+  height: 100%;
+
+  background: var(--green);
+
+  border-radius: inherit;
+
+  transition: width 0.25s ease;
+}
+
+
+.currentGrid {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  margin-top: 16px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--line);
+  border-radius: 8px;
+
+  flex: 0 0 auto;
+}
+
+.currentGrid div {
+  min-width: 0;
+
+  padding: 11px 10px;
+
+  background: var(--surface);
+}
+
+.currentGrid div + div {
+  border-left: 1px solid var(--line);
+}
+
+.currentGrid span {
+  display: block;
+
+  margin-bottom: 5px;
+
+  color: var(--muted);
+
+  font-size: 7px;
+  line-height: 1.3;
+
+  font-weight: 600;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.07em;
+}
+
+.currentGrid strong {
+  display: block;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: var(--ink);
+
+  font-size: 12px;
+  line-height: 1.25;
+
+  font-weight: 400;
+}
+
+
+.legend {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 10;
+
+  width: 190px;
+  box-sizing: border-box;
+
+  margin: 0;
+  padding: 14px 16px;
+
+  border: 1px solid rgba(201, 223, 210, 0.95);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    0 8px 24px rgba(16, 42, 30, 0.10),
+    0 2px 6px rgba(19, 122, 71, 0.06);
+
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  overflow: hidden;
+}
+
+.legend .kicker {
+  margin: 0 0 10px;
+  color: var(--green);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+
+  margin: 7px 0 0;
+
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.legendRow:first-of-type {
+  margin-top: 0;
+}
+.swatchCity,
+.swatchExpanded,
+.swatchUcs,
+.swatchAstar,
+.swatchUcsHighlight,
+.swatchAstarHighlight,
+.swatchPath {
+  flex: 0 0 auto;
+
+  width: 12px;
+  height: 12px;
+
+  box-sizing: border-box;
+
+  border-radius: 3px;
+}
+
+.swatchCity {
+  border: 1px solid #7da58e;
+  background: var(--surface);
+}
+
+.swatchExpanded {
+  background: var(--green-soft);
+}
+
+.swatchUcs {
+  border: 3px solid var(--green-mid);
+}
+
+.swatchAstar {
+  border: 3px solid var(--green-bright);
+}
+
+.swatchUcsHighlight {
+  background: #a0c878;
+}
+
+.swatchAstarHighlight {
+  background: #ddeb9d;
+}
+
+.swatchPath {
+  background: #62c98d;
+}
+
+
+.mapLegend {
+  position: absolute;
+
+  top: 16px;
+  right: 16px;
+
+  z-index: 10;
+
+  padding: 10px 12px;
+
+  border: 1px solid var(--line);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.9);
+
+  box-shadow:
+    0 5px 15px rgba(19, 122, 71, 0.08);
+
+  backdrop-filter: blur(6px);
+}
+
+.mapLegend .kicker {
+  margin-bottom: 6px;
+}
+
+.mapLegend .legendRow {
+  margin-top: 4px;
+}
+
+.routeSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 13px;
+  background: var(--green-pale);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+@media (max-width: 800px) {
+  .page {
+    height: auto;
+    min-height: 100dvh;
+
+    padding:
+      18px
+      14px
+      24px;
+
+    overflow: visible;
+  }
+
+  .header {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+  }
+
+  .title {
+    font-size: clamp(30px, 9vw, 38px);
+  }
+
+  .content {
+    display: flex;
+
+    flex-direction: column;
+
+    width: 100%;
+    max-width: none;
+
+    gap: 14px;
+
+    overflow: visible;
+  }
+
+  .mapPanel {
+    width: 100%;
+
+    height: min(56dvh, 480px);
+
+    flex: 0 0 auto;
+
+    border-radius: 10px;
+  }
+
+  .panel {
+    width: 100%;
+
+    padding: 16px;
+
+    overflow: visible;
+
+    flex: 0 0 auto;
+
+    border-radius: 10px;
+  }
+
+  .panel h2 {
+    font-size: 21px;
+    margin-bottom: 7px;
+  }
+
+  .helperText {
+    margin-bottom: 14px;
+  }
+
+  .routeSelector {
+    padding: 11px;
+    gap: 9px;
+  }
+
+  .citySearch input {
+    height: 42px;
+    font-size: 13px;
+  }
+
+  .animationControls {
+    margin-top: 16px;
+    padding-top: 14px;
+  }
+
+  .controlButton {
+    width: 40px;
+    height: 40px;
+  }
+
+  .status {
+    font-size: 10px;
+  }
+
+  .currentGrid {
+    grid-template-columns: 1fr 1fr;
+
+    margin-top: 14px;
+  }
+
+  .currentGrid div + div {
+    border-left: 1px solid var(--line);
+    border-top: 0;
+  }
+
+  .legend {
+    margin-top: 16px;
+  }
+
+  .mapLegend {
+    top: 10px;
+    right: 10px;
+
+    padding: 8px 10px;
+  }
+
+  .mapLegend .legendRow {
+    font-size: 8px;
+  }
+}
+
+
