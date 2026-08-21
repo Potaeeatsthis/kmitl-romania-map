@@ -1,26 +1,28 @@
-#[derive(Clone, Debug, PartialEq)]
+use serde::Serialize;
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct FrontierNode {
     pub city: usize,
     pub cost: u32,
     pub priority: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct DiscoveredNode {
     pub city: usize,
     pub cost: u32,
     pub parent: Option<usize>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct SearchStep {
-    pub expanded: usize,
+    pub expanded_city: usize,
     pub expanded_cost: u32,
     pub frontier: Vec<FrontierNode>,
     pub discovered: Vec<DiscoveredNode>,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct SearchResult {
     pub path: Vec<usize>,
     pub explored_order: Vec<usize>,

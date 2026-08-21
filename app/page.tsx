@@ -1,5 +1,5 @@
-// app/page.tsx
+import SampleGraphDemo from "../components/sample/SampleGraphDemo";
 
-export default function Home() {
-  return <main>KMITL Romania Map</main>;
+export default function HomePage() {
+  return <SampleGraphDemo />;
 }

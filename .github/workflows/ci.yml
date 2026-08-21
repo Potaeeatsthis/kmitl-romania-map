@@ -92,6 +92,13 @@ jobs:
       - name: Harness wiring
         run: npm run verify:harness
 
+      # The committed sample the browser animates, checked against the engine that
+      # generated it, plus the road table lib/romaniaGraph.ts duplicates. Lives here
+      # rather than in `frontend` because it runs the exporter: this job already has
+      # the pinned toolchain and a warm CARGO_TARGET_DIR, so the crate is built by now.
+      - name: Frontend sample freshness
+        run: npm run verify:frontend-sample
+
   frontend:
     name: Frontend types
     runs-on: ubuntu-latest
