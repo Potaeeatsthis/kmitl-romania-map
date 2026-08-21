@@ -33,9 +33,12 @@ web page that animates both searches side by side and reports their metrics.
 | `wasm/Cargo.toml`, `wasm/src/bin/cli.rs` | **Working.** Native Cargo library and CLI |
 | `wasm/src/*.rs`, `wasm/src/heuristics/` | **Working.** Shared UCS/A* engine with an animation trace |
 | `wasm/tests/` | **Working.** All-pairs optimality, heuristic, and trace tests |
-| `components/`, `lib/`, `stores/` | **Empty.** Each file holds only its own path as a comment |
-| `public/data/romania.geojson` | **Empty (0 bytes)** |
-| `app/page.tsx` | Renders the words "KMITL Romania Map" and nothing else |
+| `lib/types.ts`, `lib/romaniaGraph.ts`, `lib/countyOutlines.ts` | **Working.** Trace types, the 20 city positions with all 23 roads, and the county/border paths |
+| `components/sample/SampleGraphDemo.tsx` | **Working.** ~300 lines: the animated side-by-side SVG. **No tests** — see the frontend-test rule below |
+| `public/data/arad-bucharest-search.json` | **Generated, committed.** Written by `wasm/src/bin/export_sample.rs`; `verify:frontend-sample` re-runs the exporter and diffs, so it cannot go stale silently |
+| `stores/`, `lib/wasm/`, `components/Sidebar.tsx`, `components/controls/`, `components/metrics/` | **Empty.** Each file holds only its own path as a comment |
+| `public/data/romania.geojson` | **Empty (0 bytes), and now orphaned** — `components/map/MapView.tsx` was deleted; the map's geography comes from `lib/countyOutlines.ts` instead. Fill it or delete it |
+| `app/page.tsx` | Renders `<SampleGraphDemo />` |
 
 Verified across all 400 start/goal pairs: 0 cost mismatches against an independent
 Dijkstra, 0 admissibility violations, 0 consistency violations, and UCS 4200 → A\* 2436
@@ -140,11 +143,11 @@ wasm/
 **Do not reintroduce `wasm/src/search/ucs.rs` or `wasm/src/search/astar.rs`.**
 They violate I1. Keep one `wasm/src/search.rs`.
 
-`npm run verify` runs five gates and checks I1–I4. I5 is a convention.
+`npm run verify` runs six gates and checks I1–I4. I5 is a convention.
 
-`npm run verify:mutation` is separate and deliberately not in that chain: it injects ten
+`npm run verify:mutation` is separate and deliberately not in that chain: it injects twelve
 known bugs and asserts a gate goes red for each, which takes ~10 minutes. It runs weekly
-in CI, and it is what tells you whether the other five gates still work. One fault is
+in CI, and it is what tells you whether the other six gates still work. One fault is
 recorded there as a documented blind spot rather than a failure: an edit to
 `reference/romania_search.rs`, which no gate compiles since the crate landed. Closing it
 is a decision rather than a patch — wire the file back into `verify:parity` as a fourth
@@ -153,6 +156,34 @@ implementation, or delete it.
 Two checks in `verify:invariants` exist because behaviour cannot see the fault at all: the
 tie-break pin, and a list of test names that must still be present. Deleting a test
 otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
+
+---
+
+## Frontend tests — the rule
+
+**The first PR that adds frontend logic also adds the test runner (vitest + jsdom +
+testing-library) and the CI step. Tests do not land in a follow-up.**
+
+This was agreed on 2026-08-20 and not written here, so the first frontend PR shipped
+without it: `components/sample/SampleGraphDemo.tsx` is ~300 lines with no test runner
+installed anywhere in the repo. That debt is open. Do not let a second frontend PR land
+on top of it.
+
+Do **not** pre-install the runner ahead of the logic — one sitting there with no tests
+grows a placeholder and stops being noticed. This repository has already produced that
+failure twice. The PostToolUse hook died silently for weeks (`docs/runbook.md` §2). And
+`.github/workflows/mutation.yml` has never executed once: scheduled workflows run only
+from the default branch, and `master` currently contains two files and no `.github/`.
+Both times the capability existed and nothing invoked it.
+
+`verify:frontend-sample` is **not** a frontend test. It checks a Rust-generated JSON file
+and the road table; it never renders a component.
+
+The highest-value first test is a pure selectors module, because the trace supplies its
+own oracle: at step *i* the expanded set must equal `explored_order[0..i]`, derived rather
+than hand-written. That module does not exist yet — the derivations currently live inline
+in `SampleGraphDemo.tsx`, which is precisely why nothing there is testable. Extracting
+them is the work; the tests are easy afterwards.
 
 ---
 
@@ -168,7 +199,11 @@ otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
   `wasm/src/search.rs` and fails if the three keys stop reading `f`, `g`, `city`. The C++
   and Python tie-breaks remain unpinned and rely on this rule being read
 - The algorithm itself stays dependency-free; `wasm-bindgen` and `serde` are for the
-  browser boundary only, never for the search or the heuristic
+  browser boundary only, never for the search or the heuristic. **`metrics.rs` counts as
+  that boundary**: its four structs derive `Serialize` so `bin/export_sample.rs` can write
+  the frontend's JSON. `search.rs`, `graph.rs` and `heuristics/` stay clean — that is the
+  line. Note serde is currently an unconditional dependency, so the native CLI links it
+  too; feature-gate it if that ever costs anything
 - Heuristic tables are precomputed at build time and shipped as JSON; the browser never
   runs Gauss-Jordan
 - Benchmarks are produced natively by `wasm/src/bin/cli.rs`, committed as `benchmarks.json`
@@ -211,12 +246,13 @@ When a bug is found, complete all four steps before reporting it fixed:
 ## Common commands
 
 ```bash
-npm run verify              # all five gates — run this before pushing
+npm run verify              # all six gates — run this before pushing
 npm run verify:invariants   # I1, I4, clean builds
 npm run verify:parity       # I2 — three languages agree
 npm run verify:correctness  # I3 — 400 pairs, admissibility, consistency
 npm run verify:golden       # full CLI output against tests/golden/
 npm run verify:harness      # the PostToolUse hook is wired and reacts
+npm run verify:frontend-sample  # the committed sample still matches the engine
 npm run typecheck           # tsc --noEmit
 
 npm run verify:mutation     # ~10 min — do the gates above actually catch anything?

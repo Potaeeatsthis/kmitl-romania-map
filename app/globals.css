@@ -1,4 +1,14 @@
-/* app/globals.css */
+@font-face {
+  font-family: "Departure Mono";
+  src: url("/fonts/DepartureMono-Regular.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  --font-interface: "Departure Mono", "Courier New", monospace;
+}
 
 * {
   box-sizing: border-box;
@@ -6,5 +16,10 @@
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-interface);
+}
+
+::selection {
+  color: #ffffff;
+  background: #137a47;
 }
