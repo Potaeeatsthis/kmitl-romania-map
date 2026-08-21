@@ -1,7 +1,7 @@
 name: Mutation
 
 # Answers the question the other workflow cannot: do the gates in ci.yml actually catch
-# anything? scripts/verify_mutation.sh introduces nine realistic bugs and checks that at
+# anything? scripts/verify_mutation.sh introduces twelve realistic bugs and checks that at
 # least one gate goes red for each. It detects a newly added check that catches nothing,
 # and an existing check that has quietly stopped working -- which has happened here
 # before (docs/runbook.md section 2).
