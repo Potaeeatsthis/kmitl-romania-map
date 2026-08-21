@@ -102,8 +102,10 @@
 }
 
 .mapPanel {
-  padding: 8px;
+  position: relative;
+  padding: 0;
   display: flex;
+  overflow: hidden;
 }
 
 .map {
@@ -112,7 +114,33 @@
   height: 100%;
   background-color: var(--surface);
   background-image: linear-gradient(#e4f1e9 1px, transparent 1px), linear-gradient(90deg, #e4f1e9 1px, transparent 1px);
-  background-size: 32px 32px;
+  background-size: 30px 30px;
+  background-position: center center;
+}
+
+.mapLegend {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+
+  padding: 12px 14px;
+
+  border: 1px solid var(--line);
+  border-radius: 8px;
+
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 18px rgba(19, 122, 71, 0.08);
+
+  backdrop-filter: blur(6px);
+}
+
+.mapLegend .kicker {
+  margin-bottom: 8px;
+}
+
+.mapLegend .legendRow {
+  margin-top: 5px;
 }
 
 .roads line { stroke: #91aa9c; stroke-width: 1.5; }
@@ -275,4 +303,53 @@
   fill: none;
   stroke: var(--green-soft);
   stroke-width: 0;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controlButton {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
+
+  background: transparent;
+  color: inherit;
+
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.controlButton:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.controlButton:active {
+  transform: scale(0.94);
+}
+
+.controlButton:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+.status {
+  margin-left: 8px;
+}
+
+.citySearch input,
+.searchResults button {
+  font-family: inherit;
 }
