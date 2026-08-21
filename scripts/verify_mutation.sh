@@ -25,7 +25,7 @@
 # what gets measured, and nothing here can touch your checkout. Takes ~10 minutes,
 # which is why it is a weekly scheduled job rather than part of `npm run verify`.
 #
-# Run via: npm run verify:mutation          all nine
+# Run via: npm run verify:mutation          all twelve
 #          bash scripts/verify_mutation.sh M3   just one, while iterating
 set -uo pipefail
 
@@ -71,6 +71,7 @@ PAR=(bash scripts/verify_parity.sh)
 GOLD=(bash scripts/verify_golden.sh)
 CORR=(python3 scripts/verify_correctness.py)
 TEST=(cargo test --quiet --manifest-path wasm/Cargo.toml --target-dir "$CARGO_LAB")
+FRONT=(env CARGO_TARGET_DIR="$CARGO_LAB" node scripts/verify_frontend_sample.mjs)
 
 # mutate <id> <expectation> <description>; body follows, then `verdict`
 CAUGHT_ANY=0
@@ -221,6 +222,27 @@ assert s.count(old) == 1, 'make_step sort anchor moved -- update verify_mutation
 open(p, 'w').write(s.replace(old, new))
 PY
   check tests "${TEST[@]}"; check golden "${GOLD[@]}"; check parity "${PAR[@]}"
+  verdict
+fi
+
+# --------------------------------------------------- the sample the browser animates
+if ! skip M11; then
+  begin M11 caught "change an on-path road without regenerating the frontend sample"
+  # Sibiu -> Rimnicu Vilcea is ON the Arad->Bucharest route, so the committed sample
+  # genuinely goes stale. Do not swap this for (0, 1, 75) as M4 and M5 use: Arad->Zerind
+  # is off the sampled route, the JSON stays correct, and the fault reads as a false miss.
+  sed -i.bak 's/(3, 9, 80)/(3, 9, 81)/' wasm/src/graph.rs && rm -f wasm/src/*.bak
+  check frontend "${FRONT[@]}"
+  verdict
+fi
+
+# ----------------------------------------------------- the map's copy of the roads
+if ! skip M12; then
+  begin M12 caught "drift lib/romaniaGraph.ts away from the engine's road table"
+  # A fourth encoding of the table I2 pins across Rust, C++ and Python. Nothing else
+  # reads this file, so without this gate the map labels a road the search never uses.
+  sed -i.bak 's/\[0, 1, 75\]/[0, 1, 76]/' lib/romaniaGraph.ts && rm -f lib/*.bak
+  check frontend "${FRONT[@]}"
   verdict
 fi
 
