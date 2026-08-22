@@ -1,14 +1,21 @@
 // components/sample/SampleGraphDemo.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import type { CSSProperties, KeyboardEvent } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
-import sampleData from "../../public/data/arad-bucharest-search.json";
-import type { DiscoveredNode, SearchResponse } from "../../lib/types";
+import type { DiscoveredNode } from "../../lib/types";
 import { romaniaGraph } from "../../lib/romaniaGraph";
+import {
+  getTimelineLength,
+  getTraceFrame,
+  getExpandedCities,
+  getFrontierCities,
+  getFinalPath,
+} from "../../lib/traceSelectors";
+import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./SampleGraphDemo.module.css";
 
-const sample = sampleData as SearchResponse;
 const FRAME_DURATION_MS = 850;
 
 const labelOffsets: Record<number, { x: number; y: number }> = {
@@ -59,179 +66,534 @@ const COUNTRY_OUTLINE_PATH = `
 `;
 
 export default function SampleGraphDemo() {
-  const [step, setStep] = useState(0);
-  const timelineLength = Math.max(sample.ucs.trace.length, sample.astar.trace.length);
-  const animationComplete = step >= timelineLength - 1;
+  const data = useSearchStore((state) => state.data);
+  const step = useSearchStore((state) => state.step);
+  const isPlaying = useSearchStore((state) => state.isPlaying);
+  const speed = useSearchStore((state) => state.speed);
+  const startCity = useSearchStore((state) => state.startCity);
+  const destinationCity = useSearchStore((state) => state.destinationCity);
+  const selecting = useSearchStore((state) => state.selecting);
+  const isLoading = useSearchStore((state) => state.isLoading);
+  const error = useSearchStore((state) => state.error);
+  const setCity = useSearchStore((state) => state.setCity);
+  const run = useSearchStore((state) => state.run);
+  const play = useSearchStore((state) => state.play);
+  const pause = useSearchStore((state) => state.pause);
+  const replay = useSearchStore((state) => state.replay);
+  const setStep = useSearchStore((state) => state.setStep);
+  const setSpeed = useSearchStore((state) => state.setSpeed);
+
+  const cityById = useMemo(
+    () => new Map(romaniaGraph.cities.map((city) => [city.id, city])),
+    [],
+  );
+  const timelineLength = getTimelineLength(data);
+  const lastStep = Math.max(0, timelineLength - 1);
+  const animationComplete = timelineLength > 0 && step >= lastStep;
 
   useEffect(() => {
-    if (animationComplete) return;
-    const timer = window.setTimeout(() => setStep((current) => current + 1), FRAME_DURATION_MS);
+    if (!isPlaying || timelineLength === 0) return;
+
+    if (animationComplete) {
+      pause();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setStep(Math.min(step + 1, lastStep));
+    }, FRAME_DURATION_MS / speed);
+
     return () => window.clearTimeout(timer);
-  }, [animationComplete, step]);
+  }, [
+    animationComplete,
+    isPlaying,
+    lastStep,
+    pause,
+    setStep,
+    speed,
+    step,
+    timelineLength,
+  ]);
+
+  const ucsFrame = getTraceFrame(data, "ucs", step);
+  const astarFrame = getTraceFrame(data, "astar", step);
+
+  const ucsExpanded = getExpandedCities(data, "ucs", step);
+  const astarExpanded = getExpandedCities(data, "astar", step);
+  const ucsFrontier = getFrontierCities(ucsFrame);
+  const astarFrontier = getFrontierCities(astarFrame);
+  const ucsComplete = Boolean(data && step >= data.ucs.trace.length - 1);
+  const astarComplete = Boolean(data && step >= data.astar.trace.length - 1);
+  const finalPath = getFinalPath(
+    data,
+    ucsComplete,
+    astarComplete,
+  );
+  const progress = timelineLength > 0 ? ((Math.min(step, lastStep) + 1) / timelineLength) * 100 : 0;
+
+  const headerStatus = isLoading
+    ? "Running Rust search…"
+    : !data
+      ? "Choose route · Run search"
+      : animationComplete
+        ? "Animation complete · Replay"
+        : `Frame ${step + 1} / ${timelineLength}`;
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <p className={styles.kicker}>RUST TRACE / ARAD TO BUCHAREST</p>
+          <p className={styles.kicker}>RUST / WASM TRACE</p>
           <h1 className={styles.title}>Romania search</h1>
         </div>
         {animationComplete ? (
-          <button className={[styles.status, styles.replay].join(" ")} type="button" onClick={() => setStep(0)}>
-            Animation complete — replay
+          <button className={styles.headerStatusButton} type="button" onClick={replay}>
+            {headerStatus}
           </button>
         ) : (
-          <p className={styles.status}>Auto-playing frame {step + 1} of {timelineLength}</p>
+          <p className={styles.headerStatus} aria-live="polite">
+            {headerStatus}
+          </p>
         )}
       </header>
-      <DemoContent data={sample} step={step} timelineLength={timelineLength} />
+
+      <section className={styles.content}>
+        <div className={styles.mapPanel}>
+          <svg
+            className={styles.map}
+            viewBox="120 50 900 650"
+            preserveAspectRatio="xMidYMid meet"
+            aria-label="Animated Romania road graph. Selectable cities set the active route field."
+            role="group"
+          >
+            <defs>
+              <linearGradient id="shared-label-highlight" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#A0C878" />
+                <stop offset="50%" stopColor="#A0C878" />
+                <stop offset="50%" stopColor="#DDEB9D" />
+                <stop offset="100%" stopColor="#DDEB9D" />
+              </linearGradient>
+            </defs>
+
+            <g className={styles.countyLines} aria-hidden="true">
+              {countyOutlines.map((path, index) => (
+                <path key={index} d={path} />
+              ))}
+            </g>
+            <path className={styles.countryOutline} d={COUNTRY_OUTLINE_PATH} aria-hidden="true" />
+
+            <g className={styles.roads} aria-hidden="true">
+              {romaniaGraph.roads.map(([from, to]) => {
+                const roadStart = cityById.get(from);
+                const roadEnd = cityById.get(to);
+                if (!roadStart || !roadEnd) return null;
+                return (
+                  <line
+                    key={`${from}-${to}`}
+                    x1={roadStart.x}
+                    y1={roadStart.y}
+                    x2={roadEnd.x}
+                    y2={roadEnd.y}
+                  />
+                );
+              })}
+            </g>
+
+            {ucsFrame && (
+              <SearchTreeLines
+                discovered={ucsFrame.discovered}
+                cityById={cityById}
+                className={styles.ucsTree}
+                offset={-2}
+              />
+            )}
+            {astarFrame && (
+              <SearchTreeLines
+                discovered={astarFrame.discovered}
+                cityById={cityById}
+                className={styles.astarTree}
+                offset={2}
+              />
+            )}
+            {ucsFrame && (
+              <ExpandedTreeLines
+                discovered={ucsFrame.discovered}
+                expanded={ucsExpanded}
+                cityById={cityById}
+                className={styles.ucsPath}
+                offset={-3}
+              />
+            )}
+            {astarFrame && (
+              <ExpandedTreeLines
+                discovered={astarFrame.discovered}
+                expanded={astarExpanded}
+                cityById={cityById}
+                className={styles.astarPath}
+                offset={3}
+              />
+            )}
+            {ucsComplete && data && (
+              <PathLines path={data.ucs.path} cityById={cityById} className={styles.ucsPath} offset={-3} />
+            )}
+            {astarComplete && data && (
+              <PathLines path={data.astar.path} cityById={cityById} className={styles.astarPath} offset={3} />
+            )}
+
+            <g className={styles.roadLabels} aria-hidden="true">
+              {romaniaGraph.roads.map(([from, to, distance]) => {
+                const roadStart = cityById.get(from);
+                const roadEnd = cityById.get(to);
+                if (!roadStart || !roadEnd) return null;
+                const position = roadLabelPosition(roadStart, roadEnd);
+                return (
+                  <text key={`${from}-${to}`} x={position.x} y={position.y}>
+                    {distance}
+                  </text>
+                );
+              })}
+            </g>
+
+            {romaniaGraph.cities.map((city) => {
+              const offset = labelOffsets[city.id] ?? { x: 0, y: 22 };
+              const labelX = city.x + offset.x;
+              const labelY = city.y + offset.y;
+              const isTwoLineLabel = city.id === 9;
+              const labelWidth = (isTwoLineLabel ? 7 : city.name.length) * 6.6 + 10;
+              const ucsLabelHighlighted = ucsFrame
+                ? ucsComplete
+                  ? Boolean(data?.ucs.path.includes(city.id))
+                  : ucsFrame.expanded_city === city.id
+                : false;
+              const astarLabelHighlighted = astarFrame
+                ? astarComplete
+                  ? Boolean(data?.astar.path.includes(city.id))
+                  : astarFrame.expanded_city === city.id
+                : false;
+              const labelHighlightClass = ucsLabelHighlighted && astarLabelHighlighted
+                ? styles.labelBoth
+                : astarLabelHighlighted
+                  ? styles.labelAstar
+                  : ucsLabelHighlighted
+                    ? styles.labelUcs
+                    : "";
+              const inUcsFrontier = ucsFrontier.has(city.id);
+              const inAstarFrontier = astarFrontier.has(city.id);
+              const isActive = ucsFrame?.expanded_city === city.id || astarFrame?.expanded_city === city.id;
+              const classes = [
+                styles.city,
+                ucsExpanded.has(city.id) || astarExpanded.has(city.id) ? styles.expanded : "",
+                inUcsFrontier && inAstarFrontier
+                  ? styles.frontierBoth
+                  : inUcsFrontier
+                    ? styles.frontierUcs
+                    : inAstarFrontier
+                      ? styles.frontierAstar
+                      : "",
+                isActive ? styles.active : "",
+                finalPath.has(city.id) ? styles.path : "",
+                city.id === startCity ? styles.startCity : "",
+                city.id === destinationCity ? styles.destinationCity : "",
+              ].filter(Boolean).join(" ");
+
+              const chooseCity = () => {
+                const selectedField = selecting;
+                setCity(selectedField, city.id);
+
+                if (selectedField === "destination") {
+                  void useSearchStore.getState().run();
+                }
+              };
+              const handleCityKeyDown = (event: KeyboardEvent<SVGGElement>) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  chooseCity();
+                }
+              };
+
+              return (
+                <g
+                  key={city.id}
+                  className={classes}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`Choose ${city.name} as ${selecting === "start" ? "starting point" : "destination"}`}
+                  onClick={chooseCity}
+                  onKeyDown={handleCityKeyDown}
+                >
+                  {labelHighlightClass && (
+                    <rect
+                      className={`${styles.cityLabelBackground} ${labelHighlightClass}`}
+                      x={labelX - labelWidth / 2}
+                      y={labelY - (isTwoLineLabel ? 17 : 13)}
+                      width={labelWidth}
+                      height={isTwoLineLabel ? 28 : 18}
+                      rx="3"
+                    />
+                  )}
+                  <rect className={styles.cityNode} x={city.x - 5} y={city.y - 5} width="10" height="10" rx="2" />
+                  <text x={labelX} y={labelY}>
+                    {city.id === 9 ? (
+                      <>
+                        <tspan x={labelX} y={labelY - 6}>Rimnicu</tspan>
+                        <tspan x={labelX} y={labelY + 6}>Vilcea</tspan>
+                      </>
+                    ) : city.name}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+
+          <div className={styles.legend}>
+            <p className={styles.kicker}>TRACE LEGEND</p>
+            <Legend className={styles.swatchCity} label="Not discovered" />
+            <Legend className={styles.swatchExpanded} label="Expanded" />
+            <Legend className={styles.swatchUcs} label="UCS frontier / tree" />
+            <Legend className={styles.swatchAstar} label="A* frontier / tree" />
+            <Legend className={styles.swatchUcsHighlight} label="UCS city highlight" />
+            <Legend className={styles.swatchAstarHighlight} label="A* city highlight" />
+            <Legend className={styles.swatchPath} label="Final optimal path" />
+          </div>
+        </div>
+
+        <aside className={styles.panel}>
+          <p className={styles.kicker}>ROUTE</p>
+          <h2>Choose your route</h2>
+          <p className={styles.helperText}>
+            Select two cities on the map to run automatically. Dropdown changes wait for Run search.
+          </p>
+
+          <div className={styles.routeSelector}>
+            <CitySearch
+              label="STARTING POINT"
+              selectedCity={startCity}
+              onFocus={() => useSearchStore.getState().setSelecting("start")}
+              onSelect={(cityId) => setCity("start", cityId)}
+            />
+            <CitySearch
+              label="DESTINATION"
+              selectedCity={destinationCity}
+              onFocus={() => useSearchStore.getState().setSelecting("destination")}
+              onSelect={(cityId) => setCity("destination", cityId)}
+            />
+            <p className={styles.mapHint}>
+              Map: choose the <strong>{selecting === "start" ? "starting point" : "destination to run the search"}</strong>.
+            </p>
+            <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
+              {isLoading ? "Running Rust…" : "Run search"}
+            </button>
+          </div>
+
+          {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+
+          <div className={styles.animationControls}>
+            <p className={styles.kicker}>PLAYBACK</p>
+            <div className={styles.controls}>
+              <button
+                className={styles.controlButton}
+                type="button"
+                onClick={isPlaying ? pause : play}
+                disabled={!data || isLoading}
+                aria-label={isPlaying ? "Pause animation" : "Play animation"}
+                title={isPlaying ? "Pause" : "Play"}
+              >
+                {isPlaying ? <PauseIcon /> : <PlayIcon />}
+              </button>
+              <button className={styles.controlButton} type="button" onClick={replay} disabled={!data || isLoading} aria-label="Replay animation" title="Replay">
+                <ReplayIcon />
+              </button>
+              <label className={styles.speedControl}>
+                <span>Speed</span>
+                <select value={speed} onChange={(event) => setSpeed(Number(event.target.value))}>
+                  <option value={0.5}>0.5×</option>
+                  <option value={1}>1×</option>
+                  <option value={2}>2×</option>
+                </select>
+              </label>
+            </div>
+            <label className={styles.frameScrubber}>
+              <span>Frame scroll</span>
+              <output aria-live="polite">
+                {timelineLength ? Math.min(step, lastStep) + 1 : 0} / {timelineLength}
+              </output>
+              <input
+                type="range"
+                min={0}
+                max={lastStep}
+                step={1}
+                value={timelineLength ? Math.min(step, lastStep) : 0}
+                disabled={!data || timelineLength <= 1 || isLoading}
+                aria-label="Animation frame"
+                style={{ "--frame-progress": progress + "%" } as CSSProperties}
+                onChange={(event) => {
+                  pause();
+                  setStep(Number(event.target.value));
+                }}
+                onWheel={(event) => {
+                  if (!data || timelineLength <= 1) return;
+                  event.preventDefault();
+                  pause();
+                  const direction = event.deltaY > 0 ? 1 : -1;
+                  setStep(Math.min(lastStep, Math.max(0, step + direction)));
+                }}
+              />
+            </label>
+          </div>
+
+          <div className={styles.currentGrid}>
+            <Metric label="UCS expanded now" value={ucsFrame ? romaniaGraph.cities[ucsFrame.expanded_city].name : "—"} />
+            <Metric label="A* expanded now" value={astarFrame ? romaniaGraph.cities[astarFrame.expanded_city].name : "—"} />
+          </div>
+        </aside>
+      </section>
     </main>
   );
 }
 
-function DemoContent({ data, step, timelineLength }: { data: SearchResponse; step: number; timelineLength: number }) {
-  const cityById = new Map(romaniaGraph.cities.map((city) => [city.id, city]));
-  const ucsIndex = Math.min(step, data.ucs.trace.length - 1);
-  const astarIndex = Math.min(step, data.astar.trace.length - 1);
-  const ucsFrame = data.ucs.trace[ucsIndex];
-  const astarFrame = data.astar.trace[astarIndex];
-  const ucsExpanded = new Set(data.ucs.explored_order.slice(0, ucsIndex + 1));
-  const astarExpanded = new Set(data.astar.explored_order.slice(0, astarIndex + 1));
-  const ucsFrontier = new Set(ucsFrame.frontier.map((node) => node.city));
-  const astarFrontier = new Set(astarFrame.frontier.map((node) => node.city));
-  const ucsComplete = step >= data.ucs.trace.length - 1;
-  const astarComplete = step >= data.astar.trace.length - 1;
-  const finalPath = new Set([...(ucsComplete ? data.ucs.path : []), ...(astarComplete ? data.astar.path : [])]);
+function CitySearch({
+  label,
+  selectedCity,
+  onFocus,
+  onSelect,
+}: {
+  label: string;
+  selectedCity: number;
+  onFocus: () => void;
+  onSelect: (cityId: number) => void;
+}) {
+  const listId = useId();
+  const selected = romaniaGraph.cities[selectedCity];
+  const [query, setQuery] = useState(selected.name);
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const normalizedQuery = normalizeCityName(query);
+  const matches = useMemo(
+    () => romaniaGraph.cities.filter((city) =>
+      normalizedQuery === "" || normalizeCityName(city.name).startsWith(normalizedQuery),
+    ),
+    [normalizedQuery],
+  );
+  const listboxOpen = isOpen && matches.length > 0;
+  const emptyStatusId = listId + "-empty";
+
+  useEffect(() => {
+    setQuery(selected.name);
+  }, [selected.name]);
+
+  const choose = (cityId: number) => {
+    onSelect(cityId);
+    setQuery(romaniaGraph.cities[cityId].name);
+    setIsOpen(false);
+    setActiveIndex(0);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setIsOpen(true);
+      setActiveIndex((index) => matches.length ? (index + 1) % matches.length : 0);
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setIsOpen(true);
+      setActiveIndex((index) => matches.length ? (index - 1 + matches.length) % matches.length : 0);
+    } else if (event.key === "Enter" && isOpen && matches[activeIndex]) {
+      event.preventDefault();
+      choose(matches[activeIndex].id);
+    } else if (event.key === "Escape") {
+      setIsOpen(false);
+      setQuery(selected.name);
+    }
+  };
 
   return (
-    <section className={styles.content}>
-      <div className={styles.mapPanel}>
-        <svg className={styles.map} viewBox="120 60 900 630" aria-label="Animated Romania road graph" role="img">
-          <defs>
-            <linearGradient id="shared-label-highlight" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#A0C878" />
-              <stop offset="50%" stopColor="#A0C878" />
-              <stop offset="50%" stopColor="#DDEB9D" />
-              <stop offset="100%" stopColor="#DDEB9D" />
-            </linearGradient>
-          </defs>
-          <g className={styles.countyLines}>
-            {countyOutlines.map((d, i) => (
-              <path key={i} d={d} />
-            ))}
-          </g>
-          <path className={styles.countryOutline} d={COUNTRY_OUTLINE_PATH} />
-
-          <g className={styles.roads}>
-            {romaniaGraph.roads.map(([from, to]) => {
-              const start = cityById.get(from);
-              const end = cityById.get(to);
-              if (!start || !end) return null;
-              return <line key={from + "-" + to} x1={start.x} y1={start.y} x2={end.x} y2={end.y} />;
-            })}
-          </g>
-
-          <SearchTreeLines discovered={ucsFrame.discovered} cityById={cityById} className={styles.ucsTree} offset={-2} />
-          <SearchTreeLines discovered={astarFrame.discovered} cityById={cityById} className={styles.astarTree} offset={2} />
-          <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} cityById={cityById} className={styles.ucsPath} offset={-3} />
-          <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} cityById={cityById} className={styles.astarPath} offset={3} />
-          {ucsComplete && <PathLines path={data.ucs.path} cityById={cityById} className={styles.ucsPath} offset={-3} />}
-          {astarComplete && <PathLines path={data.astar.path} cityById={cityById} className={styles.astarPath} offset={3} />}
-
-          <g className={styles.roadLabels}>
-            {romaniaGraph.roads.map(([from, to, distance]) => {
-              const start = cityById.get(from);
-              const end = cityById.get(to);
-              if (!start || !end) return null;
-              const position = roadLabelPosition(start, end);
-              return <text key={from + "-" + to} x={position.x} y={position.y}>{distance}</text>;
-            })}
-          </g>
-
-          {romaniaGraph.cities.map((city) => {
-            const offset = labelOffsets[city.id] ?? { x: 0, y: 22 };
-            const labelX = city.x + offset.x;
-            const labelY = city.y + offset.y;
-            const isTwoLineLabel = city.id === 9;
-            const labelWidth = (isTwoLineLabel ? 7 : city.name.length) * 6.6 + 10;
-            const ucsLabelHighlighted = ucsComplete
-              ? data.ucs.path.includes(city.id)
-              : ucsFrame.expanded_city === city.id;
-            const astarLabelHighlighted = astarComplete
-              ? data.astar.path.includes(city.id)
-              : astarFrame.expanded_city === city.id;
-            const labelHighlightClass = ucsLabelHighlighted && astarLabelHighlighted
-              ? styles.labelBoth
-              : astarLabelHighlighted
-                ? styles.labelAstar
-                : ucsLabelHighlighted
-                  ? styles.labelUcs
-                  : "";
-            const inUcsFrontier = ucsFrontier.has(city.id);
-            const inAstarFrontier = astarFrontier.has(city.id);
-            const classes = [
-              styles.city,
-              ucsExpanded.has(city.id) || astarExpanded.has(city.id) ? styles.expanded : "",
-              inUcsFrontier && inAstarFrontier ? styles.frontierBoth : inUcsFrontier ? styles.frontierUcs : inAstarFrontier ? styles.frontierAstar : "",
-              ucsFrame.expanded_city === city.id || astarFrame.expanded_city === city.id ? styles.active : "",
-              finalPath.has(city.id) ? styles.path : "",
-            ].filter(Boolean).join(" ");
-
-            return (
-              <g key={city.id} className={classes}>
-                {labelHighlightClass && (
-                  <rect
-                    className={[styles.cityLabelBackground, labelHighlightClass].join(" ")}
-                    x={labelX - labelWidth / 2}
-                    y={labelY - (isTwoLineLabel ? 17 : 13)}
-                    width={labelWidth}
-                    height={isTwoLineLabel ? 28 : 18}
-                    rx="3"
-                  />
-                )}
-                <rect x={city.x - 5} y={city.y - 5} width="10" height="10" rx="2" />
-                <text x={labelX} y={labelY}>
-                  {city.id === 9 ? (
-                    <>
-                      <tspan x={labelX} y={labelY - 6}>Rimnicu</tspan>
-                      <tspan x={labelX} y={labelY + 6}>Vilcea</tspan>
-                    </>
-                  ) : city.name}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-
-      <aside className={styles.panel}>
-        <p className={styles.kicker}>SAMPLE TRACE</p>
-        <h2>UCS and current-flow A*</h2>
-        <div className={styles.progress} aria-hidden="true">
-          <span style={{ width: `${((step + 1) / timelineLength) * 100}%` }} />
+    <div className={styles.citySearch}>
+      <label htmlFor={`${listId}-input`}>{label}</label>
+      <input
+        id={`${listId}-input`}
+        type="text"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls={listboxOpen ? listId : undefined}
+        aria-expanded={listboxOpen}
+        aria-activedescendant={listboxOpen && matches[activeIndex] ? `${listId}-${matches[activeIndex].id}` : undefined}
+        aria-describedby={isOpen && matches.length === 0 ? emptyStatusId : undefined}
+        value={query}
+        placeholder="Type a city…"
+        autoComplete="off"
+        spellCheck={false}
+        onFocus={(event) => {
+          onFocus();
+          event.currentTarget.select();
+          setIsOpen(true);
+        }}
+        onBlur={() => {
+          window.setTimeout(() => {
+            setIsOpen(false);
+            setQuery(romaniaGraph.cities[selectedCity].name);
+          }, 100);
+        }}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setActiveIndex(0);
+          setIsOpen(true);
+        }}
+        onKeyDown={handleKeyDown}
+      />
+      {listboxOpen && (
+        <div className={styles.searchResults} id={listId} role="listbox">
+          {matches.map((city, index) => (
+            <button
+              key={city.id}
+              id={`${listId}-${city.id}`}
+              type="button"
+              role="option"
+              aria-selected={city.id === selectedCity}
+              className={index === activeIndex ? styles.activeOption : undefined}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => choose(city.id)}
+            >
+              {city.name}
+            </button>
+          ))}
         </div>
-        <div className={styles.currentGrid}>
-          <Metric label="UCS expanded now" value={romaniaGraph.cities[ucsFrame.expanded_city].name} />
-          <Metric label="A* expanded now" value={romaniaGraph.cities[astarFrame.expanded_city].name} />
+      )}
+      {isOpen && matches.length === 0 && (
+        <div className={styles.searchResults}>
+          <p className={styles.noResults} id={emptyStatusId} role="status">
+            No city starts with “{query}”.
+          </p>
         </div>
-        <div className={styles.metrics}>
-          <Metric label="UCS distance" value={`${data.ucs.cost} km`} />
-          <Metric label="A* distance" value={`${data.astar.cost} km`} />
-          <Metric label="UCS expanded" value={data.ucs.expanded} />
-          <Metric label="A* expanded" value={data.astar.expanded} />
-        </div>
-        <div className={styles.legend}>
-          <p className={styles.kicker}>TRACE LEGEND</p>
-          <Legend className={styles.swatchCity} label="Not discovered" />
-          <Legend className={styles.swatchExpanded} label="Expanded" />
-          <Legend className={styles.swatchUcs} label="UCS frontier / tree" />
-          <Legend className={styles.swatchAstar} label="A* frontier / tree" />
-          <Legend className={styles.swatchUcsHighlight} label="UCS city highlight" />
-          <Legend className={styles.swatchAstarHighlight} label="A* city highlight" />
-          <Legend className={styles.swatchPath} label="Final optimal path" />
-        </div>
-      </aside>
-    </section>
+      )}
+    </div>
+  );
+}
+
+function normalizeCityName(value: string) {
+  return value.toLocaleLowerCase("en").trim();
+}
+
+function PlayIcon() {
+  return (
+    <svg className={styles.controlIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
+      <path d="M3 2h3v2h3v2h3v2h3v4h-3v2H9v2H6v2H3Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg className={styles.controlIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
+      <path d="M3 2h6v16H3Zm2 3v10h2V5Zm6-3h6v16h-6Zm2 3v10h2V5Z" fill="currentColor" fillRule="evenodd" />
+    </svg>
+  );
+}
+
+function ReplayIcon() {
+  return (
+    <svg className={styles.controlIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
+      <path d="M2 3h3V1h2v2h7v2H7v2H5v2H3V7H1V3Zm12 2h2v2h2v7h-2v2h-2v2H6v-2h8v-2h2V7h-2Z" fill="currentColor" />
+    </svg>
   );
 }
 
@@ -250,7 +612,6 @@ function roadLabelPosition(start: CityPosition, end: CityPosition) {
   const deltaY = end.y - start.y;
   const length = Math.hypot(deltaX, deltaY) || 1;
   const offset = 13;
-
   return {
     x: (start.x + end.x) / 2 - (deltaY / length) * offset,
     y: (start.y + end.y) / 2 + (deltaX / length) * offset,
@@ -259,7 +620,7 @@ function roadLabelPosition(start: CityPosition, end: CityPosition) {
 
 function SearchTreeLines({ discovered, cityById, className, offset }: { discovered: DiscoveredNode[]; cityById: Map<number, CityPosition>; className: string; offset: number }) {
   return (
-    <g className={styles.searchTree}>
+    <g className={styles.searchTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null ? null : (
         <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} cityById={cityById} className={className} offset={offset} />
       ))}
@@ -269,9 +630,9 @@ function SearchTreeLines({ discovered, cityById, className, offset }: { discover
 
 function ExpandedTreeLines({ discovered, expanded, cityById, className, offset }: { discovered: DiscoveredNode[]; expanded: Set<number>; cityById: Map<number, CityPosition>; className: string; offset: number }) {
   return (
-    <g className={styles.expandedTree}>
+    <g className={styles.expandedTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null || !expanded.has(node.city) ? null : (
-        <GraphLine key={node.parent + "-" + node.city} from={node.parent} to={node.city} cityById={cityById} className={className} offset={offset} />
+        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} cityById={cityById} className={className} offset={offset} />
       ))}
     </g>
   );
@@ -279,9 +640,9 @@ function ExpandedTreeLines({ discovered, expanded, cityById, className, offset }
 
 function PathLines({ path, cityById, className, offset }: { path: number[]; cityById: Map<number, CityPosition>; className: string; offset: number }) {
   return (
-    <g className={styles.finalPath}>
+    <g className={styles.finalPath} aria-hidden="true">
       {path.slice(0, -1).map((city, index) => (
-        <GraphLine key={city + "-" + path[index + 1]} from={city} to={path[index + 1]} cityById={cityById} className={className} offset={offset} />
+        <GraphLine key={`${city}-${path[index + 1]}`} from={city} to={path[index + 1]} cityById={cityById} className={className} offset={offset} />
       ))}
     </g>
   );

@@ -1,3 +1,4 @@
+// app/page.tsx
 import SampleGraphDemo from "../components/sample/SampleGraphDemo";
 
 export default function HomePage() {

@@ -3,6 +3,7 @@
 /.next/
 /wasm/target/
 /wasm/pkg/
+/public/wasm/
 *.tsbuildinfo
 next-env.d.ts
 __pycache__/

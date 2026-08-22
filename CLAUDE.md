@@ -164,10 +164,9 @@ otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
 **The first PR that adds frontend logic also adds the test runner (vitest + jsdom +
 testing-library) and the CI step. Tests do not land in a follow-up.**
 
-This was agreed on 2026-08-20 and not written here, so the first frontend PR shipped
-without it: `components/sample/SampleGraphDemo.tsx` is ~300 lines with no test runner
-installed anywhere in the repo. That debt is open. Do not let a second frontend PR land
-on top of it.
+The Step 4 PR installs the runner and covers the trace selectors, Wasm JSON boundary,
+Zustand search/playback state, and key route-selection interactions. Keep those layers
+covered when their contracts change.
 
 Do **not** pre-install the runner ahead of the logic — one sitting there with no tests
 grows a placeholder and stops being noticed. This repository has already produced that
@@ -179,11 +178,9 @@ Both times the capability existed and nothing invoked it.
 `verify:frontend-sample` is **not** a frontend test. It checks a Rust-generated JSON file
 and the road table; it never renders a component.
 
-The highest-value first test is a pure selectors module, because the trace supplies its
-own oracle: at step *i* the expanded set must equal `explored_order[0..i]`, derived rather
-than hand-written. That module does not exist yet — the derivations currently live inline
-in `SampleGraphDemo.tsx`, which is precisely why nothing there is testable. Extracting
-them is the work; the tests are easy afterwards.
+`lib/traceSelectors.ts` keeps trace derivation outside React so its tests can use the
+Rust-generated sample as their oracle: at step *i*, the expanded set equals
+`explored_order[0..i]`.
 
 ---
 
@@ -237,10 +234,10 @@ When a bug is found, complete all four steps before reporting it fixed:
 
 1. `npm run verify` exits 0 — invariants, parity, and correctness all pass
 2. `npm run typecheck` exits 0
-3. No invariant I1–I5 broken
-4. For a bug fix: the loop above is closed, all four steps
-5. No pre-existing check newly broken
-
+3. `npm test` exits 0
+4. No invariant I1–I5 broken
+5. For a bug fix: the loop above is closed, all four steps
+6. No pre-existing check newly broken
 ---
 
 ## Common commands
@@ -276,8 +273,7 @@ python3 reference/romania_search.py
   state can persist between commands; use an absolute path or `cd` to the repo root first.
 - **`bin/` must exist** before `rustc -o bin/…` or `g++ -o bin/…` — it is gitignored, so a
   fresh clone does not have it. `mkdir -p bin` first.
-- **`wasm32-unknown-unknown` and `wasm-pack` are not installed.** Needed from step 4:
-  `rustup target add wasm32-unknown-unknown` and `cargo install wasm-pack`.
+- **`wasm32-unknown-unknown` is declared in `rust-toolchain.toml`.** `wasm-pack` is also needed locally; install the pinned project version with `cargo install wasm-pack --version 0.15.0 --locked`.
 - **`std::time::Instant` panics on `wasm32`.** This is what I4 exists to prevent. Keeping
   `benchmark()` in `bin/cli.rs` solves it automatically.
 - **`reference/romania_search.cpp` has one pre-existing `-Wall -Wextra` warning** — an unused
@@ -311,3 +307,13 @@ python3 reference/romania_search.py
   - **Still needed.** Settings → Pages → Source: GitHub Actions, before build step 6
   - **Optional.** Turn on "Require review from Code Owners" to make `.github/CODEOWNERS`
     take effect; it is inert until then
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

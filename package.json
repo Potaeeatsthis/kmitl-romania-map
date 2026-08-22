@@ -3,9 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "build:wasm": "wasm-pack build wasm --target web --release --out-dir ../public/wasm --out-name romania_search",
+    "dev": "npm run build:wasm && next dev",
+    "build": "npm run build:wasm && next build",
     "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "verify:frontend-sample": "node scripts/verify_frontend_sample.mjs",
     "verify:invariants": "bash scripts/verify_invariants.sh",
@@ -19,12 +22,18 @@
   "dependencies": {
     "next": "16.3.1",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zustand": "5.0.15"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.6",
     "@types/node": "26.2.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.4",
-    "typescript": "7.0.2"
+    "jsdom": "29.1.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
   }
 }
