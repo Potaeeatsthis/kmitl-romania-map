@@ -1,6 +1,13 @@
 // lib/wasm/client.ts
 
-import type { SearchResponse, SearchResult, SearchStep } from "../types";
+import { romaniaGraph } from "../romaniaGraph";
+import type {
+  DiscoveredNode,
+  FrontierNode,
+  SearchResponse,
+  SearchResult,
+  SearchStep,
+} from "../types";
 
 type WasmModule = {
   default: (input?: { module_or_path: string | URL }) => Promise<unknown>;
@@ -10,7 +17,7 @@ type WasmModule = {
 let wasmModulePromise: Promise<WasmModule> | null = null;
 
 function publicUrl(path: string) {
-  return `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}${path}`;
+  return (process.env.NEXT_PUBLIC_BASE_PATH ?? "") + path;
 }
 
 async function loadWasm(): Promise<WasmModule> {
@@ -35,12 +42,23 @@ async function loadWasm(): Promise<WasmModule> {
 }
 
 export async function runSearch(start: number, goal: number): Promise<SearchResponse> {
-  if (!Number.isInteger(start) || !Number.isInteger(goal)) {
+  if (!isCityIndex(start) || !isCityIndex(goal)) {
     throw new Error("Start and destination must be valid city indices.");
   }
 
   const wasm = await loadWasm();
-  const result: unknown = JSON.parse(wasm.searchPairJson(start, goal));
+  return parseSearchResponse(wasm.searchPairJson(start, goal));
+}
+
+export function parseSearchResponse(json: string): SearchResponse {
+  let result: unknown;
+
+  try {
+    result = JSON.parse(json);
+  } catch {
+    throw new Error("Rust returned invalid JSON.");
+  }
+
   assertSearchResponse(result);
   return result;
 }
@@ -54,26 +72,48 @@ function assertSearchResponse(value: unknown): asserts value is SearchResponse {
 function isSearchResult(value: unknown): value is SearchResult {
   return (
     isRecord(value) &&
-    isNumberArray(value.path) &&
-    isNumberArray(value.explored_order) &&
+    isCityIndexArray(value.path) &&
+    isCityIndexArray(value.explored_order) &&
     Array.isArray(value.trace) &&
     value.trace.every(isSearchStep) &&
-    typeof value.cost === "number" &&
-    typeof value.expanded === "number" &&
-    typeof value.generated === "number" &&
-    typeof value.peak_frontier === "number" &&
-    typeof value.peak_records === "number" &&
-    typeof value.peak_payload_bytes === "number"
+    isNonNegativeInteger(value.cost) &&
+    isNonNegativeInteger(value.expanded) &&
+    value.trace.length === value.expanded &&
+    value.explored_order.length === value.expanded &&
+    isNonNegativeInteger(value.generated) &&
+    isNonNegativeInteger(value.peak_frontier) &&
+    isNonNegativeInteger(value.peak_records) &&
+    isNonNegativeInteger(value.peak_payload_bytes)
   );
 }
 
 function isSearchStep(value: unknown): value is SearchStep {
   return (
     isRecord(value) &&
-    typeof value.expanded_city === "number" &&
-    typeof value.expanded_cost === "number" &&
+    isCityIndex(value.expanded_city) &&
+    isNonNegativeInteger(value.expanded_cost) &&
     Array.isArray(value.frontier) &&
-    Array.isArray(value.discovered)
+    value.frontier.every(isFrontierNode) &&
+    Array.isArray(value.discovered) &&
+    value.discovered.every(isDiscoveredNode)
+  );
+}
+
+function isFrontierNode(value: unknown): value is FrontierNode {
+  return (
+    isRecord(value) &&
+    isCityIndex(value.city) &&
+    isNonNegativeInteger(value.cost) &&
+    isNonNegativeNumber(value.priority)
+  );
+}
+
+function isDiscoveredNode(value: unknown): value is DiscoveredNode {
+  return (
+    isRecord(value) &&
+    isCityIndex(value.city) &&
+    isNonNegativeInteger(value.cost) &&
+    (value.parent === null || isCityIndex(value.parent))
   );
 }
 
@@ -81,6 +121,18 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function isNumberArray(value: unknown): value is number[] {
-  return Array.isArray(value) && value.every((item) => typeof item === "number");
+function isCityIndexArray(value: unknown): value is number[] {
+  return Array.isArray(value) && value.every(isCityIndex);
+}
+
+function isCityIndex(value: unknown): value is number {
+  return isNonNegativeInteger(value) && value < romaniaGraph.cities.length;
+}
+
+function isNonNegativeInteger(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function isNonNegativeNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value) && value >= 0;
 }

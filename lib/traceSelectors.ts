@@ -1,3 +1,4 @@
+// lib/traceSelectors.ts
 import type { SearchResponse } from "./types";
 
 export function getTimelineLength(data: SearchResponse | null): number {

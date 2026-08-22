@@ -115,9 +115,6 @@ export default function SampleGraphDemo() {
     timelineLength,
   ]);
 
-  const ucsIndex = data ? Math.min(step, data.ucs.trace.length - 1) : 0;
-  const astarIndex = data ? Math.min(step, data.astar.trace.length - 1) : 0;
-
   const ucsFrame = getTraceFrame(data, "ucs", step);
   const astarFrame = getTraceFrame(data, "astar", step);
 
@@ -128,10 +125,10 @@ export default function SampleGraphDemo() {
   const ucsComplete = Boolean(data && step >= data.ucs.trace.length - 1);
   const astarComplete = Boolean(data && step >= data.astar.trace.length - 1);
   const finalPath = getFinalPath(
-  data,
-  ucsComplete,
-  astarComplete,
-);
+    data,
+    ucsComplete,
+    astarComplete,
+  );
   const progress = timelineLength > 0 ? ((Math.min(step, lastStep) + 1) / timelineLength) * 100 : 0;
 
   const headerStatus = isLoading
@@ -477,6 +474,8 @@ function CitySearch({
     ),
     [normalizedQuery],
   );
+  const listboxOpen = isOpen && matches.length > 0;
+  const emptyStatusId = listId + "-empty";
 
   useEffect(() => {
     setQuery(selected.name);
@@ -515,9 +514,10 @@ function CitySearch({
         type="text"
         role="combobox"
         aria-autocomplete="list"
-        aria-controls={listId}
-        aria-expanded={isOpen}
-        aria-activedescendant={isOpen && matches[activeIndex] ? `${listId}-${matches[activeIndex].id}` : undefined}
+        aria-controls={listboxOpen ? listId : undefined}
+        aria-expanded={listboxOpen}
+        aria-activedescendant={listboxOpen && matches[activeIndex] ? `${listId}-${matches[activeIndex].id}` : undefined}
+        aria-describedby={isOpen && matches.length === 0 ? emptyStatusId : undefined}
         value={query}
         placeholder="Type a city…"
         autoComplete="off"
@@ -540,9 +540,9 @@ function CitySearch({
         }}
         onKeyDown={handleKeyDown}
       />
-      {isOpen && (
+      {listboxOpen && (
         <div className={styles.searchResults} id={listId} role="listbox">
-          {matches.length ? matches.map((city, index) => (
+          {matches.map((city, index) => (
             <button
               key={city.id}
               id={`${listId}-${city.id}`}
@@ -555,9 +555,14 @@ function CitySearch({
             >
               {city.name}
             </button>
-          )) : (
-            <p className={styles.noResults} role="status">No city starts with “{query}”.</p>
-          )}
+          ))}
+        </div>
+      )}
+      {isOpen && matches.length === 0 && (
+        <div className={styles.searchResults}>
+          <p className={styles.noResults} id={emptyStatusId} role="status">
+            No city starts with “{query}”.
+          </p>
         </div>
       )}
     </div>

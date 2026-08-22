@@ -1,3 +1,4 @@
+// stores/useSearchStore.ts
 "use client";
 
 import { create } from "zustand";

@@ -164,10 +164,9 @@ otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
 **The first PR that adds frontend logic also adds the test runner (vitest + jsdom +
 testing-library) and the CI step. Tests do not land in a follow-up.**
 
-This was agreed on 2026-08-20 and not written here, so the first frontend PR shipped
-without it: `components/sample/SampleGraphDemo.tsx` is ~300 lines with no test runner
-installed anywhere in the repo. That debt is open. Do not let a second frontend PR land
-on top of it.
+The Step 4 PR installs the runner and covers the trace selectors, Wasm JSON boundary,
+Zustand search/playback state, and key route-selection interactions. Keep those layers
+covered when their contracts change.
 
 Do **not** pre-install the runner ahead of the logic — one sitting there with no tests
 grows a placeholder and stops being noticed. This repository has already produced that
@@ -179,11 +178,9 @@ Both times the capability existed and nothing invoked it.
 `verify:frontend-sample` is **not** a frontend test. It checks a Rust-generated JSON file
 and the road table; it never renders a component.
 
-The highest-value first test is a pure selectors module, because the trace supplies its
-own oracle: at step *i* the expanded set must equal `explored_order[0..i]`, derived rather
-than hand-written. That module does not exist yet — the derivations currently live inline
-in `SampleGraphDemo.tsx`, which is precisely why nothing there is testable. Extracting
-them is the work; the tests are easy afterwards.
+`lib/traceSelectors.ts` keeps trace derivation outside React so its tests can use the
+Rust-generated sample as their oracle: at step *i*, the expanded set equals
+`explored_order[0..i]`.
 
 ---
 
@@ -232,8 +229,6 @@ When a bug is found, complete all four steps before reporting it fixed:
 > a code change Claude makes. CI only ever runs what is already configured.
 
 ---
-
-## Definition of done
 
 ## Definition of done
 
