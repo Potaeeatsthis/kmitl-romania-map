@@ -1,0 +1,355 @@
+.wrapper {
+
+  --line: #c9dfd2;
+
+  --ink: #102a1e;
+
+  --muted: #526d60;
+
+  --ucs: hsl(163, 100%, 20%);
+
+  --astar: #00ed64;
+
+  box-sizing: border-box;
+
+  padding: 30px;
+
+  background: #ffffff;
+
+  color: var(--ink);
+
+  font-family: var(--font-interface);
+
+}
+
+.header {
+
+  margin-bottom: 25px;
+
+}
+
+.kicker {
+
+  margin: 0 0 7.5px;
+
+  color: #137a47;
+
+  font-size: 12.5px;
+
+  font-weight: 500;
+
+  letter-spacing: 0.14em;
+
+  text-transform: uppercase;
+
+}
+
+.title {
+
+  margin: 0 0 10px;
+
+  font-size: 25px;
+
+  font-weight: 400;
+
+  line-height: 1.2;
+
+}
+
+.summary {
+
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: 15px;
+
+  line-height: 1.5;
+
+}
+
+.footnote {
+
+  margin: 22.5px 0 0;
+
+  color: var(--muted);
+
+  font-size: 12.5px;
+
+  line-height: 1.5;
+
+}
+
+.stack {
+
+  padding: 20px;
+
+  background: transparent;
+
+}
+
+.stack .header {
+
+  margin-bottom: 17.5px;
+
+}
+
+
+/* Hero block */
+
+.hero {
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  text-align: center;
+
+}
+
+.heroRingWrap {
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  width: 100%;
+
+  margin: 2.5px 0 12.5px;
+
+}
+
+.heroRing {
+
+  display: block;
+
+  overflow: visible;
+
+}
+
+.heroRingTrack {
+
+  stroke: #eef2ee;
+
+}
+
+.heroRingProgress {
+
+  stroke: var(--ucs);
+
+}
+
+.heroRingLabel {
+
+  fill: var(--ink);
+
+  font-size: 30px;
+
+  font-weight: 500;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.heroDelta {
+
+  margin: 0;
+
+  color: var(--ink);
+
+  font-size: 17.5px;
+
+  font-weight: 500;
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.heroMethod {
+
+  margin: 7.5px 0 0;
+
+  color: var(--muted);
+
+  font-size: 12.5px;
+
+  line-height: 1.5;
+
+}
+
+.heroDivider {
+
+  height: 1px;
+
+  background: #eef2ee;
+
+  margin: 5px 0 20px;
+
+}
+
+
+.divRow {
+
+  margin-bottom: 22.5px;
+
+}
+
+.divLabel {
+
+  font-size: 12.5px;
+
+  letter-spacing: 0.1em;
+
+  text-transform: uppercase;
+
+  color: var(--muted);
+
+  margin-bottom: 7.5px;
+
+}
+
+.divTrack {
+
+  display: grid;
+
+  grid-template-columns: auto 1fr 2.5px 1fr auto;
+
+  align-items: center;
+
+  column-gap: 10px;
+
+}
+
+.divValLeft {
+
+  text-align: right;
+
+  min-width: 42.5px;
+
+  font-size: 15px;
+
+  color: var(--ink);
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.divValRight {
+
+  text-align: left;
+
+  min-width: 42.5px;
+
+  font-size: 15px;
+
+  color: var(--ink);
+
+  font-variant-numeric: tabular-nums;
+
+}
+
+.divBarAreaLeft {
+
+  display: flex;
+
+  justify-content: flex-end;
+
+}
+
+.divBarAreaRight {
+
+  display: flex;
+
+  justify-content: flex-start;
+
+}
+
+.divBar {
+
+  height: 20px;
+
+}
+
+.divBarUcs {
+
+  background: var(--ucs);
+
+  border-radius: 5px 0 0 5px;
+
+}
+
+.divBarAstar {
+
+  background: var(--astar);
+
+  border-radius: 0 5px 5px 0;
+
+}
+
+.divAxis {
+
+  width: 2.5px;
+
+  height: 27.5px;
+
+  background: var(--line);
+
+}
+
+.divNote {
+
+  font-size: 12.5px;
+
+  color: #a06a1a;
+
+  margin-top: 5px;
+
+}
+
+.divLegend {
+
+  display: flex;
+
+  justify-content: center;
+
+  gap: 25px;
+
+  font-size: 12.5px;
+
+  color: var(--muted);
+
+  margin: 5px 0 17.5px;
+
+}
+
+.swatchUcs, .swatchAstar {
+
+  display: inline-block;
+
+  width: 10px;
+
+  height: 10px;
+
+  border-radius: 2.5px;
+
+}
+
+.swatchUcs {
+
+  background: var(--ucs);
+
+  margin-right: 5px;
+
+}
+
+.swatchAstar {
+
+  background: var(--astar);
+
+  margin-left: 5px;
+
+}
