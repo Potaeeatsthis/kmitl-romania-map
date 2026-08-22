@@ -68,18 +68,6 @@
 
 }
 
-.footnote {
-
-  margin: 22.5px 0 0;
-
-  color: var(--muted);
-
-  font-size: 12.5px;
-
-  line-height: 1.5;
-
-}
-
 .stack {
 
   padding: 20px;
@@ -139,15 +127,19 @@
 
 .heroRingProgress {
 
-  stroke: var(--ucs);
+  stroke: var(--astar);
 
+}
+
+.heroRingWorse {
+  stroke: #a06a1a;
 }
 
 .heroRingLabel {
 
   fill: var(--ink);
 
-  font-size: 30px;
+  font-size: 24px;
 
   font-weight: 500;
 
@@ -169,13 +161,20 @@
 
 }
 
+.heroComparison {
+  margin: 5px 0 0;
+  color: var(--ink);
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+
 .heroMethod {
 
   margin: 7.5px 0 0;
 
   color: var(--muted);
 
-  font-size: 12.5px;
+  font-size: 11.5px;
 
   line-height: 1.5;
 
@@ -352,4 +351,95 @@
 
   margin-left: 5px;
 
+}
+
+.routeSummary {
+  margin-bottom: 15px;
+}
+
+.routeLabel {
+  color: var(--muted);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+}
+
+.routeTitleRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.routeTitle {
+  min-width: 0;
+  margin: 0;
+  color: var(--ink);
+  font-size: 17.5px;
+  font-weight: 400;
+  line-height: 1.3;
+}
+
+.routeCost {
+  flex: 0 0 auto;
+  color: #137a47;
+  font-size: 14px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.routePath {
+  overflow-wrap: anywhere;
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.routePath span {
+  color: #137a47;
+  letter-spacing: 0.08em;
+}
+
+.splitPaths {
+  display: grid;
+  gap: 4px;
+}
+
+.pending,
+.errorState {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.errorState {
+  border-color: #b64b3b;
+  color: #8b2e23;
+}
+
+@media (max-width: 400px) {
+  .wrapper,
+  .stack {
+    padding: 16px;
+  }
+
+  .routeTitleRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .divTrack {
+    column-gap: 6px;
+  }
+
+  .divValLeft,
+  .divValRight {
+    min-width: 0;
+    font-size: 13px;
+  }
 }
