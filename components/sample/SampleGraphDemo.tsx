@@ -6,6 +6,13 @@ import type { CSSProperties, KeyboardEvent } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
 import type { DiscoveredNode } from "../../lib/types";
 import { romaniaGraph } from "../../lib/romaniaGraph";
+import {
+  getTimelineLength,
+  getTraceFrame,
+  getExpandedCities,
+  getFrontierCities,
+  getFinalPath,
+} from "../../lib/traceSelectors";
 import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./SampleGraphDemo.module.css";
 
@@ -80,9 +87,7 @@ export default function SampleGraphDemo() {
     () => new Map(romaniaGraph.cities.map((city) => [city.id, city])),
     [],
   );
-  const timelineLength = data
-    ? Math.max(data.ucs.trace.length, data.astar.trace.length)
-    : 0;
+  const timelineLength = getTimelineLength(data);
   const lastStep = Math.max(0, timelineLength - 1);
   const animationComplete = timelineLength > 0 && step >= lastStep;
 
@@ -112,22 +117,21 @@ export default function SampleGraphDemo() {
 
   const ucsIndex = data ? Math.min(step, data.ucs.trace.length - 1) : 0;
   const astarIndex = data ? Math.min(step, data.astar.trace.length - 1) : 0;
-  const ucsFrame = data?.ucs.trace[ucsIndex];
-  const astarFrame = data?.astar.trace[astarIndex];
-  const ucsExpanded = data
-    ? new Set(data.ucs.explored_order.slice(0, ucsIndex + 1))
-    : new Set<number>();
-  const astarExpanded = data
-    ? new Set(data.astar.explored_order.slice(0, astarIndex + 1))
-    : new Set<number>();
-  const ucsFrontier = new Set(ucsFrame?.frontier.map((node) => node.city) ?? []);
-  const astarFrontier = new Set(astarFrame?.frontier.map((node) => node.city) ?? []);
+
+  const ucsFrame = getTraceFrame(data, "ucs", step);
+  const astarFrame = getTraceFrame(data, "astar", step);
+
+  const ucsExpanded = getExpandedCities(data, "ucs", step);
+  const astarExpanded = getExpandedCities(data, "astar", step);
+  const ucsFrontier = getFrontierCities(ucsFrame);
+  const astarFrontier = getFrontierCities(astarFrame);
   const ucsComplete = Boolean(data && step >= data.ucs.trace.length - 1);
   const astarComplete = Boolean(data && step >= data.astar.trace.length - 1);
-  const finalPath = new Set([
-    ...(ucsComplete ? data?.ucs.path ?? [] : []),
-    ...(astarComplete ? data?.astar.path ?? [] : []),
-  ]);
+  const finalPath = getFinalPath(
+  data,
+  ucsComplete,
+  astarComplete,
+);
   const progress = timelineLength > 0 ? ((Math.min(step, lastStep) + 1) / timelineLength) * 100 : 0;
 
   const headerStatus = isLoading

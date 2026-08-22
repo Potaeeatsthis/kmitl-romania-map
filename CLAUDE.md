@@ -235,12 +235,14 @@ When a bug is found, complete all four steps before reporting it fixed:
 
 ## Definition of done
 
+## Definition of done
+
 1. `npm run verify` exits 0 — invariants, parity, and correctness all pass
 2. `npm run typecheck` exits 0
-3. No invariant I1–I5 broken
-4. For a bug fix: the loop above is closed, all four steps
-5. No pre-existing check newly broken
-
+3. `npm test` exits 0
+4. No invariant I1–I5 broken
+5. For a bug fix: the loop above is closed, all four steps
+6. No pre-existing check newly broken
 ---
 
 ## Common commands

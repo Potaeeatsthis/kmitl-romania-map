@@ -132,9 +132,12 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-      # tsc --noEmit is not the same check as a real build: it does not catch
-      # "use client" boundary violations, invalid route segment exports, or a
-      # server-only import pulled into a client component.
+      - name: Test
+        run: npm test
+
+      # tsc --noEmit is not the same check as a real build: it does not catch 
+      # "use client" boundary violations, invalid route segment exports, or a 
+      # server-only import pulled into a client component. 
       - name: Build
         run: npm run build
 
