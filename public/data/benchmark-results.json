@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-08-22",
+  "all_pairs": {
+    "city_count": 20,
+    "route_count": 400,
+    "includes_same_city_routes": true,
+    "results": [
+      {
+        "algorithm": "ucs",
+        "label": "UCS",
+        "expanded": 4200
+      },
+      {
+        "algorithm": "astar",
+        "label": "Current-flow A*",
+        "expanded": 2436
+      }
+    ],
+    "comparison": {
+      "expanded_reduction": 1764,
+      "expanded_reduction_percent": 42.0,
+      "optimal_cost_mismatches": 0,
+      "admissibility_violations": 0,
+      "consistency_violations": 0
+    }
+  },
+  "sample_route": {
+    "start": {
+      "id": 0,
+      "name": "Arad"
+    },
+    "goal": {
+      "id": 12,
+      "name": "Bucharest"
+    },
+    "cost_km": 418,
+    "results": [
+      {
+        "algorithm": "ucs",
+        "label": "UCS",
+        "median_runtime_us": 2.226,
+        "expanded": 13,
+        "generated": 14,
+        "peak_frontier": 4,
+        "peak_records": 40,
+        "logical_memory_bytes": 286
+      },
+      {
+        "algorithm": "astar",
+        "label": "Current-flow A*",
+        "median_runtime_us": 1.474,
+        "expanded": 9,
+        "generated": 13,
+        "peak_frontier": 6,
+        "peak_records": 33,
+        "logical_memory_bytes": 272
+      }
+    ],
+    "comparison": {
+      "expanded_reduction_percent": 30.8,
+      "runtime_reduction_percent": 33.8,
+      "logical_memory_reduction_percent": 4.9
+    }
+  },
+  "runtime_method": {
+    "source": "native Rust CLI",
+    "build_profile": "release",
+    "process_launches": 9,
+    "searches_per_algorithm_per_launch": 5000,
+    "statistic": "median of per-launch mean runtimes",
+    "heuristic_build_excluded": true,
+    "trace_recording_enabled": true,
+    "unit": "microseconds"
+  },
+  "memory_method": {
+    "unit": "bytes",
+    "description": "Language-neutral logical search payload; allocator and container overhead are excluded."
+  }
+}
