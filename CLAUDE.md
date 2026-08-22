@@ -165,8 +165,9 @@ otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
 testing-library) and the CI step. Tests do not land in a follow-up.**
 
 The Step 4 PR installs the runner and covers the trace selectors, Wasm JSON boundary,
-Zustand search/playback state, and key route-selection interactions. Keep those layers
-covered when their contracts change.
+Zustand search/playback state, and key route-selection interactions. Step 5 also covers
+the benchmark drawer, committed values, and keyboard focus. Keep those layers covered
+when their contracts change.
 
 Do **not** pre-install the runner ahead of the logic — one sitting there with no tests
 grows a placeholder and stops being noticed. This repository has already produced that
@@ -203,7 +204,7 @@ Rust-generated sample as their oracle: at step *i*, the expanded set equals
   too; feature-gate it if that ever costs anything
 - Heuristic tables are precomputed at build time and shipped as JSON; the browser never
   runs Gauss-Jordan
-- Benchmarks are produced natively by `wasm/src/bin/cli.rs`, committed as `benchmarks.json`
+- Benchmarks are produced natively by `wasm/src/bin/cli.rs`, committed as `public/data/benchmark-results.json`
 - The SVG schematic graph is the primary view; MapLibre is an optional enhancement layered
   on a project that already works
 - `search()` returns `Result`, never `panic!` — a panic in wasm would take down the
