@@ -1,4 +1,4 @@
-//lib/romaniaGraph.ts
+// lib/romaniaGraph.ts
 type CityPosition = {
   id: number;
   name: string;
