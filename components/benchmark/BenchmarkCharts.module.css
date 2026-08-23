@@ -97,6 +97,26 @@
 
 }
 
+.ringGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.ringMetric {
+  min-width: 0;
+}
+
+.ringKicker {
+  display: block;
+  min-height: 2.6em;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+}
+
 .heroRingWrap {
 
   display: flex;
@@ -147,6 +167,13 @@
 
 }
 
+.heroRingUnit {
+  fill: var(--muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
 .heroDelta {
 
   margin: 0;
@@ -166,6 +193,13 @@
   color: var(--ink);
   font-size: 12.5px;
   font-variant-numeric: tabular-nums;
+}
+
+.speedRoute {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 1.4;
 }
 
 .heroMethod {

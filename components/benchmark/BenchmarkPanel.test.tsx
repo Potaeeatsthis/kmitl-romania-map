@@ -48,6 +48,10 @@ describe("BenchmarkPanel", () => {
     expect(screen.getByText(/All 400 pairs:/)).toHaveTextContent(
       "4,200 → 2,436 expansions (42% fewer).",
     );
+    expect(
+      screen.getByRole("img", { name: /A\* median runtime 1\.474 microseconds/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("UCS 2.226 → A* 1.474 µs")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Arad → Bucharest" })).toBeInTheDocument();
     expect(screen.getByText("418 km")).toBeInTheDocument();
     expect(screen.getByText(/Arad → Sibiu → Rimnicu Vilcea → Pitesti → Bucharest/)).toBeInTheDocument();
@@ -87,5 +91,14 @@ describe("BenchmarkPanel", () => {
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Open benchmark results" })).toHaveFocus();
     });
+  });
+
+  it("uses the box-drawing cross for the close control", async () => {
+    const user = userEvent.setup();
+    render(<BenchmarkPanel />);
+
+    await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
+
+    expect(screen.getByText("╳")).toBeInTheDocument();
   });
 });

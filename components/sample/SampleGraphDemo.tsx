@@ -378,7 +378,7 @@ export default function SampleGraphDemo() {
               onSelect={(cityId) => setCity("destination", cityId)}
             />
             <p className={styles.mapHint}>
-              Map: choose the <strong>{selecting === "start" ? "starting point" : "destination to run the search"}</strong>.
+              Map: choose a starting point, then a destination.
             </p>
             <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
               {isLoading ? "Running Rust…" : "Run search"}
@@ -441,10 +441,6 @@ export default function SampleGraphDemo() {
             </label>
           </div>
 
-          <div className={styles.currentGrid}>
-            <Metric label="UCS expanded now" value={ucsFrame ? romaniaGraph.cities[ucsFrame.expanded_city].name : "—"} />
-            <Metric label="A* expanded now" value={astarFrame ? romaniaGraph.cities[astarFrame.expanded_city].name : "—"} />
-          </div>
         </aside>
       </section>
     </main>
@@ -595,10 +591,6 @@ function ReplayIcon() {
       <path d="M2 3h3V1h2v2h7v2H7v2H5v2H3V7H1V3Zm12 2h2v2h2v7h-2v2h-2v2H6v-2h8v-2h2V7h-2Z" fill="currentColor" />
     </svg>
   );
-}
-
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return <div><span>{label}</span><strong>{value}</strong></div>;
 }
 
 function Legend({ className, label }: { className: string; label: string }) {

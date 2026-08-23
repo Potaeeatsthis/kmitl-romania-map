@@ -63,15 +63,7 @@ export default function BenchmarkPanel() {
             onClick={() => setOpen(false)}
             aria-label="Close benchmark results"
           >
-            <svg
-              className={styles.closeIcon}
-              viewBox="0 0 16 16"
-              aria-hidden="true"
-              focusable="false"
-              shapeRendering="crispEdges"
-            >
-              <path d="M2 2h3v3h2v2H5v2H2v3h3V9h2V7h2v2h2v3h3V9h-3V7H9V5h2V2H8v3H6V2Z" fill="currentColor" />
-            </svg>
+            <span className={styles.closeGlyph} aria-hidden="true">╳</span>
           </button>
         </div>
         <div className={styles.drawerBody}>

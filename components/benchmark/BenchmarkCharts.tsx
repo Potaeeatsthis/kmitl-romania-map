@@ -90,6 +90,8 @@ export default function BenchmarkCharts() {
 
   const allUcs = benchmark.all_pairs.results.find((result) => result.algorithm === "ucs");
   const allAstar = benchmark.all_pairs.results.find((result) => result.algorithm === "astar");
+  const sampleUcs = benchmark.sample_route.results.find((result) => result.algorithm === "ucs");
+  const sampleAstar = benchmark.sample_route.results.find((result) => result.algorithm === "astar");
   const startName = romaniaGraph.cities[startCity]?.name ?? "Unknown city";
   const destinationName = romaniaGraph.cities[destinationCity]?.name ?? "Unknown city";
 
@@ -120,23 +122,64 @@ export default function BenchmarkCharts() {
       </div>
 
       <div className={styles.hero}>
-        <div className={styles.heroRingWrap}>
-          <HeroRing
-            percent={Math.min(Math.abs(selectedExpansionPercent ?? 0), 100)}
-            value={selectedExpansionPercent === null ? "—" : Math.abs(selectedExpansionPercent) + "%"}
-            label={selectedExpansionLabel}
-            isWorse={(selectedExpansionPercent ?? 0) < 0}
-          />
+        <div className={styles.ringGrid}>
+          <div className={styles.ringMetric}>
+            <span className={styles.ringKicker}>SELECTED ROUTE</span>
+            <div className={styles.heroRingWrap}>
+              <HeroRing
+                percent={Math.min(Math.abs(selectedExpansionPercent ?? 0), 100)}
+                value={selectedExpansionPercent === null ? "—" : Math.abs(selectedExpansionPercent) + "%"}
+                label={selectedExpansionLabel}
+                isWorse={(selectedExpansionPercent ?? 0) < 0}
+              />
+            </div>
+
+            <p className={styles.heroDelta}>{selectedExpansionLabel}</p>
+
+            {routeData && (
+              <p className={styles.heroComparison}>
+                UCS {routeData.ucs.expanded.toLocaleString("en-US")} → A*{" "}
+                {routeData.astar.expanded.toLocaleString("en-US")} expansions
+              </p>
+            )}
+          </div>
+
+          {sampleUcs && sampleAstar && (
+            <div className={styles.ringMetric}>
+              <span className={styles.ringKicker}>NATIVE SPEED SAMPLE</span>
+              <div className={styles.heroRingWrap}>
+                <HeroRing
+                  percent={Math.min(
+                    Math.abs(benchmark.sample_route.comparison.runtime_reduction_percent),
+                    100,
+                  )}
+                  value={sampleAstar.median_runtime_us.toFixed(3)}
+                  unit="µs"
+                  label={
+                    "A* median runtime " +
+                    sampleAstar.median_runtime_us.toFixed(3) +
+                    " microseconds; " +
+                    benchmark.sample_route.comparison.runtime_reduction_percent +
+                    "% faster than UCS on " +
+                    benchmark.sample_route.start.name +
+                    " to " +
+                    benchmark.sample_route.goal.name
+                  }
+                  isWorse={benchmark.sample_route.comparison.runtime_reduction_percent < 0}
+                />
+              </div>
+
+              <p className={styles.heroDelta}>A* median runtime</p>
+              <p className={styles.heroComparison}>
+                UCS {sampleUcs.median_runtime_us.toFixed(3)} → A*{" "}
+                {sampleAstar.median_runtime_us.toFixed(3)} µs
+              </p>
+              <p className={styles.speedRoute}>
+                {benchmark.sample_route.start.name} → {benchmark.sample_route.goal.name}
+              </p>
+            </div>
+          )}
         </div>
-
-        <p className={styles.heroDelta}>{selectedExpansionLabel}</p>
-
-        {routeData && (
-          <p className={styles.heroComparison}>
-            UCS {routeData.ucs.expanded.toLocaleString("en-US")} → A*{" "}
-            {routeData.astar.expanded.toLocaleString("en-US")} expansions
-          </p>
-        )}
 
         <p className={styles.heroMethod}>
           All {benchmark.all_pairs.route_count.toLocaleString("en-US")} pairs:{" "}
@@ -193,11 +236,13 @@ export default function BenchmarkCharts() {
 function HeroRing({
   percent,
   value,
+  unit,
   label,
   isWorse,
 }: {
   percent: number;
   value: string;
+  unit?: string;
   label: string;
   isWorse: boolean;
 }) {
@@ -236,15 +281,26 @@ function HeroRing({
         strokeLinecap="round"
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
       />
-      <text
-        className={styles.heroRingLabel}
-        x="50%"
-        y="50%"
-        textAnchor="middle"
-        dominantBaseline="middle"
-      >
-        {value}
-      </text>
+      {unit ? (
+        <>
+          <text className={styles.heroRingLabel} x="50%" y="48%" textAnchor="middle">
+            {value}
+          </text>
+          <text className={styles.heroRingUnit} x="50%" y="65%" textAnchor="middle">
+            {unit}
+          </text>
+        </>
+      ) : (
+        <text
+          className={styles.heroRingLabel}
+          x="50%"
+          y="50%"
+          textAnchor="middle"
+          dominantBaseline="middle"
+        >
+          {value}
+        </text>
+      )}
     </svg>
   );
 }
