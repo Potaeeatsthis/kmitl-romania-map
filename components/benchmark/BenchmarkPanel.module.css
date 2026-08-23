@@ -86,9 +86,11 @@
   color: #0b5631;
 }
 
-.closeIcon {
-  width: 16px;
-  height: 16px;
+.closeGlyph {
+  font-family: "Departure Mono", "Courier New", monospace;
+  font-weight: 400;
+  font-size: 19px;
+  line-height: 1;
 }
 
 .tab:focus-visible,
