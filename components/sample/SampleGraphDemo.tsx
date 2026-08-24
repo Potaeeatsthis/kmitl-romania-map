@@ -243,13 +243,6 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
   );
   const progress = timelineLength > 0 ? ((Math.min(step, lastStep) + 1) / timelineLength) * 100 : 0;
 
-  const headerStatus = isLoading
-    ? "Running Rust search…"
-    : !data
-      ? "Choose route · Run search"
-      : animationComplete
-        ? "Animation complete · Replay"
-        : `Frame ${step + 1} / ${timelineLength}`;
   const mapZoom = mapViewport.zoom;
   const mapViewBox = getMapViewBox(mapViewport);
 
@@ -389,15 +382,6 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
           </div>
         </div>
         <div className={styles.headerActions}>
-          {animationComplete ? (
-            <button className={styles.headerStatusButton} type="button" onClick={replay}>
-              {headerStatus}
-            </button>
-          ) : (
-            <p className={styles.headerStatus} aria-live="polite">
-              {headerStatus}
-            </p>
-          )}
           <button
             className={styles.themeToggle}
             type="button"
@@ -682,10 +666,6 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
               </button>
             </div>
 
-            <p className={styles.helperText}>
-              Select two cities on the map to run automatically. Dropdown changes wait for Run search.
-            </p>
-
             <div className={styles.routeSelector}>
               <CitySearch
                 label="STARTING POINT"
@@ -730,7 +710,6 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
             aria-label="Open playback controls"
             title="Open playback controls"
           >
-            <span className={styles.departureIcon} aria-hidden="true">+</span>
             <span>Playback</span>
           </button>
         ) : (

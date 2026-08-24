@@ -98,6 +98,8 @@ describe("SampleGraphDemo", () => {
 
     const toggle = screen.getByRole("button", { name: "Switch to dark mode" });
     expect(toggle).toHaveTextContent("★");
+    expect(screen.queryByText(/^Frame \d+ \/ \d+$/)).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Replay animation" })).toBeInTheDocument();
 
     await user.click(toggle);
 
@@ -110,7 +112,7 @@ describe("SampleGraphDemo", () => {
     );
   });
 
-  it("minimizes playback with a Departure Mono control and reopens it", async () => {
+  it("minimizes playback and reopens it without an extra icon", async () => {
     const user = userEvent.setup();
     render(<SampleGraphDemo />);
 
@@ -119,7 +121,7 @@ describe("SampleGraphDemo", () => {
     await user.click(minimize);
 
     const open = screen.getByRole("button", { name: "Open playback controls" });
-    expect(open).toHaveTextContent("+");
+    expect(open).toHaveTextContent(/^Playback$/);
     await user.click(open);
 
     expect(screen.getByRole("button", { name: "Minimize playback controls" })).toBeInTheDocument();
