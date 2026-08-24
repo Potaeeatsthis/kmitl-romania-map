@@ -305,7 +305,15 @@ python3 reference/romania_search.py
   state can persist between commands; use an absolute path or `cd` to the repo root first.
 - **`bin/` must exist** before `rustc -o bin/…` or `g++ -o bin/…` — it is gitignored, so a
   fresh clone does not have it. `mkdir -p bin` first.
-- **`wasm32-unknown-unknown` is declared in `rust-toolchain.toml`.** `wasm-pack` is also needed locally; install the pinned project version with `cargo install wasm-pack --version 0.15.0 --locked`.
+- **`wasm32-unknown-unknown` is declared in `rust-toolchain.toml`**, but rustup installs a
+  declared target lazily, so a fresh machine hits it mid-build rather than up front.
+  `wasm-pack` is needed too, and neither is checked by `npm run verify`. Run `npm run doctor`
+  — it reports the verify toolchain and the build toolchain separately and prints the install
+  command for whatever is missing. **`wasm-pack` is pinned in `.wasm-pack-version`**, read by
+  both `verify_env.sh` and `ci.yml`, so install that exact version from the releases page —
+  `doctor` fails on a version mismatch, not just on absence. Avoid `cargo install wasm-pack`
+  (compiles from source, minutes) and the generic `init.sh` installer (takes latest, defeats
+  the pin).
 - **`std::time::Instant` panics on `wasm32`.** This is what I4 exists to prevent. Keeping
   `benchmark()` in `bin/cli.rs` solves it automatically.
 - **`reference/romania_search.cpp` has one pre-existing `-Wall -Wextra` warning** — an unused

@@ -2,7 +2,8 @@ name: CI
 
 # Gates the five invariants in CLAUDE.md. Every check here is a script in scripts/,
 # the same ones `/prevent` runs locally — this file holds no check logic of its own,
-# so a green local `npm run verify` means a green build.
+# so a green local `npm run verify:all` means a green build. `npm run doctor` reports
+# whether a machine has the toolchain both halves need.
 
 on:
   push:
@@ -17,6 +18,17 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+# Do NOT add paths-ignore or a paths filter to this workflow.
+#
+# Both jobs below are required status checks on master and dev, and they are required
+# by job NAME. A required check that a path filter skips never reports a status at all,
+# and GitHub reads "never reported" as still pending -- the pull request blocks forever
+# and only an admin can override it. The mistake looks obviously correct, which is why
+# this comment is here rather than in a wiki.
+#
+# If a docs-only PR ever needs to be fast, the shape that works is a job that always
+# runs and short-circuits internally, so it still reports a green status.
+
 # Neither job writes anything: they read the tree and run checks. The deploy job added
 # at build step 6 needs `pages: write` and `id-token: write` -- grant those on that job
 # alone rather than widening this default.
@@ -27,7 +39,11 @@ jobs:
   correctness:
     name: Invariants, parity, correctness
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Cold cache means a full --release --all-targets build of the crate, then cargo
+    # check, test, clippy and fmt, then g++, then 41 routes through three languages,
+    # then the sample exporter. Comfortable warm, thin cold. A timeout should catch a
+    # hang, not a slow legitimate run.
+    timeout-minutes: 20
 
     # Each verify script builds Rust into its own mktemp directory, so a full run used
     # to compile the crate four times and keep nothing between runs. Setting this makes
@@ -38,10 +54,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
 
@@ -50,7 +66,7 @@ jobs:
       # Keyed on the lockfile and the pinned toolchain: a dependency or a Rust version
       # change invalidates it, anything else reuses the previous run's artifacts.
       - name: Cache cargo
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: |
             ~/.cargo/registry
@@ -106,10 +122,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -120,14 +136,32 @@ jobs:
       - name: Resolve pinned Rust toolchain and Wasm target
         run: rustc --version && rustup target list --installed
 
-      - name: Cache wasm-pack
-        uses: actions/cache@v4
-        with:
-          path: /home/runner/.cargo/bin/wasm-pack
-          key: wasm-pack-linux-0.15.0
-
+      # The prebuilt binary, not `cargo install wasm-pack`, which compiles from source
+      # and takes minutes. That mattered: it ran inside this job's timeout alongside
+      # npm ci, typecheck, tests and a full next build, and it was guarded by a cache
+      # whose key never varied -- so a week without a run evicted the entry and the
+      # source build came back. A release tarball is a few seconds, so nothing is cached.
+      #
+      # The version comes from .wasm-pack-version rather than being written here, for the
+      # same reason .nvmrc exists: scripts/verify_env.sh reads the same file, so a machine
+      # and this runner cannot end up on different wasm-pack versions. The generic
+      # rustwasm installer script is deliberately NOT used -- it takes whatever is latest,
+      # which would leave wasm-pack the one unpinned tool in a project that pins its Rust
+      # toolchain precisely so builds are reproducible.
       - name: Install wasm-pack
-        run: command -v wasm-pack > /dev/null || cargo install wasm-pack --version 0.15.0 --locked
+        run: |
+          version="$(tr -d '[:space:]' < .wasm-pack-version)"
+          name="wasm-pack-v${version}-x86_64-unknown-linux-musl"
+          curl -sSfL "https://github.com/rustwasm/wasm-pack/releases/download/v${version}/${name}.tar.gz" \
+            | tar -xz -C "$HOME/.cargo/bin" --strip-components=1 "${name}/wasm-pack"
+          wasm-pack --version
+
+      - name: Cache Next build
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .next/cache
+          key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'stores/**') }}
+          restore-keys: next-${{ hashFiles('package-lock.json') }}-
 
       - name: Typecheck
         run: npm run typecheck
