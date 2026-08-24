@@ -225,3 +225,37 @@ suites, add a narrow documented `#[allow(dead_code)]` on that helper only.
 ### Prevent
 
 `npm run verify:invariants` runs Clippy across all targets with warnings denied.
+
+## §6 — `mutation-false-pass-broken-gate`
+
+**Symptom.** A fault whose expectation is `missed` reports *"is now caught -- a gap was
+closed"*, or the `Preflight` block is missing from the output entirely. Both mean the same
+thing: a gate that cannot run, scoring every fault it touches as caught.
+
+**Not a symptom: a fast run.** The first version of this section said two minutes instead
+of ten. That was calibrated on a Mac. CI completes the full suite in under three minutes
+legitimately -- 2m53s on 2026-08-24 with all fifteen preflight and fault lines correct.
+Duration tells you nothing on its own; M15's verdict does.
+
+**Diagnose.** Read the top of the output. Every gate should be listed green under
+*Preflight*. If the suite starts at all, the preflight passed; if it refused with
+`the harness is broken`, the named gate is the problem. On a run from before the preflight
+existed, look for a gate reporting `CAUGHT` for *every* fault it touches — a working gate
+catches some and misses others.
+
+The tell that started this: `node_modules not found ... the vitest faults will be skipped`.
+They were not skipped. `gate()` scores detection by exit status alone, so `npx vitest run`
+exiting 1 because vitest is not installed reads exactly like vitest failing because the
+fault was found.
+
+**Fix.** Whatever the gate needs, install it. For the vitest gates that is `npm ci`; the
+script now exits rather than continuing without `node_modules`, and
+`.github/workflows/mutation.yml` runs Setup Node and `npm ci` before the suite.
+
+**Prevent.** The suite preflights every gate against the unmutated worktree and refuses to
+start if one is red. Adding a gate that needs a tool the CI job does not install now fails
+loudly on the first run instead of turning the suite green.
+
+**Never do this.** Do not act on a `missed → caught` promotion without checking the
+preflight first. The advice to close a documented blind spot is exactly what a broken gate
+produces, and M15 is the blind spot it will offer to close.

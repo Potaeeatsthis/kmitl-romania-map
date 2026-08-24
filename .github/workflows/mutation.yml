@@ -45,8 +45,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
+      # The vitest faults (M13-M15) need the frontend dependencies. Without them
+      # `npx vitest run` exits non-zero because vitest is not installed, gate() reads
+      # any non-zero exit as "the fault was caught", and the suite reports PASS having
+      # run no tests at all. That happened on this workflow's first ever run, 2026-08-24:
+      # M15 -- a fault proven undetectable -- reported "now caught". verify_mutation.sh
+      # now refuses to start without node_modules, and preflights every gate; this step
+      # is what makes it able to start.
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
       - name: Show compiler versions
-        run: rustc --version && g++ --version && python3 --version
+        run: rustc --version && g++ --version && python3 --version && node --version
 
       # Deliberately not cached: each mutation edits the sources the gates compile, so
       # most of the work cannot be reused between faults anyway, and a stale cache here

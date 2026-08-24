@@ -67,7 +67,14 @@ cd "$LAB/tree"
 if [ -d "$ROOT/node_modules" ]; then
   ln -s "$ROOT/node_modules" "$LAB/tree/node_modules"
 else
-  echo "  note node_modules not found at $ROOT -- run npm ci; the vitest faults will be skipped" >&2
+  # Fatal, not a warning. gate() reads any non-zero exit as "the fault was caught", and
+  # `npx vitest run` with no node_modules exits 1 because vitest is not installed -- so
+  # every vitest fault would report CAUGHT without running a single test, and the suite
+  # would print PASS. Observed in CI on 2026-08-24: M15, a fault proven undetectable,
+  # reported "now caught" and advised changing its expectation.
+  echo "node_modules not found at $ROOT. Run npm ci first -- without it the vitest" >&2
+  echo "gates report CAUGHT for every fault and this suite reports a meaningless PASS." >&2
+  exit 1
 fi
 
 fail=0
@@ -98,6 +105,37 @@ FRONT=(env CARGO_TARGET_DIR="$CARGO_LAB" node scripts/verify_frontend_sample.mjs
 # same "deleting a test makes the suite greener" failure the Rust side has a test
 # inventory for, one layer up in the tooling meant to catch it.
 VITEST=(npx vitest run)
+
+# Every gate must PASS on the unmutated tree before it can be trusted to detect anything.
+# A gate that is already red -- a missing interpreter, an uninstalled tool, a bad path --
+# reports CAUGHT for every fault it is handed, and the suite then reports PASS having
+# measured nothing. That is the failure this whole script exists to catch, so it is worth
+# catching in the script itself.
+echo "Preflight -- every gate must be green before any fault is injected"
+preflight_failed=0
+preflight() {
+  local label="$1"; shift
+  if "$@" >/dev/null 2>&1; then
+    pass "$label is green on the clean tree"
+  else
+    bad "$label is ALREADY FAILING before any mutation -- it cannot detect anything"
+    echo "         $*"
+    preflight_failed=1
+  fi
+}
+preflight invariants "${INV_S[@]}"
+preflight parity "${PAR[@]}"
+preflight golden "${GOLD[@]}"
+preflight correctness "${CORR[@]}"
+preflight tests "${TEST[@]}"
+preflight frontend "${FRONT[@]}"
+preflight vitest "${VITEST[@]}"
+if [ "$preflight_failed" -ne 0 ]; then
+  echo
+  echo "mutation: FAIL -- the harness is broken, so no fault result below would mean anything"
+  exit 1
+fi
+echo
 
 # mutate <id> <expectation> <description>; body follows, then `verdict`
 CAUGHT_ANY=0
