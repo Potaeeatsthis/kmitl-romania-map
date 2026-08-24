@@ -2,6 +2,9 @@
   "name": "kmitl-romania-map",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "build:wasm": "wasm-pack build wasm --target web --release --out-dir ../public/wasm --out-name romania_search",
     "dev": "npm run build:wasm && next dev",
@@ -17,7 +20,10 @@
     "verify:golden": "bash scripts/verify_golden.sh",
     "verify:harness": "bash scripts/verify_harness.sh",
     "verify:mutation": "bash scripts/verify_mutation.sh",
-    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness && npm run verify:frontend-sample"
+    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness && npm run verify:frontend-sample",
+    "verify:frontend": "npm run typecheck && npm run test",
+    "verify:all": "npm run verify && npm run verify:frontend",
+    "doctor": "bash scripts/verify_env.sh"
   },
   "dependencies": {
     "next": "16.3.1",

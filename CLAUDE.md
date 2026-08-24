@@ -259,24 +259,28 @@ When a bug is found, complete all four steps before reporting it fixed:
 
 ## Definition of done
 
-1. `npm run verify` exits 0 — invariants, parity, and correctness all pass
-2. `npm run typecheck` exits 0
-3. `npm test` exits 0
-4. No invariant I1–I5 broken
-5. For a bug fix: the loop above is closed, all four steps
-6. No pre-existing check newly broken
+1. `npm run verify:all` exits 0. That is the six engine gates plus `typecheck` and
+   `npm test` — the same set CI requires, which is the point of it being one command:
+   `npm run verify` alone cannot fail on the checks most likely to fail
+2. No invariant I1–I5 broken
+3. For a bug fix: the loop above is closed, all four steps
+4. No pre-existing check newly broken
 ---
 
 ## Common commands
 
 ```bash
-npm run verify              # all six gates — run this before pushing
+npm run verify:all          # everything CI requires — run this before pushing
+npm run doctor              # is this machine able to run the checks and the build?
+
+npm run verify              # the six engine gates only
 npm run verify:invariants   # I1, I4, clean builds
 npm run verify:parity       # I2 — three languages agree
 npm run verify:correctness  # I3 — 400 pairs, admissibility, consistency
 npm run verify:golden       # full CLI output against tests/golden/
 npm run verify:harness      # the PostToolUse hook is wired and reacts
 npm run verify:frontend-sample  # the committed sample still matches the engine
+npm run verify:frontend     # typecheck + tests, the other half of verify:all
 npm run typecheck           # tsc --noEmit
 npm test                    # vitest run — 22 frontend tests
 
