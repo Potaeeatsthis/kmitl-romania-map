@@ -31,6 +31,7 @@ are not built.
 |---|---|
 | `reference/romania_search.py` | **Working.** 238 lines, matches Rust exactly |
 | `reference/romania_search.cpp` | **Working.** 304 lines, matches Rust exactly |
+| `data/IMG_3390.JPG` | **The assignment brief.** Do not delete — see the section above. Unreferenced by code, and the only copy of the requirements and the canonical road weights |
 | `docs/` | **Written.** `ideas.md` and `ARCHITECTURE.md` (algorithm maths, architecture analysis), `ARCHITECTURE_DECISION.md` (the benchmark-spread record), `runbook.md` (symptom → fix, cited throughout this file), `sample-trace.md`, and `docs/rootcause/` |
 | `wasm/Cargo.toml`, `wasm/src/bin/cli.rs` | **Working.** Native Cargo library and CLI |
 | `wasm/src/*.rs`, `wasm/src/heuristics/` | **Working.** Shared UCS/A* engine with an animation trace |
@@ -50,6 +51,30 @@ Verified across all 400 start/goal pairs: 0 cost mismatches against an independe
 Dijkstra, 0 admissibility violations, 0 consistency violations, and UCS 4200 → A\* 2436
 expansions (42.0% reduction). All three languages produce byte-identical explored order
 and counters.
+
+---
+
+## The assignment — what is actually being graded
+
+`data/IMG_3390.JPG` is the assignment brief. **Do not delete it.** It is unreferenced by
+any code, which makes it look like a stray photo; it is the only copy of the requirements
+and of the canonical Romania map the 23 road weights came from.
+
+| Requirement | State |
+|---|---|
+| Implement the Romania-Map pathfinding problem as a **web application** | Done |
+| User can select **any arbitrary** start and goal | Done — any of the 20 cities |
+| **One blind search** and **one custom heuristic search** | Done — UCS and current-flow A\* |
+| Compare **execution time, memory usage, and solution quality (path cost)** | Done — `components/benchmark/`. Note I5: runtime numbers are native only |
+| **Put the link to the GitHub repository inside the web app** | **NOT DONE** — no link anywhere in `app/`, `components/` or `lib/` |
+| Submit: web app URL, YouTube presentation (10–15 min), repo link | Outstanding |
+
+**Due 9 AM Tuesday, 13 October 2026.** Graded on creativity (heuristic, UX/UI),
+completeness, and presentation.
+
+The missing repo link is the cheapest outstanding item on this list and the easiest to
+forget, because nothing in the harness can see it — it is a requirement about the rendered
+page, not about the engine.
 
 ---
 
