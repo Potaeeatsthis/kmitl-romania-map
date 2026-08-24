@@ -8,6 +8,13 @@
 
 :root {
   --font-interface: "Departure Mono", "Courier New", monospace;
+  color-scheme: light;
+  background: #edf8f1;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  background: #1b1919;
 }
 
 * {
@@ -16,10 +23,16 @@
 
 body {
   margin: 0;
+  background: inherit;
   font-family: var(--font-interface);
 }
 
 ::selection {
   color: #ffffff;
   background: #137a47;
+}
+
+:root[data-theme="dark"] ::selection {
+  color: #1b1919;
+  background: #00ed64;
 }

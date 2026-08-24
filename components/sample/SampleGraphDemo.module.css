@@ -5,12 +5,40 @@
   --green-dark: #0b5631;
   --green-bright: #00ed64;
   --green-mid: #00684a;
+  --action: #137a47;
+  --action-strong: #0b5631;
   --green-soft: #cfe7d8;
   --green-pale: #edf8f1;
   --line: #c9dfd2;
   --surface: #ffffff;
+  --canvas: #edf8f1;
   --map-surface: #f5f8f6;
+  --on-accent: #ffffff;
+  --road-casing: #ffffff;
+  --road-center: #aabbb1;
+  --road-label: #466054;
+  --city-stroke: #557867;
+  --label-astar: #ddeb9d;
+  --label-ucs: #a0c878;
+  --label-highlight-text: #000000;
+  --expanded-stroke: #67977a;
+  --active-fill: #83d7a5;
+  --path-fill: #62c98d;
+  --county-fill: #e4f0e8;
+  --county-line: #c5dacd;
+  --country-outline: #9ebbaa;
+  --panel-surface: rgba(255, 255, 255, 0.97);
+  --input-placeholder: #5e7469;
+  --input-hover: #8db9a0;
+  --focus-shadow: rgba(19, 122, 71, 0.12);
+  --error-border: #f0b7b0;
+  --error-surface: #fff4f2;
+  --error-text: #7a271a;
+  --warning: #a06a1a;
   --shadow-raised: 0 12px 32px rgba(16, 42, 30, 0.16);
+  --panel-shadow: 0 10px 25px rgba(19, 122, 71, 0.08);
+  --popover-shadow: 0 12px 28px rgba(16, 42, 30, 0.15);
+  --thumb-shadow: 0 2px 6px rgba(16, 42, 30, 0.22);
 
   width: 100%;
   height: 100dvh;
@@ -19,8 +47,51 @@
   flex-direction: column;
   overflow: hidden;
   color: var(--ink);
-  background: var(--green-pale);
+  background: var(--canvas);
   font-family: var(--font-interface);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+:global(html[data-theme="dark"]) .page {
+  --ink: #d6d7da;
+  --muted: #a9adb5;
+  --green: #00ed64;
+  --green-dark: #00ed64;
+  --green-bright: #00ed64;
+  --green-mid: #eeeeee;
+  --action: #137a47;
+  --action-strong: #00684a;
+  --green-soft: #2d3a2a;
+  --green-pale: #272525;
+  --line: #393e46;
+  --surface: #242222;
+  --canvas: #1b1919;
+  --map-surface: #1b1919;
+  --on-accent: #ffffff;
+  --road-casing: #2c2a2a;
+  --road-center: #555c66;
+  --road-label: #a9adb5;
+  --city-stroke: #8a919b;
+  --label-astar: #00ed64;
+  --label-ucs: #eeeeee;
+  --expanded-stroke: #626a74;
+  --active-fill: #137a47;
+  --path-fill: #00ed64;
+  --county-fill: #201e1e;
+  --county-line: #32343a;
+  --country-outline: #555c66;
+  --panel-surface: rgba(36, 34, 34, 0.97);
+  --input-placeholder: #a9adb5;
+  --input-hover: #137a47;
+  --focus-shadow: rgba(0, 237, 100, 0.22);
+  --error-border: #b9826f;
+  --error-surface: #35251f;
+  --error-text: #f0c7b7;
+  --warning: #d6a85f;
+  --shadow-raised: 0 14px 34px rgba(0, 0, 0, 0.38);
+  --panel-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  --popover-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+  --thumb-shadow: 0 2px 7px rgba(0, 0, 0, 0.46);
 }
 
 .header {
@@ -48,8 +119,8 @@
   place-items: center;
   flex: 0 0 auto;
   border-radius: 10px;
-  background: var(--green-dark);
-  color: #ffffff;
+  background: var(--action-strong);
+  color: var(--on-accent);
   font-size: 18px;
   line-height: 1;
 }
@@ -87,6 +158,45 @@
   gap: 8px;
 }
 
+.themeToggle {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--green-dark);
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    transform 150ms ease;
+}
+
+.themeToggle:hover {
+  border-color: var(--green);
+  background: var(--green-pale);
+  color: var(--green);
+}
+
+.themeToggle:active {
+  transform: scale(0.96);
+}
+
+.themeToggle[aria-pressed="true"] {
+  border-color: var(--action);
+  background: var(--action);
+  color: var(--on-accent);
+}
+
+.themeGlyph {
+  font: 400 18px / 1 var(--font-interface);
+}
+
 .headerStatus,
 .headerStatusButton {
   min-width: 0;
@@ -113,6 +223,7 @@
 }
 
 .headerStatusButton:focus-visible,
+.themeToggle:focus-visible,
 .city:focus-visible,
 .legend summary:focus-visible,
 .collapseButton:focus-visible,
@@ -167,19 +278,19 @@
 }
 
 .roads .roadCasing {
-  stroke: #ffffff;
+  stroke: var(--road-casing);
   stroke-width: 5.5;
   stroke-linecap: round;
 }
 
 .roads .roadCenter {
-  stroke: #aabbb1;
+  stroke: var(--road-center);
   stroke-width: 1.5;
   stroke-linecap: round;
 }
 
 .roadLabels text {
-  fill: #466054;
+  fill: var(--road-label);
   font: 10px var(--font-interface);
   paint-order: stroke;
   stroke: var(--map-surface);
@@ -223,7 +334,7 @@
 
 .city .cityNode {
   fill: var(--surface);
-  stroke: #557867;
+  stroke: var(--city-stroke);
   stroke-width: 1.8;
   transition: fill 160ms ease, stroke 160ms ease, stroke-width 160ms ease;
 }
@@ -251,20 +362,26 @@
 }
 
 .city .labelAstar {
-  fill: #ddeb9d;
+  fill: var(--label-astar);
 }
 
 .city .labelUcs {
-  fill: #a0c878;
+  fill: var(--label-ucs);
 }
 
 .city .labelBoth {
   fill: url(#shared-label-highlight);
 }
 
+.city .highlightedCityLabel {
+  fill: var(--label-highlight-text);
+  paint-order: normal;
+  stroke: none;
+}
+
 .expanded .cityNode {
   fill: var(--green-soft);
-  stroke: #67977a;
+  stroke: var(--expanded-stroke);
 }
 
 .frontierUcs .cityNode {
@@ -286,13 +403,13 @@
 }
 
 .active .cityNode {
-  fill: #83d7a5;
+  fill: var(--active-fill);
   stroke: var(--green-dark);
   stroke-width: 3;
 }
 
 .path .cityNode {
-  fill: #62c98d;
+  fill: var(--path-fill);
   stroke: var(--green-dark);
   stroke-width: 2.5;
 }
@@ -306,14 +423,14 @@
 }
 
 .countyLines path {
-  fill: #e4f0e8;
-  stroke: #c5dacd;
+  fill: var(--county-fill);
+  stroke: var(--county-line);
   stroke-width: 0.8;
 }
 
 .countryOutline path {
   fill: none;
-  stroke: #9ebbaa;
+  stroke: var(--country-outline);
   stroke-width: 2.4;
 }
 
@@ -392,8 +509,8 @@
   padding: clamp(16px, 2.2vh, 24px);
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.97);
-  box-shadow: 0 10px 25px rgba(19, 122, 71, 0.08);
+  background: var(--panel-surface);
+  box-shadow: var(--panel-shadow);
   animation: panelReveal 220ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -500,16 +617,16 @@
 }
 
 .citySearch input::placeholder {
-  color: #5e7469;
+  color: var(--input-placeholder);
 }
 
 .citySearch input:hover {
-  border-color: #8db9a0;
+  border-color: var(--input-hover);
 }
 
 .citySearch input:focus {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(19, 122, 71, 0.12);
+  box-shadow: 0 0 0 3px var(--focus-shadow);
 }
 
 .searchResults {
@@ -524,7 +641,7 @@
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--surface);
-  box-shadow: 0 12px 28px rgba(16, 42, 30, 0.15);
+  box-shadow: var(--popover-shadow);
   scrollbar-color: var(--green-soft) transparent;
   scrollbar-width: thin;
 }
@@ -570,17 +687,17 @@
 
 .runButton {
   min-height: 46px;
-  border: 1px solid var(--green-dark);
+  border: 1px solid var(--action-strong);
   border-radius: 7px;
-  background: var(--green-dark);
-  color: #ffffff;
+  background: var(--action-strong);
+  color: var(--on-accent);
   font: 400 13px / 1 var(--font-interface);
   cursor: pointer;
   transition: background 150ms ease, transform 150ms ease;
 }
 
 .runButton:hover:not(:disabled) {
-  background: var(--green-mid);
+  background: var(--action);
 }
 
 .runButton:active:not(:disabled) {
@@ -596,9 +713,9 @@
 .errorMessage {
   margin: 12px 0 0;
   padding: 10px 12px;
-  border: 1px solid #f0b7b0;
-  background: #fff4f2;
-  color: #7a271a;
+  border: 1px solid var(--error-border);
+  background: var(--error-surface);
+  color: var(--error-text);
   font-size: 11px;
   line-height: 1.45;
 }
@@ -689,13 +806,13 @@
   border-radius: 3px;
 }
 
-.swatchCity { border: 1px solid #7da58e; background: var(--surface); }
+.swatchCity { border: 1px solid var(--city-stroke); background: var(--surface); }
 .swatchExpanded { background: var(--green-soft); }
 .swatchUcs { border: 2px solid var(--green-mid); }
 .swatchAstar { border: 2px solid var(--green-bright); }
-.swatchUcsHighlight { background: #a0c878; }
-.swatchAstarHighlight { background: #ddeb9d; }
-.swatchPath { background: #62c98d; }
+.swatchUcsHighlight { background: var(--label-ucs); }
+.swatchAstarHighlight { background: var(--label-astar); }
+.swatchPath { background: var(--path-fill); }
 
 .animationControls {
   right: 16px;
@@ -758,16 +875,16 @@
   gap: 9px;
   border: 0;
   border-radius: 12px;
-  background: var(--green-dark);
+  background: var(--action-strong);
   box-shadow: var(--shadow-raised);
-  color: #ffffff;
+  color: var(--on-accent);
   font: 400 11px / 1 var(--font-interface);
   cursor: pointer;
   animation: panelReveal 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .playbackMinimized:hover {
-  background: var(--green-mid);
+  background: var(--action);
 }
 
 .playbackLabel {
@@ -882,8 +999,8 @@
   appearance: none;
   border: 2px solid var(--surface);
   border-radius: 50%;
-  background: var(--green-dark);
-  box-shadow: 0 2px 6px rgba(16, 42, 30, 0.22);
+  background: var(--action-strong);
+  box-shadow: var(--thumb-shadow);
 }
 
 .frameScrubber input::-moz-range-track {
@@ -903,8 +1020,8 @@
   height: 13px;
   border: 2px solid var(--surface);
   border-radius: 50%;
-  background: var(--green-dark);
-  box-shadow: 0 2px 6px rgba(16, 42, 30, 0.22);
+  background: var(--action-strong);
+  box-shadow: var(--thumb-shadow);
 }
 
 .frameScrubber input:disabled {
@@ -1026,6 +1143,11 @@
 }
 
 @media (max-width: 520px) {
+  .headerStatus,
+  .headerStatusButton {
+    display: none;
+  }
+
   .panel {
     padding: 16px;
   }
@@ -1080,6 +1202,7 @@
   .city .cityNode,
   .city .cityLabelBackground,
   .citySearch input,
+  .themeToggle,
   .runButton,
   .controlButton {
     transition: none;

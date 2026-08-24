@@ -30,7 +30,9 @@ const MAP_ZOOM_STEP = 0.25;
 const TRACKPAD_SCROLL_ZOOM_SENSITIVITY = 0.0025;
 const TRACKPAD_PINCH_ZOOM_SENSITIVITY = 0.01;
 const MAX_WHEEL_ZOOM_EXPONENT = 0.35;
+const THEME_STORAGE_KEY = "romania-search-theme";
 
+type ColorTheme = "light" | "dark";
 type MapTouchPoint = { x: number; y: number };
 type MapViewport = { zoom: number; centerX: number; centerY: number };
 type PinchGesture = { startDistance: number; startViewport: MapViewport };
@@ -48,6 +50,22 @@ const INITIAL_MAP_VIEWPORT: MapViewport = {
   centerX: MAP_VIEW_BOX.x + MAP_VIEW_BOX.width / 2,
   centerY: MAP_VIEW_BOX.y + MAP_VIEW_BOX.height / 2,
 };
+
+function isColorTheme(value: string | null | undefined): value is ColorTheme {
+  return value === "light" || value === "dark";
+}
+
+function applyDocumentTheme(theme: ColorTheme, persist: boolean) {
+  document.documentElement.dataset.theme = theme;
+  document.documentElement.style.colorScheme = theme;
+
+  if (!persist) return;
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // The visual theme still works when storage is unavailable.
+  }
+}
 
 function clampMapZoom(zoom: number) {
   return Math.min(MAP_MAX_ZOOM, Math.max(MAP_MIN_ZOOM, zoom));
@@ -96,6 +114,7 @@ const labelOffsets: Record<number, { x: number; y: number }> = {
 
 export default function SampleGraphDemo({ headerAction }: { headerAction?: ReactNode }) {
   const [isRouteOpen, setIsRouteOpen] = useState(true);
+  const [theme, setTheme] = useState<ColorTheme>("light");
   const [isPlaybackMinimized, setIsPlaybackMinimized] = useState(false);
   const [mapViewport, setMapViewport] = useState<MapViewport>(INITIAL_MAP_VIEWPORT);
   const [isMapPanning, setIsMapPanning] = useState(false);
@@ -152,6 +171,29 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
     step,
     timelineLength,
   ]);
+
+  useEffect(() => {
+    let storedTheme: string | null = null;
+    try {
+      storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    } catch {
+      // Fall back to the document or system preference.
+    }
+
+    const documentTheme = document.documentElement.dataset.theme;
+    const prefersDark = typeof window.matchMedia === "function"
+      && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const initialTheme = isColorTheme(storedTheme)
+      ? storedTheme
+      : isColorTheme(documentTheme)
+        ? documentTheme
+        : prefersDark
+          ? "dark"
+          : "light";
+
+    setTheme(initialTheme);
+    applyDocumentTheme(initialTheme, false);
+  }, []);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -324,6 +366,12 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
     }));
   };
 
+  const handleThemeToggle = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+    setTheme(nextTheme);
+    applyDocumentTheme(nextTheme, true);
+  };
+
   const mapClassName = [
     styles.map,
     mapZoom > MAP_MIN_ZOOM ? styles.mapPannable : "",
@@ -350,6 +398,16 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
               {headerStatus}
             </p>
           )}
+          <button
+            className={styles.themeToggle}
+            type="button"
+            onClick={handleThemeToggle}
+            aria-pressed={theme === "dark"}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            <span className={styles.themeGlyph} aria-hidden="true">★</span>
+          </button>
           {headerAction}
         </div>
       </header>
@@ -371,10 +429,10 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
           >
             <defs>
               <linearGradient id="shared-label-highlight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#A0C878" />
-                <stop offset="50%" stopColor="#A0C878" />
-                <stop offset="50%" stopColor="#DDEB9D" />
-                <stop offset="100%" stopColor="#DDEB9D" />
+                <stop offset="0%" stopColor="var(--label-ucs)" />
+                <stop offset="50%" stopColor="var(--label-ucs)" />
+                <stop offset="50%" stopColor="var(--label-astar)" />
+                <stop offset="100%" stopColor="var(--label-astar)" />
               </linearGradient>
             </defs>
 
@@ -548,7 +606,11 @@ export default function SampleGraphDemo({ headerAction }: { headerAction?: React
                     />
                   )}
                   <rect className={styles.cityNode} x={city.x - 5} y={city.y - 5} width="10" height="10" rx="2" />
-                  <text x={labelX} y={labelY}>
+                  <text
+                    className={labelHighlightClass ? styles.highlightedCityLabel : undefined}
+                    x={labelX}
+                    y={labelY}
+                  >
                     {city.id === 9 ? (
                       <>
                         <tspan x={labelX} y={labelY - 6}>Rimnicu</tspan>

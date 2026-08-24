@@ -4,10 +4,12 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import sampleData from "../../public/data/arad-bucharest-search.json";
+import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { SearchResponse } from "../../lib/types";
 import { runSearch } from "../../lib/wasm/client";
 import { useSearchStore } from "../../stores/useSearchStore";
 import SampleGraphDemo from "./SampleGraphDemo";
+import styles from "./SampleGraphDemo.module.css";
 
 vi.mock("../../lib/wasm/client", () => ({
   runSearch: vi.fn(),
@@ -17,6 +19,10 @@ const sample = sampleData as SearchResponse;
 const mockedRunSearch = vi.mocked(runSearch);
 
 beforeEach(() => {
+  window.localStorage.clear();
+  document.documentElement.removeAttribute("data-theme");
+  document.documentElement.style.colorScheme = "";
+
   useSearchStore.setState({
     data: sample,
     startCity: 0,
@@ -84,6 +90,24 @@ describe("SampleGraphDemo", () => {
 
     await user.click(screen.getByRole("button", { name: "Route" }));
     expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
+  });
+
+  it("uses a Departure Mono black star to enable and save dark mode", async () => {
+    const user = userEvent.setup();
+    render(<SampleGraphDemo />);
+
+    const toggle = screen.getByRole("button", { name: "Switch to dark mode" });
+    expect(toggle).toHaveTextContent("★");
+
+    await user.click(toggle);
+
+    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement.style.colorScheme).toBe("dark");
+    expect(window.localStorage.getItem("romania-search-theme")).toBe("dark");
+    expect(screen.getByRole("button", { name: "Switch to light mode" })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
   });
 
   it("minimizes playback with a Departure Mono control and reopens it", async () => {
@@ -189,5 +213,22 @@ describe("SampleGraphDemo", () => {
 
     await user.click(screen.getByRole("button", { name: "Pause animation" }));
     expect(screen.getByRole("button", { name: "Play animation" })).toBeInTheDocument();
+  });
+
+  it("uses borderless black text for highlighted route-city labels", () => {
+    const view = render(<SampleGraphDemo />);
+    const arad = screen.getByRole("button", { name: "Choose Arad as starting point" });
+
+    expect(arad.querySelector("text")).toHaveClass(styles.highlightedCityLabel);
+
+    view.unmount();
+    useSearchStore.setState({ step: sample.ucs.trace.length - 1 });
+    render(<SampleGraphDemo />);
+
+    for (const cityId of sample.ucs.path) {
+      const cityName = romaniaGraph.cities[cityId].name;
+      const city = screen.getByRole("button", { name: `Choose ${cityName} as starting point` });
+      expect(city.querySelector("text")).toHaveClass(styles.highlightedCityLabel);
+    }
   });
 });

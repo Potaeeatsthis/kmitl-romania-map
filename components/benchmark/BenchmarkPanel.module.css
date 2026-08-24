@@ -8,19 +8,19 @@
   justify-content: center;
   gap: 8px;
   flex: 0 0 auto;
-  border: 1px solid var(--green, #137a47);
+  border: 1px solid var(--action, #137a47);
   border-radius: 10px;
-  background: var(--green, #137a47);
-  color: #ffffff;
+  background: var(--action, #137a47);
+  color: var(--on-accent, #ffffff);
   font: 400 11px / 1 var(--font-interface);
   cursor: pointer;
   transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
 
 .tab:hover {
-  border-color: var(--green-dark, #0b5631);
-  background: var(--green-dark, #0b5631);
-  color: #ffffff;
+  border-color: var(--action-strong, #0b5631);
+  background: var(--action-strong, #0b5631);
+  color: var(--on-accent, #ffffff);
 }
 
 .tab:active {
@@ -57,7 +57,7 @@
   transform-origin: top right;
   border-radius: 14px;
   background: var(--surface, #ffffff);
-  box-shadow: -10px 14px 36px rgba(16, 42, 30, 0.18);
+  box-shadow: var(--shadow-raised, -10px 14px 36px rgba(16, 42, 30, 0.18));
   font-family: var(--font-interface);
   transition:
     opacity 180ms ease,
@@ -81,12 +81,12 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 10px 8px 16px;
-  border-bottom: 1px solid #c9dfd2;
-  background: #ffffff;
+  border-bottom: 1px solid var(--line, #c9dfd2);
+  background: var(--surface, #ffffff);
 }
 
 .drawerTitle {
-  color: #137a47;
+  color: var(--green, #137a47);
   font-size: 11px;
   letter-spacing: 0.14em;
 }
@@ -100,13 +100,13 @@
   border: 0;
   border-radius: 8px;
   background: transparent;
-  color: #526d60;
+  color: var(--muted, #526d60);
   cursor: pointer;
 }
 
 .closeButton:hover {
-  background: #eef7f1;
-  color: #0b5631;
+  background: var(--green-pale, #eef7f1);
+  color: var(--green, #0b5631);
 }
 
 .closeGlyph {
@@ -118,7 +118,7 @@
 
 .tab:focus-visible,
 .closeButton:focus-visible {
-  outline: 3px solid #00ed64;
+  outline: 3px solid var(--green-bright, #00ed64);
   outline-offset: 3px;
 }
 
@@ -126,7 +126,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-color: #cfe7d8 transparent;
+  scrollbar-color: var(--green-soft, #cfe7d8) transparent;
   scrollbar-width: thin;
 }
 
