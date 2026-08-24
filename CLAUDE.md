@@ -154,15 +154,21 @@ They violate I1. Keep one `wasm/src/search.rs`.
 
 `npm run verify` runs six gates and checks I1–I4. I5 is a convention.
 
-`npm run verify:mutation` is separate and deliberately not in that chain: it injects twelve
+`npm run verify:mutation` is separate and deliberately not in that chain: it injects fifteen
 known bugs and asserts a gate goes red for each, which takes ~10 minutes. It is what tells
 you whether the other six gates still work. It is *configured* weekly and **has never run**:
 scheduled workflows fire only from the default branch, and `master` has no `.github/`. Run it
-locally, or from the Actions tab via `workflow_dispatch`. One fault is
-recorded there as a documented blind spot rather than a failure: an edit to
-`reference/romania_search.rs`, which no gate compiles since the crate landed. Closing it
-is a decision rather than a patch — wire the file back into `verify:parity` as a fourth
-implementation, or delete it.
+locally, or from the Actions tab via `workflow_dispatch`.
+
+Two faults are recorded there as documented blind spots rather than failures. **M9**: an
+edit to `reference/romania_search.rs`, which no gate compiles since the crate landed —
+closing it is a decision rather than a patch, so wire the file back into `verify:parity` as
+a fourth implementation, or delete it. **M15**: the frontend suite has a single fixture, so
+a selector that ignores the A\* trace passes (see the frontend-test rule below).
+
+M1–M12 cover the engine and the exported sample. M13–M15 cover the frontend suite, which
+until they landed was policed by nothing: the mutation script's `TEST` gate is `cargo test`,
+and `FRONT` diffs a JSON file without rendering a component.
 
 Two checks in `verify:invariants` exist because behaviour cannot see the fault at all: the
 tie-break pin, and a list of test names that must still be present. Deleting a test
@@ -197,12 +203,26 @@ and the road table; it never renders a component.
 Rust-generated sample as their oracle: at step *i*, the expanded set equals
 `explored_order[0..i]`.
 
-Two gaps in that suite are known and open, both from the fixture rather than the tests:
+Two gaps in that suite are known and open, both from the fixture rather than the tests.
 `arad-bucharest-search.json` is the only sample, and it has UCS 13 / A\* 9 frames, so
-`Math.max(ucs, astar)` is indistinguishable from `ucs` — mutating `getTimelineLength()` to
-return `data.ucs.trace.length` passes everything. And `getTraceFrame()`'s lower clamp is
-never exercised; only `step: 100` is tested, never a negative step. Both need a second
-fixture where A\* runs longer, not more assertions on this one.
+`Math.max(ucs, astar)` is indistinguishable from `ucs` — a `getTimelineLength()` that
+returns `data.ucs.trace.length` passes everything. That one is pinned as **M15**, so it
+stays visible instead of being rediscovered. The second is unpinned: `getTraceFrame()`'s
+lower clamp is never exercised, since only `step: 100` is tested and never a negative step.
+
+Both close the same way — a second fixture where A\* runs longer — not with more assertions
+on this one. Closing M15 means flipping its expectation in `verify_mutation.sh` from
+`missed` to `caught`; the script reports an unexpectedly-caught fault as an improvement to
+record, not a failure.
+
+**There is no ESLint.** It was attempted and is blocked upstream: `eslint-config-next`
+loads `typescript-eslint`, which hard-`throw`s on TypeScript 7.0 (this project is on 7.0.2)
+— tracked as typescript-eslint#10940. `next lint` was also removed in Next 16, so the old
+recipe would not have worked either. The documented workaround is a side-by-side TypeScript
+6 install used only for linting, which means linting against a different compiler than the
+one that builds — a drift source this project otherwise refuses. Left uninstalled on purpose,
+for the same reason the test runner was not pre-installed: tooling that sits there not
+working stops being noticed. Revisit when typescript-eslint supports TS 7.
 
 ---
 
