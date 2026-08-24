@@ -11,10 +11,7 @@
 # `missed` that is now caught is reported as an improvement, not a failure -- someone
 # closed a known gap and should update the expectation here.
 #
-# Two `missed` entries are documented blind spots, not bugs to fix by accident:
-#   M9  reference/romania_search.rs is compiled by nothing since the crate landed.
-#       Closing it is a decision, not a patch: either wire the file back into
-#       verify_parity.sh as a fourth implementation, or delete it.
+# One `missed` entry is a documented blind spot, not a bug to fix by accident:
 #   M15 the frontend suite has one fixture, Arad->Bucharest, with UCS 13 and A* 9
 #       frames. Math.max(ucs, astar) is therefore always ucs, so a selector that
 #       ignores the A* trace entirely passes. Needs a second fixture where A* runs
@@ -33,6 +30,9 @@
 #          bash scripts/verify_mutation.sh M3   just one, while iterating
 #
 # M1-M12 cover the engine and the exported sample. M13-M15 cover the frontend suite.
+# M9 is retired: it covered reference/romania_search.rs, which was deleted once the team
+# decided the crate is the only Rust engine. Ids are not renumbered -- a stable id is what
+# lets `bash scripts/verify_mutation.sh M13` and the docs keep meaning the same thing.
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
@@ -84,8 +84,9 @@ gate() {
   fi
 }
 
+# Only the --structural form is used. The full form ran compilers, and M9 -- retired with
+# reference/romania_search.rs -- was its only caller.
 INV_S=(bash scripts/verify_invariants.sh --structural)
-INV=(bash scripts/verify_invariants.sh)
 PAR=(bash scripts/verify_parity.sh)
 GOLD=(bash scripts/verify_golden.sh)
 CORR=(python3 scripts/verify_correctness.py)
@@ -220,14 +221,6 @@ j = s.index('#[test]', i + len(marker))
 open(p, 'w').write(s[:i] + s[j:])
 PY
   check tests "${TEST[@]}"; check invariants "${INV_S[@]}"
-  verdict
-fi
-
-# --------------------------------------------------------------- the unbuilt reference
-if ! skip M9; then
-  begin M9 missed "change a road weight in reference/romania_search.rs only"
-  sed -i.bak 's/(0, 1, 75)/(0, 1, 76)/' reference/romania_search.rs && rm -f reference/*.bak
-  check invariants "${INV[@]}"; check parity "${PAR[@]}"; check golden "${GOLD[@]}"
   verdict
 fi
 

@@ -151,9 +151,13 @@ was added but never actually caught anything.
 expected to be missed that is now caught is reported as an improvement, not a failure;
 update its expectation in the script.
 
-*One documented blind spot:* M9, an edit to `reference/romania_search.rs`, which no gate
-compiles since the engine moved into the crate. Closing it is a decision — wire the file
-back into `verify:parity`, or delete it.
+*One documented blind spot:* M15, a `getTimelineLength()` that ignores the A\* trace. The
+frontend suite has a single fixture, Arad → Bucharest, with UCS 13 and A\* 9 frames, so
+`Math.max(ucs, astar)` is always `ucs` and no assertion on this fixture can see it. Closing
+it needs a second fixture where A\* runs longer.
+
+*M9 is retired.* It covered `reference/romania_search.rs`, deleted once the team confirmed
+the crate is the only Rust engine. Fault ids are not renumbered, so M9 is simply absent.
 
 ## Everything at once
 

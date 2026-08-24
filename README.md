@@ -35,7 +35,6 @@ The Rust engine and the standalone Python and C++ reference programs:
 | `wasm/src/bin/export_sample.rs` | Generates real UCS and A* JSON sample data for the frontend |
 | `components/benchmark/` | Displays the UCS and A* benchmark comparison |
 | `public/data/benchmark-results.json` | Committed native Rust benchmark results |
-| `reference/romania_search.rs` | Transitional native Rust baseline |
 | `reference/romania_search.py` | Python 3 reference implementation |
 | `reference/romania_search.cpp` | C++17 reference implementation |
 | `docs/ideas.md` | Algorithm explanation and mathematical specification |

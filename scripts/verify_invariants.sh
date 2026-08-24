@@ -21,13 +21,8 @@ warn() { printf '  \033[33mwarn\033[0m %s\n' "$1"; }
 echo "I1 — one search function"
 # UCS and A* must remain the same function, differing only by the heuristic passed in.
 # Two implementations would drift and silently invalidate every reported number.
-if [ -s wasm/src/search.rs ]; then
-  count=$(grep -cE '^(pub )?fn search\(' wasm/src/search.rs || true)
-  where="wasm/src/search.rs"
-else
-  count=$(grep -cE '^(pub )?fn search\(' reference/romania_search.rs || true)
-  where="reference/romania_search.rs"
-fi
+count=$(grep -cE '^(pub )?fn search\(' wasm/src/search.rs || true)
+where="wasm/src/search.rs"
 if [ "$count" -eq 1 ]; then
   pass "$where defines exactly one search()"
 else
@@ -51,20 +46,10 @@ echo "I4 — engine stays wasm-safe"
 # std::io, std::time and println! belong to the CLI. Instant panics on wasm32,
 # so a leak into the engine breaks the browser build at runtime, not compile time.
 BANNED='println!|eprintln!|Instant|black_box|io::'
-wasm_engine_file=$(find wasm/src -type f -name '*.rs' -size +0c -print -quit)
-if [ -n "$wasm_engine_file" ]; then
-  # Once implementation starts, every Rust source file except native CLI binaries is engine code.
-  hits=$(find wasm/src -type f -name '*.rs' ! -path '*/bin/*' -exec \
-         grep -nHE "$BANNED" {} + 2>/dev/null || true)
-  scope="wasm/src excluding wasm/src/bin"
-else
-  # Pre-restructure: everything is in the native reference, so inspect its engine region --
-  # from the first constant to the start of the benchmark harness.
-  start=$(grep -n '^const CITY_COUNT' reference/romania_search.rs | cut -d: -f1)
-  end=$(grep -n '^fn benchmark' reference/romania_search.rs | cut -d: -f1)
-  hits=$(sed -n "${start},${end}p" reference/romania_search.rs | grep -nE "$BANNED" || true)
-  scope="reference/romania_search.rs lines ${start}-${end}"
-fi
+# Every Rust source file except the native CLI binaries is engine code.
+hits=$(find wasm/src -type f -name '*.rs' ! -path '*/bin/*' -exec \
+       grep -nHE "$BANNED" {} + 2>/dev/null || true)
+scope="wasm/src excluding wasm/src/bin"
 if [ -z "$hits" ]; then
   pass "no banned symbols in $scope"
 else
@@ -169,18 +154,16 @@ echo "Locked decision — priority-queue tie-break"
 # The C++ and Python tie-breaks are equally invisible to behavioural gates. They are not
 # checked here: three greps over three encodings to pin one decision is more brittleness
 # than it buys, and those two are reference implementations rather than the engine.
-if [ -s wasm/src/search.rs ]; then
-  order=$(sed -n '/impl Ord for QueueEntry/,/^}/p' wasm/src/search.rs \
-          | grep -oE 'total_cmp\(&self\.f\)|other\.g\.cmp\(&self\.g\)|other\.city\.cmp\(&self\.city\)' \
-          | paste -sd'|' -)
-  expected='total_cmp(&self.f)|other.g.cmp(&self.g)|other.city.cmp(&self.city)'
-  if [ "$order" = "$expected" ]; then
-    pass "QueueEntry orders by (f, g, city)"
-  else
-    bad "tie-break changed -- CLAUDE.md locks (f, g, city)"
-    echo "         expected: $expected"
-    echo "         found:    ${order:-<no comparison keys matched>}"
-  fi
+order=$(sed -n '/impl Ord for QueueEntry/,/^}/p' wasm/src/search.rs \
+        | grep -oE 'total_cmp\(&self\.f\)|other\.g\.cmp\(&self\.g\)|other\.city\.cmp\(&self\.city\)' \
+        | paste -sd'|' -)
+expected='total_cmp(&self.f)|other.g.cmp(&self.g)|other.city.cmp(&self.city)'
+if [ "$order" = "$expected" ]; then
+  pass "QueueEntry orders by (f, g, city)"
+else
+  bad "tie-break changed -- CLAUDE.md locks (f, g, city)"
+  echo "         expected: $expected"
+  echo "         found:    ${order:-<no comparison keys matched>}"
 fi
 
 echo
