@@ -184,6 +184,14 @@ you whether the other six gates still work. It is *configured* weekly and **has 
 scheduled workflows fire only from the default branch, and `master` has no `.github/`. Run it
 locally, or from the Actions tab via `workflow_dispatch`.
 
+Before injecting anything it **preflights every gate on the clean tree**, and refuses to
+run if one is already red. A gate that cannot execute reports its fault as *caught* —
+`gate()` reads any non-zero exit as detection — so a broken gate produces a green suite
+that measured nothing. That is not hypothetical: on this workflow's first ever run
+(2026-08-24) the CI job had no `node_modules`, `npx vitest run` exited 1 because vitest
+was not installed, all three vitest faults reported `CAUGHT`, and **M15 — a fault proven
+undetectable — reported "now caught" and advised closing it.** The suite printed `PASS`.
+
 One fault is recorded there as a documented blind spot rather than a failure. **M15**: the
 frontend suite has a single fixture, so a selector that ignores the A\* trace passes (see
 the frontend-test rule below). **M9 is retired** — it covered `reference/romania_search.rs`,
