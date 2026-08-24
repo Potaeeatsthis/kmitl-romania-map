@@ -370,9 +370,13 @@ python3 reference/romania_search.py
     `Frontend types` — not by the job ids `correctness` and `frontend`. `master` also
     requires one approving review and an up-to-date branch; `dev` requires neither, so
     feature work merges as soon as CI is green
-  - **Still needed.** Settings → Pages → Source: GitHub Actions, before build step 6
+  - **Enabled 2026-08-24.** Settings → Pages → Source: GitHub Actions. The API reports
+    `build_type: workflow` and `html_url: https://potaeeatsthis.github.io/kmitl-romania-map/`,
+    so `.github/workflows/deploy.yml` is what publishes, and `/kmitl-romania-map` is the
+    base path it derives from the repository name. No deployment has run yet: the workflow
+    only triggers on push to `master`, so the site goes live when it gets there
   - **Optional.** Turn on "Require review from Code Owners" to make `.github/CODEOWNERS`
-    take effect; it is inert until then
+    take effect; it is inert until then, and inert regardless until the file reaches `master`
 
 <!-- BEGIN:nextjs-agent-rules -->
 
