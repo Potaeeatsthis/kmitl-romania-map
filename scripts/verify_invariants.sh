@@ -134,6 +134,78 @@ if [ -s wasm/src/search.rs ]; then
   fi
 fi
 
+echo
+echo "CLAUDE.md — the state table matches the tree"
+# The "What exists" table is a fourth encoding of facts that live in the tree, and it was
+# the only one with no gate. It drifted: it described public/data/romania.geojson months
+# after the file was deleted, called stores/ and lib/wasm/ "Empty" when they held 243 lines
+# of working code, and named wasm/src/bin/export.rs, which is export_sample.rs.
+#
+# Both checks are pure text, so they run in --structural mode too. Neither can police
+# whether prose is *true* -- only whether the paths it names exist, and whether a row
+# claiming "Empty" still points at an empty file. That is the mechanical part, which is
+# also the part that rots silently.
+python3 - <<'TABLE' || fail=1
+import re, sys, glob, os
+
+text = open("CLAUDE.md", encoding="utf-8").read()
+section = re.search(r"^## What exists.*?^---", text, re.S | re.M)
+if not section:
+    print("  \033[31mFAIL\033[0m CLAUDE.md has no '## What exists' section to check")
+    sys.exit(1)
+section = section.group(0)
+
+GREEN, RED = "\033[32m", "\033[31m"
+OFF = "\033[0m"
+bad = 0
+
+def exists(path):
+    if "*" in path:
+        return bool(glob.glob(path))
+    return os.path.exists(path)
+
+# 1. Every backticked path in the section must exist. Only tokens containing a slash are
+#    treated as paths; bare words like `verify:parity` and `Cargo.toml` are prose or are
+#    ambiguous, and a false failure here would be worse than a missed one. Angle brackets
+#    and whitespace rule out JSX (`<SampleGraphDemo />`), which also contains a slash.
+paths = sorted({
+    t for t in re.findall(r"`([^`]+)`", section)
+    if "/" in t and "<" not in t and ">" not in t and not re.search(r"\s", t)
+})
+missing = [t for t in paths if not exists(t)]
+if missing:
+    print("  %sFAIL%s the state table names %d path(s) that do not exist:" % (RED, OFF, len(missing)))
+    for t in missing:
+        print("         %s" % t)
+    bad = 1
+else:
+    print("  %sok%s   all %d paths named in the state table exist" % (GREEN, OFF, len(paths)))
+
+# 2. A row whose State cell starts with **Empty must point at files of at most one line.
+#    This is the check that would have caught the stores/ row the day the store landed.
+wrong = []
+for line in section.splitlines():
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
+    if len(cells) < 2 or not cells[1].startswith("**Empty"):
+        continue
+    for t in re.findall(r"`([^`]+)`", cells[0]):
+        for f in (glob.glob(t) if "*" in t else [t]):
+            if os.path.isfile(f):
+                with open(f, encoding="utf-8", errors="replace") as fh:
+                    lines = sum(1 for _ in fh)
+                if lines > 1:
+                    wrong.append((f, lines))
+if wrong:
+    print("  %sFAIL%s marked Empty in the state table but not empty:" % (RED, OFF))
+    for f, lines in wrong:
+        print("         %s (%d lines)" % (f, lines))
+    bad = 1
+else:
+    print("  %sok%s   every row marked Empty points at an empty file" % (GREEN, OFF))
+
+sys.exit(bad)
+TABLE
+
 if [ "$STRUCTURAL_ONLY" -eq 1 ]; then
   [ "$fail" -eq 0 ] || echo "invariants: FAIL"
   exit "$fail"
