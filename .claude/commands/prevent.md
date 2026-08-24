@@ -148,6 +148,10 @@ Injects **14** known bugs into a throwaway worktree and asserts a gate goes red 
 This is the only check that catches a gate which has quietly stopped working, or one that
 was added but never actually caught anything.
 
+It preflights every gate on the clean tree first and refuses to run if one is already
+red — a gate that cannot execute reports every fault as caught, which is a green suite
+that measured nothing.
+
 **Pass:** `mutation: PASS`
 **Fail:** a fault expected to be caught was missed — a gate has stopped working. A fault
 expected to be missed that is now caught is reported as an improvement, not a failure;
