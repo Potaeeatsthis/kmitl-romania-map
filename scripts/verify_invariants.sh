@@ -107,6 +107,55 @@ else
 fi
 
 echo
+echo "Frontend test inventory"
+# The same argument as above, for the 22 vitest cases. Deleting one makes `npm test`
+# greener, and until scripts/verify_mutation.sh grew a vitest gate (M13-M15) nothing
+# in this harness could see the frontend suite at all.
+#
+# Listed in full rather than curated: JS tests are named by string, so the list costs
+# nothing to maintain and a rename shows up in the diff, which is the point.
+FRONTEND_TESTS_FILE="$BIN/frontend-tests"
+cat > "$FRONTEND_TESTS_FILE" <<'TESTS'
+accepts the Rust-generated sample
+announces an empty search outside the listbox
+clamps an out-of-bounds step to the last frame
+clamps frames and toggles playback safely
+closes with Escape and returns focus to the results button
+expanded cities include cities through the current step
+filters city options by the beginning of the name
+keeps the closed drawer out of keyboard navigation
+rejects malformed discovered nodes
+rejects malformed frontier nodes
+reports invalid JSON clearly
+returns 0 when data is null
+returns only the cities in the current frontier
+runs automatically after two cities are chosen on the map
+runs the selected Rust search and starts playback
+shows a useful error when the Wasm search fails
+shows final paths only for completed algorithms
+shows the all-pairs benchmark and exact selected-route details
+updates the route details for the selected starting point and destination
+uses one button that switches between play and pause
+uses the box-drawing cross for the close control
+uses the longest algorithm trace as the timeline length
+TESTS
+missing=""
+count=0
+while IFS= read -r name; do
+  [ -z "$name" ] && continue
+  count=$((count + 1))
+  grep -rqF "\"$name\"" --include='*.test.ts' --include='*.test.tsx' . 2>/dev/null \
+    || missing="$missing
+         $name"
+done < "$FRONTEND_TESTS_FILE"
+if [ -z "$missing" ]; then
+  pass "all $count required frontend tests are present"
+else
+  bad "frontend tests missing -- deleted, or renamed without updating this list:"
+  printf '%s\n' "$missing" | sed '/^$/d'
+fi
+
+echo
 echo "Locked decision — priority-queue tie-break"
 # CLAUDE.md locks the tie-break at (f, g, city). Swapping the secondary keys to
 # (f, city, g) was measured to produce identical explored order on all 800 start/goal/
