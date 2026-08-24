@@ -29,7 +29,6 @@ are not built.
 
 | Part | State |
 |---|---|
-| `reference/romania_search.rs` | **Working, but compiled by no gate.** Since the engine moved into the crate, `rust_build.sh` takes its cargo branch and the I1 grep takes its `wasm/src/search.rs` branch, so nothing builds or compares this file. Wire it into `verify:parity` or delete it |
 | `reference/romania_search.py` | **Working.** 238 lines, matches Rust exactly |
 | `reference/romania_search.cpp` | **Working.** 304 lines, matches Rust exactly |
 | `docs/` | **Written.** `ideas.md` and `ARCHITECTURE.md` (algorithm maths, architecture analysis), `ARCHITECTURE_DECISION.md` (the benchmark-spread record), `runbook.md` (symptom → fix, cited throughout this file), `sample-trace.md`, and `docs/rootcause/` |
@@ -98,7 +97,7 @@ and `O(V²)` memory; browser-side precompute stops being viable well before that
 Six steps. Each has a check that must pass before the next begins.
 
 1. **Make `wasm/` a real Cargo project.** Fill `Cargo.toml`; move the engine from
-   `reference/romania_search.rs` into `lib.rs`, `graph.rs`, the single `search.rs`,
+   the native Rust reference into `lib.rs`, `graph.rs`, the single `search.rs`,
    `heuristics/current_flow.rs`, and `src/bin/cli.rs`; convert
    `panic!("No route exists…")` to a `Result`; delete unused placeholders.
    → *check:* `cargo run --bin cli` output byte-identical to today's.
@@ -160,11 +159,11 @@ you whether the other six gates still work. It is *configured* weekly and **has 
 scheduled workflows fire only from the default branch, and `master` has no `.github/`. Run it
 locally, or from the Actions tab via `workflow_dispatch`.
 
-Two faults are recorded there as documented blind spots rather than failures. **M9**: an
-edit to `reference/romania_search.rs`, which no gate compiles since the crate landed —
-closing it is a decision rather than a patch, so wire the file back into `verify:parity` as
-a fourth implementation, or delete it. **M15**: the frontend suite has a single fixture, so
-a selector that ignores the A\* trace passes (see the frontend-test rule below).
+One fault is recorded there as a documented blind spot rather than a failure. **M15**: the
+frontend suite has a single fixture, so a selector that ignores the A\* trace passes (see
+the frontend-test rule below). **M9 is retired** — it covered `reference/romania_search.rs`,
+deleted once the team confirmed the crate is the only Rust engine. Fault ids are not
+renumbered, so M9 is simply absent.
 
 M1–M12 cover the engine and the exported sample. M13–M15 cover the frontend suite, which
 until they landed was policed by nothing: the mutation script's `TEST` gate is `cargo test`,
@@ -362,8 +361,8 @@ python3 reference/romania_search.py
 - Conventional commits: `feat:`, `fix:`, `test:`, `chore:`, `docs:`
 - One PR per build step; CI must be green before merge
 - **Claude does not commit or push unless explicitly told to**
-- The step-1 restructure (engine moved from `reference/romania_search.rs` into `wasm/`) is
-  **done and merged**. The rule it established still holds: Rust work and frontend work touch
+- The step-1 restructure (engine moved into `wasm/`) is **done and merged**, and the native
+  Rust reference it came from has since been deleted — `wasm/src/` is the only Rust engine. The rule it established still holds: Rust work and frontend work touch
   disjoint files and can run in parallel; two people inside `wasm/src/` at the same time cannot
 - Repository settings need admin, which only `Potaeeatsthis` has.
   - **Enabled.** Both `master` and `dev` are protected: PR required, plus the two status

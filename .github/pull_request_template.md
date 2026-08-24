@@ -15,8 +15,8 @@
 - [ ] **I1** — `search()` is still one function. UCS and A\* differ only by the
       heuristic array passed in. No `ucs.rs` / `astar.rs` split.
 - [ ] **I2** — **if the algorithm changed, it changed in all three languages**
-      (`wasm/src/` or transitional `reference/romania_search.rs`, plus
-      `reference/romania_search.py` and `reference/romania_search.cpp`) and `verify:parity` still passes.
+      (`wasm/src/`, plus `reference/romania_search.py` and
+      `reference/romania_search.cpp`) and `verify:parity` still passes.
 - [ ] **I3** — the heuristic is still admissible and consistent.
 - [ ] **I4** — no `println!`, `Instant`, `black_box` or `io::` in engine code.
 - [ ] **I5** — no runtime numbers taken from a browser.
