@@ -1,48 +1,68 @@
 /* components/benchmark/BenchmarkPanel.module.css */
 .tab {
-  position: fixed;
-  top: 50%;
-  right: 0;
-  z-index: 90;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 16px 12px;
-  transform: translateY(-50%);
-  border: 0;
-  border-radius: 8px 0 0 8px;
-  background: #00684a;
+  min-width: 108px;
+  height: 44px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  border: 1px solid var(--green, #137a47);
+  border-radius: 10px;
+  background: var(--green, #137a47);
   color: #ffffff;
-  box-shadow: -4px 0 14px rgba(16, 42, 30, 0.18);
-  font-family: var(--font-interface);
+  font: 400 11px / 1 var(--font-interface);
   cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, transform 150ms ease;
 }
 
 .tab:hover {
-  background: #005a40;
+  border-color: var(--green-dark, #0b5631);
+  background: var(--green-dark, #0b5631);
+  color: #ffffff;
+}
+
+.tab:active {
+  transform: scale(0.97);
 }
 
 .tabLabel {
-  writing-mode: vertical-rl;
   font-size: 10px;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.08em;
+}
+
+.tabIcon {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
 }
 
 .drawer {
   position: fixed;
-  inset: 0 0 0 auto;
+  top: calc(clamp(12px, 2vw, 24px) + 64px);
+  right: max(clamp(12px, 2vw, 24px), calc((100vw - 1680px) / 2));
+  bottom: clamp(12px, 2vw, 24px);
   z-index: 100;
   display: flex;
-  width: 33.333vw;
-  min-width: min(340px, 100vw);
-  height: 100dvh;
+  width: min(520px, calc(100vw - 32px));
   flex-direction: column;
   overflow: hidden;
-  transform: translateX(100%);
-  border-left: 1px solid #c9dfd2;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.985);
+  transform-origin: top right;
+  border-radius: 14px;
   background: var(--surface, #ffffff);
-  box-shadow: -12px 0 30px rgba(16, 42, 30, 0.14);
+  box-shadow: -10px 14px 36px rgba(16, 42, 30, 0.18);
   font-family: var(--font-interface);
-  transition: transform 0.28s ease;
+  transition:
+    opacity 180ms ease,
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 240ms;
 }
 
 .drawer[aria-hidden="true"] {
@@ -50,7 +70,9 @@
 }
 
 .drawerOpen {
-  transform: translateX(0);
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
 }
 
 .drawerHeader {
@@ -60,6 +82,7 @@
   justify-content: space-between;
   padding: 8px 10px 8px 16px;
   border-bottom: 1px solid #c9dfd2;
+  background: #ffffff;
 }
 
 .drawerTitle {
@@ -103,41 +126,44 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-color: #cfe7d8 transparent;
+  scrollbar-width: thin;
 }
 
 @media (max-width: 800px) {
-  .drawer {
-    inset: auto 0 0;
-    width: 100%;
-    min-width: 0;
-    height: auto;
-    max-height: 74dvh;
-    transform: translateY(100%);
-    border-top: 1px solid #c9dfd2;
-    border-left: 0;
-    border-radius: 12px 12px 0 0;
-  }
-
-  .drawerOpen {
-    transform: translateY(0);
-  }
-
   .tab {
-    top: auto;
-    right: 16px;
-    bottom: 0;
-    padding: 10px 16px;
-    transform: none;
-    border-radius: 8px 8px 0 0;
+    width: 44px;
+    min-width: 44px;
+    padding: 0;
+    border-radius: 9px;
   }
 
   .tabLabel {
-    writing-mode: horizontal-tb;
+    display: none;
+  }
+
+  .drawer {
+    inset: auto 0 0;
+    width: 100%;
+    height: auto;
+    max-height: 78dvh;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(100%) scale(1);
+    transform-origin: bottom center;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .drawerOpen {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer {
+  .drawer,
+  .tab {
     transition: none;
   }
 }

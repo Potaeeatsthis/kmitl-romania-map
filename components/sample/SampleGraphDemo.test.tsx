@@ -86,40 +86,98 @@ describe("SampleGraphDemo", () => {
     expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
   });
 
-  it("minimizes playback when it is dragged to a map edge", () => {
+  it("minimizes playback with a Departure Mono control and reopens it", async () => {
+    const user = userEvent.setup();
     render(<SampleGraphDemo />);
 
-    const workspace = screen.getByTestId("map-workspace");
-    const playback = screen.getByTestId("playback-controls");
-    const grip = screen.getByRole("button", { name: "Move or minimize playback controls" });
-    vi.spyOn(workspace, "getBoundingClientRect").mockReturnValue({
+    const minimize = screen.getByRole("button", { name: "Minimize playback controls" });
+    expect(minimize).toHaveTextContent("−");
+    await user.click(minimize);
+
+    const open = screen.getByRole("button", { name: "Open playback controls" });
+    expect(open).toHaveTextContent("+");
+    await user.click(open);
+
+    expect(screen.getByRole("button", { name: "Minimize playback controls" })).toBeInTheDocument();
+  });
+
+  it("zooms the map in and out with bounded controls", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<SampleGraphDemo />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+    const zoomIn = screen.getByRole("button", { name: "Zoom in" });
+    const zoomOut = screen.getByRole("button", { name: "Zoom out" });
+
+    expect(map).toHaveAttribute("viewBox", "120 50 900 650");
+    expect(zoomOut).toBeDisabled();
+
+    await user.click(zoomIn);
+    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+    expect(zoomOut).toBeEnabled();
+
+    await user.click(zoomOut);
+    expect(map).toHaveAttribute("viewBox", "120 50 900 650");
+    expect(zoomOut).toBeDisabled();
+  });
+
+  it("pans the map by dragging after zooming in", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<SampleGraphDemo />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+
+    expect(map).not.toBeNull();
+    vi.spyOn(map!, "getBoundingClientRect").mockReturnValue({
       x: 0,
       y: 0,
       top: 0,
-      right: 1000,
-      bottom: 600,
+      right: 900,
+      bottom: 650,
       left: 0,
-      width: 1000,
-      height: 600,
+      width: 900,
+      height: 650,
       toJSON: () => ({}),
-    } as DOMRect);
-    vi.spyOn(playback, "getBoundingClientRect").mockReturnValue({
-      x: 140,
-      y: 516,
-      top: 516,
-      right: 860,
-      bottom: 584,
-      left: 140,
-      width: 720,
-      height: 68,
-      toJSON: () => ({}),
-    } as DOMRect);
+    });
 
-    fireEvent.pointerDown(grip, { pointerId: 1, button: 0, clientX: 156, clientY: 536 });
-    fireEvent.pointerMove(grip, { pointerId: 1, clientX: 990, clientY: 536 });
-    fireEvent.pointerUp(grip, { pointerId: 1, clientX: 990, clientY: 536 });
+    await user.click(screen.getByRole("button", { name: "Zoom in" }));
+    fireEvent.pointerDown(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 450, clientY: 325 });
+    fireEvent.pointerMove(map!, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 550, clientY: 325 });
 
-    expect(screen.getByRole("button", { name: "Open playback controls" })).toBeInTheDocument();
+    expect(map).toHaveAttribute("viewBox", "130 115 720 520");
+
+    fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 550, clientY: 325 });
+  });
+
+  it("zooms continuously with a two-finger pinch gesture", () => {
+    const { container } = render(<SampleGraphDemo />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+
+    expect(map).not.toBeNull();
+    fireEvent.pointerDown(map!, { pointerId: 1, pointerType: "touch", clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(map!, { pointerId: 2, pointerType: "touch", clientX: 200, clientY: 100 });
+    fireEvent.pointerMove(map!, { pointerId: 2, pointerType: "touch", clientX: 250, clientY: 100 });
+
+    expect(map).toHaveAttribute("viewBox", "270 158.33 600 433.33");
+    expect(screen.getByRole("group", { name: "Map zoom controls, 150%" })).toBeInTheDocument();
+
+    fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "touch", clientX: 100, clientY: 100 });
+    fireEvent.pointerUp(map!, { pointerId: 2, pointerType: "touch", clientX: 250, clientY: 100 });
+  });
+
+  it("zooms with a two-finger touchpad gesture without scrolling the page", () => {
+    const { container } = render(<SampleGraphDemo />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+    const wheel = new WheelEvent("wheel", {
+      deltaY: -Math.log(1.25) / 0.0025,
+      bubbles: true,
+      cancelable: true,
+    });
+
+    expect(map).not.toBeNull();
+    fireEvent(map!, wheel);
+
+    expect(wheel.defaultPrevented).toBe(true);
+    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+    expect(screen.getByRole("group", { name: "Map zoom controls, 125%" })).toBeInTheDocument();
   });
 
   it("uses one button that switches between play and pause", async () => {

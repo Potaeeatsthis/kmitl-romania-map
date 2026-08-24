@@ -78,6 +78,15 @@
   letter-spacing: 0.12em;
 }
 
+.headerActions {
+  min-width: 0;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .headerStatus,
 .headerStatusButton {
   min-width: 0;
@@ -111,7 +120,8 @@
 .runButton:focus-visible,
 .controlButton:focus-visible,
 .speedControl select:focus-visible,
-.frameScrubber input:focus-visible {
+.frameScrubber input:focus-visible,
+.zoomButton:focus-visible {
   outline: 3px solid var(--green-bright);
   outline-offset: 3px;
 }
@@ -143,6 +153,17 @@
   width: 100%;
   height: 100%;
   background: var(--map-surface);
+  touch-action: none;
+  user-select: none;
+}
+
+.mapPannable {
+  cursor: grab;
+}
+
+.mapPanning,
+.mapPanning .city {
+  cursor: grabbing;
 }
 
 .roads .roadCasing {
@@ -290,10 +311,68 @@
   stroke-width: 0.8;
 }
 
-.countryOutline {
+.countryOutline path {
   fill: none;
   stroke: #9ebbaa;
-  stroke-width: 1.2;
+  stroke-width: 2.4;
+}
+
+.zoomControls {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  z-index: 20;
+  width: 52px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-50%);
+}
+
+.zoomButton {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--green-dark);
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.zoomButton + .zoomButton {
+  border-top: 1px solid var(--line);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.zoomButton:hover:not(:disabled) {
+  background: var(--green-pale);
+}
+
+.zoomButton:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.zoomButton:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.zoomIcon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
 }
 
 .panel,
@@ -633,7 +712,7 @@
   border-radius: 14px;
 }
 
-.playbackDragHandle {
+.playbackMinimizeButton {
   width: 32px;
   height: 44px;
   display: inline-flex;
@@ -643,41 +722,32 @@
   border-radius: 8px;
   background: transparent;
   color: var(--muted);
-  cursor: grab;
-  touch-action: none;
+  cursor: pointer;
 }
 
-.playbackDragHandle:hover {
+.playbackMinimizeButton:hover {
   background: var(--green-pale);
   color: var(--green-dark);
 }
 
-.playbackDragHandle:active {
-  cursor: grabbing;
-}
-
-.playbackDragHandle:focus-visible,
+.playbackMinimizeButton:focus-visible,
 .playbackMinimized:focus-visible {
   outline: 3px solid var(--green-bright);
   outline-offset: 3px;
 }
 
-.dragIcon {
+.departureIcon {
   width: 20px;
-  height: 20px;
-  fill: currentColor;
-}
-
-.playbackNearEdge {
-  outline: 2px solid var(--green-bright);
-  outline-offset: -2px;
-  background: #f3fff8;
+  display: inline-block;
+  color: currentColor;
+  font: 400 18px / 1 var(--font-interface);
+  text-align: center;
 }
 
 .playbackMinimized {
   position: absolute;
-  right: 16px;
   bottom: 16px;
+  left: 16px;
   z-index: 20;
   width: 148px;
   height: 48px;
@@ -886,6 +956,10 @@
     font-size: 8px;
   }
 
+  .headerActions {
+    gap: 6px;
+  }
+
   .headerStatus,
   .headerStatusButton {
     max-width: 44%;
@@ -907,9 +981,13 @@
     left: 10px;
   }
 
-  .playbackMinimized {
+  .zoomControls {
     right: 10px;
+  }
+
+  .playbackMinimized {
     bottom: 10px;
+    left: 10px;
   }
 
   .legend {

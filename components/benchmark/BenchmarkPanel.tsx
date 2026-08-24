@@ -44,7 +44,8 @@ export default function BenchmarkPanel() {
           onClick={() => setOpen(true)}
           aria-label="Open benchmark results"
         >
-          <span className={styles.tabLabel}>RESULTS</span>
+          <ResultsIcon />
+          <span className={styles.tabLabel}>Results</span>
         </button>
       )}
 
@@ -71,5 +72,13 @@ export default function BenchmarkPanel() {
         </div>
       </aside>
     </>
+  );
+}
+
+function ResultsIcon() {
+  return (
+    <svg className={styles.tabIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M4 15V9M10 15V5M16 15v-3" />
+    </svg>
   );
 }
