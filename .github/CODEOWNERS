@@ -25,13 +25,11 @@
 /.github/               @KLAharris
 /.claude/               @KLAharris
 
-# The engine. CLAUDE.md: two people inside wasm/src/ at the same time cannot work.
-# TODO: replace with the engine owner's handle.
-# /wasm/src/            @engine-owner
-
-# The interface.
-# TODO: replace with the frontend owner's handle.
-# /app/                 @frontend-owner
-# /components/          @frontend-owner
-# /lib/                 @frontend-owner
-# /stores/              @frontend-owner
+# The engine and the interface need no rules of their own: the default above already
+# assigns them, and the commit history agrees -- @Potaeeatsthis authors the large majority
+# of wasm/src/, app/, components/, lib/ and stores/. An explicit rule that names the same
+# owner as the default is pure noise, and "last matching rule wins" makes duplicated rules
+# a hazard rather than documentation.
+#
+# Add a path here only when its owner DIFFERS from the default, which is what the three
+# rules above are doing.

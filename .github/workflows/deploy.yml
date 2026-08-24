@@ -1,0 +1,95 @@
+name: Deploy
+
+# Build step 6. Publishes the static export to GitHub Pages.
+#
+# This file is inert until it reaches the default branch AND someone with admin sets
+# Settings -> Pages -> Source: GitHub Actions. Neither has happened yet; the Pages API
+# currently returns 404 for this repository. Landing the workflow early is deliberate --
+# it makes step 6 a merge rather than a scramble, and it costs nothing sitting here.
+#
+# Separate from ci.yml on purpose. ci.yml's two jobs are required status checks on every
+# pull request; this one runs after merge and needs write permissions that those jobs
+# must never have.
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+# Scoped to this job rather than the workflow, and deliberately narrow: `contents: read`
+# because the build only reads the tree, plus the two Pages needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Pages has one live deployment. Queue rather than cancel: cancelling mid-deploy can
+# leave the site serving a half-uploaded artifact, and a superseded run finishing is
+# harmless because the next one overwrites it.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Identical to the step in ci.yml, reading the same pin. See the comment there.
+      - name: Install wasm-pack
+        run: |
+          version="$(tr -d '[:space:]' < .wasm-pack-version)"
+          name="wasm-pack-v${version}-x86_64-unknown-linux-musl"
+          curl -sSfL "https://github.com/rustwasm/wasm-pack/releases/download/v${version}/${name}.tar.gz" \
+            | tar -xz -C "$HOME/.cargo/bin" --strip-components=1 "${name}/wasm-pack"
+          wasm-pack --version
+
+      # The one place NEXT_PUBLIC_BASE_PATH is set. next.config.ts derives basePath and
+      # assetPrefix from it, and lib/wasm/client.ts builds the wasm module URL from it,
+      # so both move together -- see the comment in next.config.ts.
+      #
+      # Derived from the repository name rather than written out, so renaming the repo
+      # (which changes the Pages URL) does not silently leave a stale path here.
+      - name: Build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+        run: npm run build
+
+      # `next build` exiting 0 does not mean the export is servable: a wrong base path
+      # builds cleanly and 404s every asset. Runs before upload, so a broken export
+      # never reaches the live site.
+      - name: Verify the export
+        env:
+          NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
+        run: npm run verify:export
+
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: out
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

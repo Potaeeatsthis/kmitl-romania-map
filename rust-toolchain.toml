@@ -2,8 +2,9 @@
 # the same rustfmt output, and the same warnings. Without this, collaborators on
 # different Rust versions get different local results and disagree with CI.
 #
-# Add targets = ["wasm32-unknown-unknown"] at build step 4. It is left out for now
-# because listing it makes every CI run download a standard library nothing uses yet.
+# targets includes wasm32-unknown-unknown because build step 4 needs it. Note rustup
+# installs a declared target lazily, so a fresh machine still hits it mid-build rather
+# than up front -- `npm run doctor` is what reports it before you get there.
 [toolchain]
 channel = "1.95.0"
 components = ["rustfmt", "clippy"]
