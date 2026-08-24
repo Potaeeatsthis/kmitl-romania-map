@@ -153,7 +153,7 @@ They violate I1. Keep one `wasm/src/search.rs`.
 
 `npm run verify` runs six gates and checks I1–I4. I5 is a convention.
 
-`npm run verify:mutation` is separate and deliberately not in that chain: it injects fifteen
+`npm run verify:mutation` is separate and deliberately not in that chain: it injects **14**
 known bugs and asserts a gate goes red for each, which takes ~10 minutes. It is what tells
 you whether the other six gates still work. It is *configured* weekly and **has never run**:
 scheduled workflows fire only from the default branch, and `master` has no `.github/`. Run it
@@ -165,7 +165,8 @@ the frontend-test rule below). **M9 is retired** — it covered `reference/roman
 deleted once the team confirmed the crate is the only Rust engine. Fault ids are not
 renumbered, so M9 is simply absent.
 
-M1–M12 cover the engine and the exported sample. M13–M15 cover the frontend suite, which
+M1–M8 and M10–M12 cover the engine and the exported sample. M13–M15 cover the frontend
+suite, which
 until they landed was policed by nothing: the mutation script's `TEST` gate is `cargo test`,
 and `FRONT` diffs a JSON file without rendering a component.
 

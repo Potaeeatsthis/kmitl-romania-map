@@ -141,6 +141,24 @@ else
 fi
 
 echo
+echo "Mutation fault count"
+# The number of injected faults is written in two docs and has drifted twice: prevent.md
+# said "ten" when there were twelve, and both said "fifteen" the moment M9 was retired.
+# Nothing breaks when it is wrong, which is exactly why it goes stale -- so the count is
+# written as a digit in both files and checked against the script.
+faults=$(grep -cE '^  begin M[0-9]+ ' scripts/verify_mutation.sh)
+stale=""
+for doc in CLAUDE.md .claude/commands/prevent.md; do
+  grep -qE "\*\*$faults\*\* *$|injects \*\*$faults\*\*|Injects \*\*$faults\*\*" "$doc" || stale="$stale $doc"
+done
+if [ -z "$stale" ]; then
+  pass "both docs state $faults injected faults"
+else
+  bad "verify_mutation.sh injects $faults faults; these do not say so:"
+  for doc in $stale; do echo "         $doc"; done
+fi
+
+echo
 echo "Locked decision — priority-queue tie-break"
 # CLAUDE.md locks the tie-break at (f, g, city). Swapping the secondary keys to
 # (f, city, g) was measured to produce identical explored order on all 800 start/goal/

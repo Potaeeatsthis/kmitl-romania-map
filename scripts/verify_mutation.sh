@@ -26,7 +26,7 @@
 # what gets measured, and nothing here can touch your checkout. Takes ~10 minutes,
 # which is why it is a weekly scheduled job rather than part of `npm run verify`.
 #
-# Run via: npm run verify:mutation          all fifteen
+# Run via: npm run verify:mutation          all 14
 #          bash scripts/verify_mutation.sh M3   just one, while iterating
 #
 # M1-M12 cover the engine and the exported sample. M13-M15 cover the frontend suite.
