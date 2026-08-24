@@ -175,6 +175,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      # NEXT_PUBLIC_BASE_PATH is unset here, so this checks the development shape:
+      # index.html and the wasm module are both in out/, and no base path has been
+      # hardcoded into next.config.ts. deploy.yml runs the same script with the
+      # variable set, which checks the prefixed shape. Catching a broken export on
+      # the pull request is the point -- deploy.yml only runs after merge.
+      - name: Verify the export
+        run: npm run verify:export
+
 # --- Not yet enabled -------------------------------------------------------------
 #
 # deploy job: remains Step 6 work. The frontend build already produces the Wasm module
