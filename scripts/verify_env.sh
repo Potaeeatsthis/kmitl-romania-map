@@ -53,11 +53,22 @@ else
   missing_build=1
 fi
 
-# Prebuilt binary rather than `cargo install`, which compiles from source and takes
-# minutes. Keep this string identical to the one in .github/workflows/ci.yml: the
-# whole point is that both sides install the same way.
-have wasm-pack wasm-pack \
-  "curl -sSfL https://rustwasm.github.io/wasm-pack/installer/init.sh | sh" build
+# Presence is not enough: CI pins wasm-pack via .wasm-pack-version, so a machine on a
+# different version can produce a different bundle from the same source. Read the pin
+# from the same file CI reads, and report a mismatch rather than a bare "ok".
+WANT="$(tr -d '[:space:]' < .wasm-pack-version 2>/dev/null)"
+if command -v wasm-pack >/dev/null 2>&1; then
+  GOT="$(wasm-pack --version 2>/dev/null | awk '{print $2}')"
+  if [ -z "$WANT" ] || [ "$GOT" = "$WANT" ]; then
+    pass "wasm-pack" "wasm-pack $GOT"
+  else
+    bad "wasm-pack" "have $GOT, project pins $WANT -- see .wasm-pack-version"
+    missing_build=1
+  fi
+else
+  bad "wasm-pack" "install v${WANT:-latest} from https://github.com/rustwasm/wasm-pack/releases"
+  missing_build=1
+fi
 
 # node_modules is not a command, and its absence is the other way `npm test` fails
 # confusingly -- vitest resolves to nothing and the shell reports command not found.

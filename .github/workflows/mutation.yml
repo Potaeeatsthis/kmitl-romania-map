@@ -6,14 +6,31 @@ name: Mutation
 # and an existing check that has quietly stopped working -- which has happened here
 # before (docs/runbook.md section 2).
 #
-# Weekly rather than per-PR: it rebuilds the crate once per injected fault, so a run
-# costs minutes rather than seconds. Also runnable on demand from the Actions tab.
+# Not on every pull request: it rebuilds the crate once per injected fault, so a run
+# costs minutes rather than seconds. It runs on the PRs that change the harness itself,
+# weekly, and on demand from the Actions tab.
 
+# The schedule alone made this unreachable. Scheduled workflows fire only from the
+# default branch, and master has no .github/ -- so this workflow has never executed
+# once, and the check that tells you the other six gates work has never itself run.
+#
+# The pull_request trigger fixes that without waiting on a merge to master: editing
+# the harness now gets the harness tested. It is deliberately path-filtered, because
+# a full run rebuilds the crate once per injected fault.
+#
+# Do NOT add this as a required status check. It does not run on most pull requests,
+# and a required check that never reports leaves the PR pending forever -- see the
+# note at the top of ci.yml.
 on:
   schedule:
-    # Mondays, 03:00 UTC.
+    # Mondays, 03:00 UTC. Inert until this file reaches the default branch.
     - cron: '0 3 * * 1'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/**'
+      - 'wasm/src/**'
 
 permissions:
   contents: read
@@ -26,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Show compiler versions
         run: rustc --version && g++ --version && python3 --version
