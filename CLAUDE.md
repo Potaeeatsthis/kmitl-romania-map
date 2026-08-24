@@ -191,6 +191,8 @@ that measured nothing. That is not hypothetical: on this workflow's first ever r
 (2026-08-24) the CI job had no `node_modules`, `npx vitest run` exited 1 because vitest
 was not installed, all three vitest faults reported `CAUGHT`, and **M15 — a fault proven
 undetectable — reported "now caught" and advised closing it.** The suite printed `PASS`.
+The reliable tell is M15's verdict, not the run time: CI finishes the whole suite in under
+three minutes quite legitimately.
 
 One fault is recorded there as a documented blind spot rather than a failure. **M15**: the
 frontend suite has a single fixture, so a selector that ignores the A\* trace passes (see

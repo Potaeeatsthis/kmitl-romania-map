@@ -228,9 +228,14 @@ suites, add a narrow documented `#[allow(dead_code)]` on that helper only.
 
 ## §6 — `mutation-false-pass-broken-gate`
 
-**Symptom.** `mutation: PASS`, but the run finished in about two minutes instead of ten.
-Or a fault whose expectation is `missed` reports *"is now caught -- a gap was closed"*.
-Either is the same thing: a gate that cannot run.
+**Symptom.** A fault whose expectation is `missed` reports *"is now caught -- a gap was
+closed"*, or the `Preflight` block is missing from the output entirely. Both mean the same
+thing: a gate that cannot run, scoring every fault it touches as caught.
+
+**Not a symptom: a fast run.** The first version of this section said two minutes instead
+of ten. That was calibrated on a Mac. CI completes the full suite in under three minutes
+legitimately -- 2m53s on 2026-08-24 with all fifteen preflight and fault lines correct.
+Duration tells you nothing on its own; M15's verdict does.
 
 **Diagnose.** Read the top of the output. Every gate should be listed green under
 *Preflight*. If the suite starts at all, the preflight passed; if it refused with
