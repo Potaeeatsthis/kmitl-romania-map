@@ -33,7 +33,8 @@ The Rust engine and the standalone Python and C++ reference programs:
 | `public/data/romania.geojson` | Browser-served GeoJSON placeholder |
 | `wasm/` | Working Rust engine, native CLI, tests, trace, and precomputed heuristic data |
 | `wasm/src/bin/export_sample.rs` | Generates real UCS and A* JSON sample data for the frontend |
-| `reference/romania_search.rs` | Transitional native Rust baseline |
+| `components/benchmark/` | Displays the UCS and A* benchmark comparison |
+| `public/data/benchmark-results.json` | Committed native Rust benchmark results |
 | `reference/romania_search.py` | Python 3 reference implementation |
 | `reference/romania_search.cpp` | C++17 reference implementation |
 | `docs/ideas.md` | Algorithm explanation and mathematical specification |
@@ -173,6 +174,7 @@ npm run verify:correctness  # 400 pairs vs Dijkstra, admissibility, consistency
 npm run verify:golden       # full CLI output against tests/golden/
 npm run verify:harness      # the PostToolUse hook is wired and reacts
 npm run verify:frontend-sample # Rust JSON matches the frontend trace contract
+npm test                    # frontend component and logic tests
 npm run typecheck           # requires `npm install` first
 cargo test --manifest-path wasm/Cargo.toml
 ```
@@ -204,7 +206,7 @@ load.
 
 | Metric | Meaning |
 |---|---|
-| Runtime (us) | Average search time in microseconds over 5,000 runs |
+| Runtime (us) | Median of nine per-launch means; each launch runs 5,000 searches |
 | Expanded | Cities removed from the queue and processed |
 | Generated | Priority-queue entries created, including the start |
 | Peak queue | Maximum simultaneous entries in the priority queue |

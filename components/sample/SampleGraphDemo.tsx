@@ -1,8 +1,8 @@
 // components/sample/SampleGraphDemo.tsx
 "use client";
 
-import { useEffect, useId, useMemo, useState } from "react";
-import type { CSSProperties, KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import type { CSSProperties, KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
 import type { DiscoveredNode } from "../../lib/types";
 import { romaniaGraph } from "../../lib/romaniaGraph";
@@ -17,6 +17,30 @@ import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./SampleGraphDemo.module.css";
 
 const FRAME_DURATION_MS = 850;
+
+const PLAYBACK_EDGE_THRESHOLD = 36;
+const PLAYBACK_MINIMIZED_WIDTH = 148;
+const PLAYBACK_MINIMIZED_HEIGHT = 48;
+const PLAYBACK_BOUNDARY_GAP = 8;
+
+type PlaybackPosition = {
+  x: number;
+  y: number;
+};
+
+type PlaybackEdge = "top" | "right" | "bottom" | "left";
+
+type PlaybackDragState = {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+  edge: PlaybackEdge | null;
+  moved: boolean;
+};
 
 const labelOffsets: Record<number, { x: number; y: number }> = {
   0: { x: -21, y: -5 },   1: { x: -20, y: -10 },  2: { x: -3, y: -22 },
@@ -66,6 +90,14 @@ const COUNTRY_OUTLINE_PATH = `
 `;
 
 export default function SampleGraphDemo() {
+  const [isRouteOpen, setIsRouteOpen] = useState(true);
+  const [isPlaybackMinimized, setIsPlaybackMinimized] = useState(false);
+  const [isPlaybackNearEdge, setIsPlaybackNearEdge] = useState(false);
+  const [playbackPosition, setPlaybackPosition] = useState<PlaybackPosition | null>(null);
+  const contentRef = useRef<HTMLElement>(null);
+  const playbackDockRef = useRef<HTMLDivElement>(null);
+  const playbackDragRef = useRef<PlaybackDragState | null>(null);
+  const suppressPlaybackClickRef = useRef(false);
   const data = useSearchStore((state) => state.data);
   const step = useSearchStore((state) => state.step);
   const isPlaying = useSearchStore((state) => state.isPlaying);
@@ -139,12 +171,121 @@ export default function SampleGraphDemo() {
         ? "Animation complete · Replay"
         : `Frame ${step + 1} / ${timelineLength}`;
 
+  const playbackStyle: CSSProperties | undefined = playbackPosition
+    ? {
+        left: playbackPosition.x,
+        top: playbackPosition.y,
+        right: "auto",
+        bottom: "auto",
+        margin: 0,
+      }
+    : undefined;
+
+  const handlePlaybackPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.button !== 0) return;
+
+    const dock = playbackDockRef.current;
+    const container = contentRef.current;
+    if (!dock || !container) return;
+
+    const dockRect = dock.getBoundingClientRect();
+    playbackDragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      offsetX: event.clientX - dockRect.left,
+      offsetY: event.clientY - dockRect.top,
+      width: dockRect.width,
+      height: dockRect.height,
+      edge: null,
+      moved: false,
+    };
+    suppressPlaybackClickRef.current = false;
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  };
+
+  const handlePlaybackPointerMove = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = playbackDragRef.current;
+    const container = contentRef.current;
+    if (!drag || !container || drag.pointerId !== event.pointerId) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const pointerX = event.clientX - containerRect.left;
+    const pointerY = event.clientY - containerRect.top;
+    const maxX = Math.max(PLAYBACK_BOUNDARY_GAP, containerRect.width - drag.width - PLAYBACK_BOUNDARY_GAP);
+    const maxY = Math.max(PLAYBACK_BOUNDARY_GAP, containerRect.height - drag.height - PLAYBACK_BOUNDARY_GAP);
+    const x = Math.min(maxX, Math.max(PLAYBACK_BOUNDARY_GAP, pointerX - drag.offsetX));
+    const y = Math.min(maxY, Math.max(PLAYBACK_BOUNDARY_GAP, pointerY - drag.offsetY));
+    const distances: Array<[PlaybackEdge, number]> = [
+      ["top", pointerY],
+      ["right", containerRect.width - pointerX],
+      ["bottom", containerRect.height - pointerY],
+      ["left", pointerX],
+    ];
+    const [nearestEdge, nearestDistance] = distances.reduce((nearest, candidate) =>
+      candidate[1] < nearest[1] ? candidate : nearest,
+    );
+
+    drag.edge = nearestDistance <= PLAYBACK_EDGE_THRESHOLD ? nearestEdge : null;
+    drag.moved = drag.moved || Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 4;
+    setPlaybackPosition({ x, y });
+    setIsPlaybackNearEdge(Boolean(drag.edge));
+    event.preventDefault();
+  };
+
+  const finishPlaybackDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    const drag = playbackDragRef.current;
+    const container = contentRef.current;
+    if (!drag || !container || drag.pointerId !== event.pointerId) return;
+
+    if (event.currentTarget.hasPointerCapture?.(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+
+    suppressPlaybackClickRef.current = drag.moved;
+
+    if (drag.edge) {
+      const containerRect = container.getBoundingClientRect();
+      const pointerX = event.clientX - containerRect.left;
+      const pointerY = event.clientY - containerRect.top;
+      const maxX = Math.max(PLAYBACK_BOUNDARY_GAP, containerRect.width - PLAYBACK_MINIMIZED_WIDTH - PLAYBACK_BOUNDARY_GAP);
+      const maxY = Math.max(PLAYBACK_BOUNDARY_GAP, containerRect.height - PLAYBACK_MINIMIZED_HEIGHT - PLAYBACK_BOUNDARY_GAP);
+      let x = Math.min(maxX, Math.max(PLAYBACK_BOUNDARY_GAP, pointerX - PLAYBACK_MINIMIZED_WIDTH / 2));
+      let y = Math.min(maxY, Math.max(PLAYBACK_BOUNDARY_GAP, pointerY - PLAYBACK_MINIMIZED_HEIGHT / 2));
+
+      if (drag.edge === "left") x = PLAYBACK_BOUNDARY_GAP;
+      if (drag.edge === "right") x = maxX;
+      if (drag.edge === "top") y = PLAYBACK_BOUNDARY_GAP;
+      if (drag.edge === "bottom") y = maxY;
+
+      setPlaybackPosition({ x, y });
+      setIsPlaybackMinimized(true);
+    }
+
+    playbackDragRef.current = null;
+    setIsPlaybackNearEdge(false);
+  };
+
+  const handlePlaybackGripClick = () => {
+    if (suppressPlaybackClickRef.current) {
+      suppressPlaybackClickRef.current = false;
+      return;
+    }
+
+    setPlaybackPosition(null);
+    setIsPlaybackMinimized(true);
+  };
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
-        <div>
-          <p className={styles.kicker}>RUST / WASM TRACE</p>
-          <h1 className={styles.title}>Romania search</h1>
+        <div className={styles.brand}>
+          <span className={styles.brandMark} aria-hidden="true">R</span>
+          <div>
+            <h1 className={styles.title}>Romania search</h1>
+            <p className={styles.productTag}>RUST / WASM TRACE</p>
+          </div>
         </div>
         {animationComplete ? (
           <button className={styles.headerStatusButton} type="button" onClick={replay}>
@@ -157,7 +298,7 @@ export default function SampleGraphDemo() {
         )}
       </header>
 
-      <section className={styles.content}>
+      <section ref={contentRef} className={styles.content} data-testid="map-workspace">
         <div className={styles.mapPanel}>
           <svg
             className={styles.map}
@@ -188,13 +329,22 @@ export default function SampleGraphDemo() {
                 const roadEnd = cityById.get(to);
                 if (!roadStart || !roadEnd) return null;
                 return (
-                  <line
-                    key={`${from}-${to}`}
-                    x1={roadStart.x}
-                    y1={roadStart.y}
-                    x2={roadEnd.x}
-                    y2={roadEnd.y}
-                  />
+                  <g key={`${from}-${to}`}>
+                    <line
+                      className={styles.roadCasing}
+                      x1={roadStart.x}
+                      y1={roadStart.y}
+                      x2={roadEnd.x}
+                      y2={roadEnd.y}
+                    />
+                    <line
+                      className={styles.roadCenter}
+                      x1={roadStart.x}
+                      y1={roadStart.y}
+                      x2={roadEnd.x}
+                      y2={roadEnd.y}
+                    />
+                  </g>
                 );
               })}
             </g>
@@ -345,50 +495,114 @@ export default function SampleGraphDemo() {
             })}
           </svg>
 
-          <div className={styles.legend}>
-            <p className={styles.kicker}>TRACE LEGEND</p>
-            <Legend className={styles.swatchCity} label="Not discovered" />
-            <Legend className={styles.swatchExpanded} label="Expanded" />
-            <Legend className={styles.swatchUcs} label="UCS frontier / tree" />
-            <Legend className={styles.swatchAstar} label="A* frontier / tree" />
-            <Legend className={styles.swatchUcsHighlight} label="UCS city highlight" />
-            <Legend className={styles.swatchAstarHighlight} label="A* city highlight" />
-            <Legend className={styles.swatchPath} label="Final optimal path" />
-          </div>
+          <details className={styles.legend}>
+            <summary><LegendIcon />Map key</summary>
+            <div className={styles.legendContent}>
+              <Legend className={styles.swatchCity} label="Not discovered" />
+              <Legend className={styles.swatchExpanded} label="Expanded" />
+              <Legend className={styles.swatchUcs} label="UCS frontier / tree" />
+              <Legend className={styles.swatchAstar} label="A* frontier / tree" />
+              <Legend className={styles.swatchUcsHighlight} label="UCS city highlight" />
+              <Legend className={styles.swatchAstarHighlight} label="A* city highlight" />
+              <Legend className={styles.swatchPath} label="Final optimal path" />
+            </div>
+          </details>
         </div>
 
-        <aside className={styles.panel}>
-          <p className={styles.kicker}>ROUTE</p>
-          <h2>Choose your route</h2>
-          <p className={styles.helperText}>
-            Select two cities on the map to run automatically. Dropdown changes wait for Run search.
-          </p>
+        {isRouteOpen ? (
+          <aside className={styles.panel} id="route-planner">
+            <div className={styles.panelHeader}>
+              <div>
+                <p className={styles.kicker}>ROUTE</p>
+                <h2>Choose your route</h2>
+              </div>
+              <button
+                className={styles.collapseButton}
+                type="button"
+                onClick={() => setIsRouteOpen(false)}
+                aria-label="Hide route planner"
+                title="Hide route planner"
+              >
+                <CollapseIcon />
+              </button>
+            </div>
 
-          <div className={styles.routeSelector}>
-            <CitySearch
-              label="STARTING POINT"
-              selectedCity={startCity}
-              onFocus={() => useSearchStore.getState().setSelecting("start")}
-              onSelect={(cityId) => setCity("start", cityId)}
-            />
-            <CitySearch
-              label="DESTINATION"
-              selectedCity={destinationCity}
-              onFocus={() => useSearchStore.getState().setSelecting("destination")}
-              onSelect={(cityId) => setCity("destination", cityId)}
-            />
-            <p className={styles.mapHint}>
-              Map: choose the <strong>{selecting === "start" ? "starting point" : "destination to run the search"}</strong>.
+            <p className={styles.helperText}>
+              Select two cities on the map to run automatically. Dropdown changes wait for Run search.
             </p>
-            <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
-              {isLoading ? "Running Rust…" : "Run search"}
+
+            <div className={styles.routeSelector}>
+              <CitySearch
+                label="STARTING POINT"
+                selectedCity={startCity}
+                onFocus={() => useSearchStore.getState().setSelecting("start")}
+                onSelect={(cityId) => setCity("start", cityId)}
+              />
+              <CitySearch
+                label="DESTINATION"
+                selectedCity={destinationCity}
+                onFocus={() => useSearchStore.getState().setSelecting("destination")}
+                onSelect={(cityId) => setCity("destination", cityId)}
+              />
+              <p className={styles.mapHint}>
+                Map: choose a starting point, then a destination.
+              </p>
+              <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
+                {isLoading ? "Running Rust…" : "Run search"}
+              </button>
+            </div>
+
+            {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+          </aside>
+        ) : (
+          <button
+            className={styles.routeLauncher}
+            type="button"
+            onClick={() => setIsRouteOpen(true)}
+            aria-expanded="false"
+            aria-controls="route-planner"
+          >
+            <RouteIcon />
+            Route
+          </button>
+        )}
+
+        {isPlaybackMinimized ? (
+          <button
+            className={styles.playbackMinimized}
+            type="button"
+            style={playbackStyle}
+            onClick={() => {
+              setPlaybackPosition(null);
+              setIsPlaybackMinimized(false);
+            }}
+            aria-label="Open playback controls"
+            title="Open playback controls"
+          >
+            <PlaybackDockIcon />
+            <span>Playback</span>
+          </button>
+        ) : (
+          <div
+            ref={playbackDockRef}
+            className={`${styles.animationControls} ${isPlaybackNearEdge ? styles.playbackNearEdge : ""}`}
+            style={playbackStyle}
+            data-testid="playback-controls"
+          >
+            <button
+              className={styles.playbackDragHandle}
+              type="button"
+              onPointerDown={handlePlaybackPointerDown}
+              onPointerMove={handlePlaybackPointerMove}
+              onPointerUp={finishPlaybackDrag}
+              onPointerCancel={finishPlaybackDrag}
+              onClick={handlePlaybackGripClick}
+              aria-label="Move or minimize playback controls"
+              title="Drag to move · Drop at an edge to minimize"
+            >
+              <DragIcon />
             </button>
-          </div>
-
-          {error && <p className={styles.errorMessage} role="alert">{error}</p>}
-
-          <div className={styles.animationControls}>
-            <p className={styles.kicker}>PLAYBACK</p>
+            <span className={styles.playbackLabel}>Playback</span>
             <div className={styles.controls}>
               <button
                 className={styles.controlButton}
@@ -440,12 +654,7 @@ export default function SampleGraphDemo() {
               />
             </label>
           </div>
-
-          <div className={styles.currentGrid}>
-            <Metric label="UCS expanded now" value={ucsFrame ? romaniaGraph.cities[ucsFrame.expanded_city].name : "—"} />
-            <Metric label="A* expanded now" value={astarFrame ? romaniaGraph.cities[astarFrame.expanded_city].name : "—"} />
-          </div>
-        </aside>
+        )}
       </section>
     </main>
   );
@@ -597,8 +806,52 @@ function ReplayIcon() {
   );
 }
 
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return <div><span>{label}</span><strong>{value}</strong></div>;
+function DragIcon() {
+  return (
+    <svg className={styles.dragIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <circle cx="7" cy="5" r="1.25" />
+      <circle cx="13" cy="5" r="1.25" />
+      <circle cx="7" cy="10" r="1.25" />
+      <circle cx="13" cy="10" r="1.25" />
+      <circle cx="7" cy="15" r="1.25" />
+      <circle cx="13" cy="15" r="1.25" />
+    </svg>
+  );
+}
+
+function PlaybackDockIcon() {
+  return (
+    <svg className={styles.buttonIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M5 3h3v2h3v2h3v2h2v2h-2v2h-3v2H8v2H5Z" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function CollapseIcon() {
+  return (
+    <svg className={styles.smallIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="M5 10h10" />
+    </svg>
+  );
+}
+
+function RouteIcon() {
+  return (
+    <svg className={styles.buttonIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <circle cx="5" cy="5" r="2.25" />
+      <circle cx="15" cy="15" r="2.25" />
+      <path d="M6.6 6.6 13.4 13.4" />
+    </svg>
+  );
+}
+
+function LegendIcon() {
+  return (
+    <svg className={styles.smallIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+      <path d="m3 5 4-2 6 2 4-2v12l-4 2-6-2-4 2Z" />
+      <path d="M7 3v12M13 5v12" />
+    </svg>
+  );
 }
 
 function Legend({ className, label }: { className: string; label: string }) {

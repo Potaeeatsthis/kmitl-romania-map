@@ -84,8 +84,7 @@ kmitl-romania-map/
 │       └── golden/                   Recorded trace, one file per route/algorithm
 ├── reference/                        Standalone comparison implementations
 │   ├── romania_search.cpp
-│   ├── romania_search.py
-│   └── romania_search.rs             Existing native Rust CLI
+│   └── romania_search.py
 ├── data/                             Source/reference assets not served directly
 ├── package.json
 └── tsconfig.json

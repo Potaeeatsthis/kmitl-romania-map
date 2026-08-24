@@ -139,21 +139,31 @@ npm run verify:mutation
 ```
 
 Not part of `npm run verify` — it takes about ten minutes, because it rebuilds the crate
-once per injected fault. It runs weekly in CI (`.github/workflows/mutation.yml`) and on
-demand.
+once per injected fault. It is *configured* weekly in `.github/workflows/mutation.yml` and
+has never run on that schedule: scheduled workflows fire only from the default branch, and
+`master` has no `.github/`. It also runs on pull requests touching `scripts/`,
+`.github/workflows/` or `wasm/src/`, and on demand from the Actions tab.
 
-Injects ten known bugs into a throwaway worktree and asserts a gate goes red for each.
+Injects **14** known bugs into a throwaway worktree and asserts a gate goes red for each.
 This is the only check that catches a gate which has quietly stopped working, or one that
 was added but never actually caught anything.
+
+It preflights every gate on the clean tree first and refuses to run if one is already
+red — a gate that cannot execute reports every fault as caught, which is a green suite
+that measured nothing.
 
 **Pass:** `mutation: PASS`
 **Fail:** a fault expected to be caught was missed — a gate has stopped working. A fault
 expected to be missed that is now caught is reported as an improvement, not a failure;
 update its expectation in the script.
 
-*One documented blind spot:* M9, an edit to `reference/romania_search.rs`, which no gate
-compiles since the engine moved into the crate. Closing it is a decision — wire the file
-back into `verify:parity`, or delete it.
+*One documented blind spot:* M15, a `getTimelineLength()` that ignores the A\* trace. The
+frontend suite has a single fixture, Arad → Bucharest, with UCS 13 and A\* 9 frames, so
+`Math.max(ucs, astar)` is always `ucs` and no assertion on this fixture can see it. Closing
+it needs a second fixture where A\* runs longer.
+
+*M9 is retired.* It covered `reference/romania_search.rs`, deleted once the team confirmed
+the crate is the only Rust engine. Fault ids are not renumbered, so M9 is simply absent.
 
 ## Everything at once
 
