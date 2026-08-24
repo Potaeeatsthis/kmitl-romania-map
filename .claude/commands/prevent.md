@@ -139,10 +139,12 @@ npm run verify:mutation
 ```
 
 Not part of `npm run verify` — it takes about ten minutes, because it rebuilds the crate
-once per injected fault. It runs weekly in CI (`.github/workflows/mutation.yml`) and on
-demand.
+once per injected fault. It is *configured* weekly in `.github/workflows/mutation.yml` and
+has never run on that schedule: scheduled workflows fire only from the default branch, and
+`master` has no `.github/`. It also runs on pull requests touching `scripts/`,
+`.github/workflows/` or `wasm/src/`, and on demand from the Actions tab.
 
-Injects ten known bugs into a throwaway worktree and asserts a gate goes red for each.
+Injects **14** known bugs into a throwaway worktree and asserts a gate goes red for each.
 This is the only check that catches a gate which has quietly stopped working, or one that
 was added but never actually caught anything.
 
