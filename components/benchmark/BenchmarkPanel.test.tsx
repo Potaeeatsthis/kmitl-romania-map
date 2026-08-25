@@ -49,9 +49,9 @@ describe("BenchmarkPanel", () => {
       "4,200 → 2,436 expansions (42% fewer).",
     );
     expect(
-      screen.getByRole("img", { name: /A\* median runtime 1\.474 microseconds/ }),
+      screen.getByRole("img", { name: /A\* median runtime 6\.628 microseconds/ }),
     ).toBeInTheDocument();
-    expect(screen.getByText("UCS 2.226 → A* 1.474 µs")).toBeInTheDocument();
+    expect(screen.getByText("UCS 8.616 → A* 6.628 µs")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Arad → Bucharest" })).toBeInTheDocument();
     expect(screen.getByText("418 km")).toBeInTheDocument();
     expect(screen.getByText(/Arad → Sibiu → Rimnicu Vilcea → Pitesti → Bucharest/)).toBeInTheDocument();

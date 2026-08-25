@@ -4,6 +4,7 @@
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { SearchResult } from "../../lib/types";
 import benchmarkData from "../../public/data/benchmark-results.json";
+import allPairsRuntimeData from "../../public/data/all-pairs-runtime.json";
 import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./BenchmarkCharts.module.css";
 
@@ -71,7 +72,22 @@ type BenchmarkResults = {
   memory_method: Record<string, unknown>;
 };
 
+type PairRuntime = {
+  start: number;
+  goal: number;
+  ucs_runtime_us: number;
+  astar_runtime_us: number;
+};
+
+type AllPairsRuntime = {
+  schema_version: number;
+  city_count: number;
+  pair_count: number;
+  pairs: PairRuntime[];
+};
+
 const benchmark = benchmarkData as BenchmarkResults;
+const allPairsRuntime = allPairsRuntimeData as AllPairsRuntime;
 
 const ROUTE_METRICS: { key: RouteMetricKey; label: string }[] = [
   { key: "expanded", label: "Expanded nodes" },
@@ -90,14 +106,21 @@ export default function BenchmarkCharts() {
 
   const allUcs = benchmark.all_pairs.results.find((result) => result.algorithm === "ucs");
   const allAstar = benchmark.all_pairs.results.find((result) => result.algorithm === "astar");
-  const sampleUcs = benchmark.sample_route.results.find((result) => result.algorithm === "ucs");
-  const sampleAstar = benchmark.sample_route.results.find((result) => result.algorithm === "astar");
   const startName = romaniaGraph.cities[startCity]?.name ?? "Unknown city";
   const destinationName = romaniaGraph.cities[destinationCity]?.name ?? "Unknown city";
 
   if (!allUcs || !allAstar) {
     return <p role="status">Benchmark data is incomplete.</p>;
   }
+
+  // Native, precomputed per-pair timing (I5: never measured live in the browser).
+  const selectedRuntime: PairRuntime | undefined =
+    allPairsRuntime.pairs[startCity * allPairsRuntime.city_count + destinationCity];
+  const selectedRuntimeReductionPercent = selectedRuntime
+    ? ((selectedRuntime.ucs_runtime_us - selectedRuntime.astar_runtime_us) /
+        selectedRuntime.ucs_runtime_us) *
+      100
+    : null;
 
   const selectedExpansionPercent =
     routeData && routeData.ucs.expanded > 0
@@ -144,38 +167,37 @@ export default function BenchmarkCharts() {
             )}
           </div>
 
-          {sampleUcs && sampleAstar && (
+          {selectedRuntime && (
             <div className={styles.ringMetric}>
               <span className={styles.ringKicker}>NATIVE SPEED SAMPLE</span>
               <div className={styles.heroRingWrap}>
                 <HeroRing
-                  percent={Math.min(
-                    Math.abs(benchmark.sample_route.comparison.runtime_reduction_percent),
-                    100,
-                  )}
-                  value={sampleAstar.median_runtime_us.toFixed(3)}
+                  percent={Math.min(Math.abs(selectedRuntimeReductionPercent ?? 0), 100)}
+                  value={selectedRuntime.astar_runtime_us.toFixed(3)}
                   unit="µs"
                   label={
                     "A* median runtime " +
-                    sampleAstar.median_runtime_us.toFixed(3) +
+                    selectedRuntime.astar_runtime_us.toFixed(3) +
                     " microseconds; " +
-                    benchmark.sample_route.comparison.runtime_reduction_percent +
-                    "% faster than UCS on " +
-                    benchmark.sample_route.start.name +
+                    Math.abs(selectedRuntimeReductionPercent ?? 0).toFixed(1) +
+                    "% " +
+                    ((selectedRuntimeReductionPercent ?? 0) < 0 ? "slower than" : "faster than") +
+                    " UCS on " +
+                    startName +
                     " to " +
-                    benchmark.sample_route.goal.name
+                    destinationName
                   }
-                  isWorse={benchmark.sample_route.comparison.runtime_reduction_percent < 0}
+                  isWorse={(selectedRuntimeReductionPercent ?? 0) < 0}
                 />
               </div>
 
               <p className={styles.heroDelta}>A* median runtime</p>
               <p className={styles.heroComparison}>
-                UCS {sampleUcs.median_runtime_us.toFixed(3)} → A*{" "}
-                {sampleAstar.median_runtime_us.toFixed(3)} µs
+                UCS {selectedRuntime.ucs_runtime_us.toFixed(3)} → A*{" "}
+                {selectedRuntime.astar_runtime_us.toFixed(3)} µs
               </p>
               <p className={styles.speedRoute}>
-                {benchmark.sample_route.start.name} → {benchmark.sample_route.goal.name}
+                {startName} → {destinationName}
               </p>
             </div>
           )}

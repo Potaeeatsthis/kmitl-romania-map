@@ -22,6 +22,7 @@ instead, because nobody will ever arrive here with a string to search for.
 | `function … is never used` in `tests/common/mod.rs` | `shared-integration-test-dead-code` | §5 |
 | `typescript-eslint does not support TS 7.0` when adding ESLint | not a bug — blocked upstream, see CLAUDE.md's frontend-test rule | — |
 | A `missed` fault reports "is now caught -- a gap was closed", or the Preflight block is absent from the output | `mutation-false-pass-broken-gate` | §6 |
+| *(no error text)* The benchmark panel's "NATIVE SPEED SAMPLE" runtime figure never changes when a different route is selected | `benchmark-panel-static-runtime` | §7 |
 
 ## Step 2 — Apply the known fix
 

@@ -259,3 +259,50 @@ loudly on the first run instead of turning the suite green.
 **Never do this.** Do not act on a `missed → caught` promotion without checking the
 preflight first. The advice to close a documented blind spot is exactly what a broken gate
 produces, and M15 is the blind spot it will offer to close.
+
+---
+
+## §7 — `benchmark-panel-static-runtime`
+
+Rootcause file: [`rootcause/benchmark-panel-static-runtime.json`](rootcause/benchmark-panel-static-runtime.json)
+
+### Symptom
+
+**There is no error message.** The benchmark results panel's "NATIVE SPEED SAMPLE"
+runtime figure never changes no matter which start/goal pair is selected on the map —
+it always shows the same Arad → Bucharest numbers.
+
+### Diagnose
+
+```bash
+grep -n "sample_route" components/benchmark/BenchmarkCharts.tsx
+```
+
+`components/benchmark/BenchmarkCharts.tsx` read runtime exclusively from
+`public/data/benchmark-results.json`'s single hardcoded `sample_route` object, not
+from the store's `startCity`/`destinationCity`. Every other metric in the same panel
+(expanded, generated, peak queue, peak records, cost) already updated correctly,
+because those come from the live WASM search result in `stores/useSearchStore.ts`.
+Runtime could not follow the same path: `SearchResult` (`wasm/src/metrics.rs`) has no
+timing field at all, and invariant I5 forbids measuring it in the browser anyway —
+`performance.now()` is coarsened to ~100 µs in Chrome against a ~1 µs search.
+
+### Fix
+
+Added a CLI/export-layer binary, `wasm/src/bin/export_all_runtimes.rs`, that times
+both algorithms for all 400 ordered pairs natively — reusing `cli.rs`'s
+`Instant`-based approach (a warmup call, then repeated individually-timed runs, median
+taken) — without adding a field to `SearchResult` or touching `search()` (I1/I4).
+Ships `public/data/all-pairs-runtime.json` as a separate file, not folded into the
+larger `all-pairs-search.json`, since it carries only two numbers per pair and no
+traces. `BenchmarkCharts.tsx` now looks up the selected route's entry from that file
+(`index = startCity * city_count + destinationCity`) instead of the static
+`sample_route`.
+
+### Prevent
+
+`npm run verify:all-runtimes`, wired into `npm run verify`. Unlike `verify:all-pairs`'s
+exact byte-for-byte diff, it checks structure and coverage only — every pair present,
+row-major, positive finite runtimes for both algorithms — because timing is inherently
+non-deterministic run to run and machine to machine; an exact-value diff would be a
+false alarm on every run.
