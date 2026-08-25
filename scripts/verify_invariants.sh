@@ -217,7 +217,7 @@ def exists(path):
 # 1. Every backticked path in the section must exist. Only tokens containing a slash are
 #    treated as paths; bare words like `verify:parity` and `Cargo.toml` are prose or are
 #    ambiguous, and a false failure here would be worse than a missed one. Angle brackets
-#    and whitespace rule out JSX (`<SampleGraphDemo />`), which also contains a slash.
+#    and whitespace rule out JSX (`<RomaniaSearch />`), which also contains a slash.
 paths = sorted({
     t for t in re.findall(r"`([^`]+)`", section)
     if "/" in t and "<" not in t and ">" not in t and not re.search(r"\s", t)

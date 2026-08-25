@@ -1,7 +1,7 @@
 // app/page.tsx
-import SampleGraphDemo from "../components/sample/SampleGraphDemo";
+import RomaniaSearch from "../components/search/RomaniaSearch";
 import BenchmarkPanel from "../components/benchmark/BenchmarkPanel";
 
 export default function HomePage() {
-  return <SampleGraphDemo headerAction={<BenchmarkPanel />} />;
+  return <RomaniaSearch headerAction={<BenchmarkPanel />} />;
 }

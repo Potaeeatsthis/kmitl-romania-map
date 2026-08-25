@@ -1,4 +1,4 @@
-// components/sample/SampleGraphDemo.test.tsx
+// components/search/RomaniaSearch.test.tsx
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -8,8 +8,8 @@ import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { SearchResponse } from "../../lib/types";
 import { runSearch } from "../../lib/wasm/client";
 import { useSearchStore } from "../../stores/useSearchStore";
-import SampleGraphDemo from "./SampleGraphDemo";
-import styles from "./SampleGraphDemo.module.css";
+import RomaniaSearch from "./RomaniaSearch";
+import mapStyles from "./SearchMap.module.css";
 
 vi.mock("../../lib/wasm/client", () => ({
   runSearch: vi.fn(),
@@ -36,10 +36,10 @@ beforeEach(() => {
   });
 });
 
-describe("SampleGraphDemo", () => {
+describe("RomaniaSearch", () => {
   it("filters city options by the beginning of the name", async () => {
     const user = userEvent.setup();
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     const input = screen.getByRole("combobox", { name: "STARTING POINT" });
     await user.clear(input);
@@ -54,7 +54,7 @@ describe("SampleGraphDemo", () => {
 
   it("announces an empty search outside the listbox", async () => {
     const user = userEvent.setup();
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     const input = screen.getByRole("combobox", { name: "STARTING POINT" });
     await user.clear(input);
@@ -70,7 +70,7 @@ describe("SampleGraphDemo", () => {
   it("runs automatically after two cities are chosen on the map", async () => {
     const user = userEvent.setup();
     mockedRunSearch.mockResolvedValue(sample);
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
     expect(mockedRunSearch).not.toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe("SampleGraphDemo", () => {
 
   it("collapses the route planner into a compact map button", async () => {
     const user = userEvent.setup();
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     await user.click(screen.getByRole("button", { name: "Hide route planner" }));
     expect(screen.queryByRole("heading", { name: "Choose your route" })).not.toBeInTheDocument();
@@ -94,7 +94,7 @@ describe("SampleGraphDemo", () => {
 
   it("uses a Departure Mono black star to enable and save dark mode", async () => {
     const user = userEvent.setup();
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     const toggle = screen.getByRole("button", { name: "Switch to dark mode" });
     expect(toggle).toHaveTextContent("★");
@@ -114,7 +114,7 @@ describe("SampleGraphDemo", () => {
 
   it("minimizes playback and reopens it without an extra icon", async () => {
     const user = userEvent.setup();
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     const minimize = screen.getByRole("button", { name: "Minimize playback controls" });
     expect(minimize).toHaveTextContent("−");
@@ -129,7 +129,7 @@ describe("SampleGraphDemo", () => {
 
   it("zooms the map in and out with bounded controls", async () => {
     const user = userEvent.setup();
-    const { container } = render(<SampleGraphDemo />);
+    const { container } = render(<RomaniaSearch />);
     const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
     const zoomIn = screen.getByRole("button", { name: "Zoom in" });
     const zoomOut = screen.getByRole("button", { name: "Zoom out" });
@@ -148,7 +148,7 @@ describe("SampleGraphDemo", () => {
 
   it("pans the map by dragging after zooming in", async () => {
     const user = userEvent.setup();
-    const { container } = render(<SampleGraphDemo />);
+    const { container } = render(<RomaniaSearch />);
     const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
 
     expect(map).not.toBeNull();
@@ -174,7 +174,7 @@ describe("SampleGraphDemo", () => {
   });
 
   it("zooms continuously with a two-finger pinch gesture", () => {
-    const { container } = render(<SampleGraphDemo />);
+    const { container } = render(<RomaniaSearch />);
     const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
 
     expect(map).not.toBeNull();
@@ -190,7 +190,7 @@ describe("SampleGraphDemo", () => {
   });
 
   it("zooms with a two-finger touchpad gesture without scrolling the page", () => {
-    const { container } = render(<SampleGraphDemo />);
+    const { container } = render(<RomaniaSearch />);
     const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
     const wheel = new WheelEvent("wheel", {
       deltaY: -Math.log(1.25) / 0.0025,
@@ -208,7 +208,7 @@ describe("SampleGraphDemo", () => {
 
   it("uses one button that switches between play and pause", async () => {
     const user = userEvent.setup();
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     await user.click(screen.getByRole("button", { name: "Play animation" }));
     expect(screen.getByRole("button", { name: "Pause animation" })).toBeInTheDocument();
@@ -218,19 +218,19 @@ describe("SampleGraphDemo", () => {
   });
 
   it("uses borderless black text for highlighted route-city labels", () => {
-    const view = render(<SampleGraphDemo />);
+    const view = render(<RomaniaSearch />);
     const arad = screen.getByRole("button", { name: "Choose Arad as starting point" });
 
-    expect(arad.querySelector("text")).toHaveClass(styles.highlightedCityLabel);
+    expect(arad.querySelector("text")).toHaveClass(mapStyles.highlightedCityLabel);
 
     view.unmount();
     useSearchStore.setState({ step: sample.ucs.trace.length - 1 });
-    render(<SampleGraphDemo />);
+    render(<RomaniaSearch />);
 
     for (const cityId of sample.ucs.path) {
       const cityName = romaniaGraph.cities[cityId].name;
       const city = screen.getByRole("button", { name: `Choose ${cityName} as starting point` });
-      expect(city.querySelector("text")).toHaveClass(styles.highlightedCityLabel);
+      expect(city.querySelector("text")).toHaveClass(mapStyles.highlightedCityLabel);
     }
   });
 });

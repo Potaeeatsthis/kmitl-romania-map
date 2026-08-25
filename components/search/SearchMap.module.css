@@ -1,0 +1,231 @@
+.mapPanel {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--map-surface);
+}
+
+.map {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--map-surface);
+  touch-action: none;
+  user-select: none;
+}
+
+.mapPannable { cursor: grab; }
+
+.mapPanning,
+.mapPanning .city { cursor: grabbing; }
+
+.roads .roadCasing {
+  stroke: var(--road-casing);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+}
+
+.roads .roadCenter {
+  stroke: var(--road-center);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.roadLabels text {
+  fill: var(--road-label);
+  font: 10px var(--font-interface);
+  paint-order: stroke;
+  stroke: var(--map-surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  text-anchor: middle;
+}
+
+.searchTree line {
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 4 5;
+  opacity: 0.62;
+}
+
+.expandedTree line {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  opacity: 0.94;
+}
+
+.finalPath line {
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 1;
+}
+
+.ucsTree,
+.ucsPath { stroke: var(--green-mid); }
+
+.astarTree,
+.astarPath { stroke: var(--green-bright); }
+
+.city { cursor: pointer; }
+
+.city:focus-visible,
+.zoomButton:focus-visible {
+  outline: 3px solid var(--green-bright);
+  outline-offset: 3px;
+}
+
+.city .cityNode {
+  fill: var(--surface);
+  stroke: var(--city-stroke);
+  stroke-width: 1.8;
+  transition: fill 160ms ease, stroke 160ms ease, stroke-width 160ms ease;
+}
+
+.city:hover .cityNode {
+  fill: var(--green-pale);
+  stroke: var(--green-dark);
+  stroke-width: 3;
+}
+
+.city text {
+  fill: var(--ink);
+  font: 11px var(--font-interface);
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--map-surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.city .cityLabelBackground {
+  stroke: none;
+  transition: fill 160ms ease;
+}
+
+.city .labelAstar { fill: var(--label-astar); }
+.city .labelUcs { fill: var(--label-ucs); }
+.city .labelBoth { fill: url(#shared-label-highlight); }
+
+.city .highlightedCityLabel {
+  fill: var(--label-highlight-text);
+  paint-order: normal;
+  stroke: none;
+}
+
+.expanded .cityNode {
+  fill: var(--green-soft);
+  stroke: var(--expanded-stroke);
+}
+
+.frontierUcs .cityNode {
+  fill: var(--surface);
+  stroke: var(--green-mid);
+  stroke-width: 3;
+}
+
+.frontierAstar .cityNode {
+  fill: var(--surface);
+  stroke: var(--green-bright);
+  stroke-width: 3;
+}
+
+.frontierBoth .cityNode {
+  fill: var(--green-pale);
+  stroke: var(--green-dark);
+  stroke-width: 3;
+}
+
+.active .cityNode {
+  fill: var(--active-fill);
+  stroke: var(--green-dark);
+  stroke-width: 3;
+}
+
+.path .cityNode {
+  fill: var(--path-fill);
+  stroke: var(--green-dark);
+  stroke-width: 2.5;
+}
+
+.startCity .cityNode { stroke-dasharray: 2 1; }
+.destinationCity .cityNode { rx: 5px; }
+
+.countyLines path {
+  fill: var(--county-fill);
+  stroke: var(--county-line);
+  stroke-width: 0.8;
+}
+
+.countryOutline path {
+  fill: none;
+  stroke: var(--country-outline);
+  stroke-width: 2.4;
+}
+
+.zoomControls {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  z-index: 20;
+  width: 52px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+  transform: translateY(-50%);
+}
+
+.zoomButton {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--green-dark);
+  cursor: pointer;
+  transition: background 150ms ease, transform 150ms ease;
+}
+
+.zoomButton + .zoomButton {
+  border-top: 1px solid var(--line);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.zoomButton:hover:not(:disabled) { background: var(--green-pale); }
+.zoomButton:active:not(:disabled) { transform: scale(0.96); }
+
+.zoomButton:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.zoomIcon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+}
+
+@media (max-width: 800px) {
+  .mapPanel { border-radius: 12px; }
+  .zoomControls { right: 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .city .cityNode,
+  .city .cityLabelBackground { transition: none; }
+}

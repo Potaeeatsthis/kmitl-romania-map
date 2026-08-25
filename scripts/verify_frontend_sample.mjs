@@ -15,7 +15,7 @@
 //   If it drifts, the map shows one distance while the search uses another.
 //
 // The contract assertions below are a separate concern from both: they pin the
-// field names components/sample/SampleGraphDemo.tsx reads, so a rename in
+// field names the components/search feature reads, so a rename in
 // wasm/src/metrics.rs fails here rather than as `undefined` in the browser.
 
 import assert from "node:assert/strict";

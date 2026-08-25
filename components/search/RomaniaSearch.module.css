@@ -1,0 +1,238 @@
+.page {
+  --ink: #102a1e;
+  --muted: #526d60;
+  --green: #137a47;
+  --green-dark: #0b5631;
+  --green-bright: #00ed64;
+  --green-mid: #00684a;
+  --action: #137a47;
+  --action-strong: #0b5631;
+  --green-soft: #cfe7d8;
+  --green-pale: #edf8f1;
+  --line: #c9dfd2;
+  --surface: #ffffff;
+  --canvas: #edf8f1;
+  --map-surface: #f5f8f6;
+  --on-accent: #ffffff;
+  --run-surface: #00ed64;
+  --run-surface-hover: #62c98d;
+  --run-text: #1b1919;
+  --road-casing: #ffffff;
+  --road-center: #aabbb1;
+  --road-label: #466054;
+  --city-stroke: #557867;
+  --label-astar: #ddeb9d;
+  --label-ucs: #a0c878;
+  --label-highlight-text: #000000;
+  --expanded-stroke: #67977a;
+  --active-fill: #83d7a5;
+  --path-fill: #0a3d2a;
+  --county-fill: #e4f0e8;
+  --county-line: #c5dacd;
+  --country-outline: #9ebbaa;
+  --panel-surface: rgba(255, 255, 255, 0.97);
+  --input-placeholder: #5e7469;
+  --input-hover: #8db9a0;
+  --focus-shadow: rgba(19, 122, 71, 0.12);
+  --error-border: #f0b7b0;
+  --error-surface: #fff4f2;
+  --error-text: #7a271a;
+  --warning: #a06a1a;
+  --shadow-raised: 0 12px 32px rgba(16, 42, 30, 0.16);
+  --panel-shadow: 0 10px 25px rgba(19, 122, 71, 0.08);
+  --popover-shadow: 0 12px 28px rgba(16, 42, 30, 0.15);
+  --thumb-shadow: 0 2px 6px rgba(16, 42, 30, 0.22);
+
+  width: 100%;
+  height: 100dvh;
+  padding: clamp(12px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--canvas);
+  font-family: var(--font-interface);
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+:global(html[data-theme="dark"]) .page {
+  --ink: #d6d7da;
+  --muted: #a9adb5;
+  --green: #00ed64;
+  --green-dark: #00ed64;
+  --green-bright: #00ed64;
+  --green-mid: #eeeeee;
+  --action: #137a47;
+  --action-strong: #00684a;
+  --green-soft: #2d3a2a;
+  --green-pale: #272525;
+  --line: #393e46;
+  --surface: #242222;
+  --canvas: #1b1919;
+  --map-surface: #1b1919;
+  --on-accent: #ffffff;
+  --road-casing: #2c2a2a;
+  --road-center: #555c66;
+  --road-label: #a9adb5;
+  --city-stroke: #8a919b;
+  --label-astar: #00ed64;
+  --label-ucs: #eeeeee;
+  --expanded-stroke: #626a74;
+  --active-fill: #137a47;
+  --path-fill: #0a3d2a;
+  --county-fill: #201e1e;
+  --county-line: #32343a;
+  --country-outline: #555c66;
+  --panel-surface: rgba(36, 34, 34, 0.97);
+  --input-placeholder: #a9adb5;
+  --input-hover: #137a47;
+  --focus-shadow: rgba(0, 237, 100, 0.22);
+  --error-border: #b9826f;
+  --error-surface: #35251f;
+  --error-text: #f0c7b7;
+  --warning: #d6a85f;
+  --shadow-raised: 0 14px 34px rgba(0, 0, 0, 0.38);
+  --panel-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  --popover-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+  --thumb-shadow: 0 2px 7px rgba(0, 0, 0, 0.46);
+}
+
+.header {
+  width: 100%;
+  max-width: 1680px;
+  min-height: 52px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandMark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: var(--action-strong);
+  color: var(--on-accent);
+  font-size: 18px;
+  line-height: 1;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.productTag {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+}
+
+.headerActions {
+  min-width: 0;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.themeToggle {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  background: transparent;
+  color: var(--green-dark);
+  cursor: pointer;
+  transition: color 150ms ease, transform 150ms ease;
+}
+
+.themeToggle:hover,
+.themeToggle[aria-pressed="true"] {
+  color: var(--green);
+}
+
+.themeToggle:active {
+  transform: scale(0.96);
+}
+
+.themeToggle:focus-visible {
+  outline: 3px solid var(--green-bright);
+  outline-offset: 3px;
+}
+
+.themeGlyph {
+  font: 400 18px / 1 var(--font-interface);
+}
+
+.content {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+@media (max-width: 800px) {
+  .page {
+    padding: 10px;
+  }
+
+  .header {
+    min-height: 48px;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 9px;
+  }
+
+  .brandMark {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    font-size: 16px;
+  }
+
+  .title {
+    font-size: 15px;
+  }
+
+  .productTag {
+    font-size: 8px;
+  }
+
+  .headerActions {
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .themeToggle {
+    transition: none;
+  }
+}
