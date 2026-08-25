@@ -161,6 +161,17 @@ cargo run --quiet --manifest-path wasm/Cargo.toml --bin export_sample \
 
 The sample is calculated by Rust. The frontend only reads and displays it.
 
+Generate the complete precomputed dataset for all 400 ordered city pairs,
+including routes where the start and destination are the same:
+
+```bash
+cargo run --quiet --manifest-path wasm/Cargo.toml --bin export_all_pairs \
+  > public/data/all-pairs-search.json
+```
+
+This writes `public/data/all-pairs-search.json`. Pairs are stored in row-major
+order, so the entry for `start` and `goal` is at `start * 20 + goal`.
+
 ## Verify before pushing
 
 The project's central claim is that three languages produce the same result. These checks

@@ -40,7 +40,7 @@ are not built.
 | `components/search/` | **Working.** Modular Romania search UI: shell/theme, animated SVG map, route planner, legend, and playback controls. Covered by `RomaniaSearch.test.tsx` |
 | `components/benchmark/` | **Working.** `BenchmarkPanel.tsx` (75 lines, 5 tests) and `BenchmarkCharts.tsx` (381 lines) |
 | `lib/traceSelectors.ts` | **Working.** 69 lines, 6 tests. Trace derivation kept outside React so it is testable — see the frontend-test rule below |
-| `public/data/arad-bucharest-search.json` | **Generated, committed.** Written by `wasm/src/bin/export_sample.rs`; `verify:frontend-sample` re-runs the exporter and diffs, so it cannot go stale silently |
+| `public/data/arad-bucharest-search.json`, `public/data/all-pairs-search.json` | **Generated, committed.** Written by `export_sample.rs` and `export_all_pairs.rs`; freshness gates regenerate and compare both files |
 | `stores/useSearchStore.ts`, `lib/wasm/client.ts` | **Working.** 105 lines of Zustand search/playback state; 138 lines of wasm module loader with full JSON validation at the boundary |
 | `vitest.config.mts`, `vitest.setup.ts` | **Working.** jsdom + testing-library. 22 tests across 5 files |
 | `components/Sidebar.tsx`, `components/controls/SearchControls.tsx`, `components/metrics/ResultsChart.tsx` | **Empty.** Each file holds only its own path as a comment |
@@ -157,7 +157,8 @@ wasm/
 │   │   └── current_flow.rs       heuristic lookup and validation
 │   └── bin/
 │       ├── cli.rs                stdin UI, native benchmarks
-│       └── export_sample.rs      writes public/data/arad-bucharest-search.json
+│       ├── export_sample.rs      writes public/data/arad-bucharest-search.json
+│       └── export_all_pairs.rs   writes public/data/all-pairs-search.json
 └── tests/
 ```
 

@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "rm -f tsconfig.tsbuildinfo && tsc --noEmit",
+    "verify:all-pairs": "node scripts/verify_all_pairs.mjs",
     "verify:frontend-sample": "node scripts/verify_frontend_sample.mjs",
     "verify:invariants": "bash scripts/verify_invariants.sh",
     "verify:parity": "bash scripts/verify_parity.sh",
@@ -21,7 +22,7 @@
     "verify:harness": "bash scripts/verify_harness.sh",
     "verify:mutation": "bash scripts/verify_mutation.sh",
     "verify:export": "node scripts/verify_export.mjs",
-    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness && npm run verify:frontend-sample",
+    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness && npm run verify:frontend-sample && npm run verify:all-pairs",
     "verify:frontend": "npm run typecheck && npm run test",
     "verify:all": "npm run verify && npm run verify:frontend",
     "doctor": "bash scripts/verify_env.sh"

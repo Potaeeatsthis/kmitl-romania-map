@@ -16,6 +16,10 @@ path = "src/bin/cli.rs"
 name = "export_sample"
 path = "src/bin/export_sample.rs"
 
+[[bin]]
+name = "export_all_pairs"
+path = "src/bin/export_all_pairs.rs"
+
 [dependencies]
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
