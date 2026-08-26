@@ -137,6 +137,16 @@ export default function SearchMap() {
     return () => map.removeEventListener("wheel", handleTrackpadZoom);
   }, []);
 
+  // Only a real reset() sets BOTH cities to null at once -- the rolling-restart on a
+  // third click clears destinationCity but sets startCity to the newly clicked city,
+  // so this never fires there. That's deliberate: the Reset button snaps the map back,
+  // a mid-route restart leaves the viewport where the user left it.
+  useEffect(() => {
+    if (startCity === null && destinationCity === null) {
+      setMapViewport(INITIAL_MAP_VIEWPORT);
+    }
+  }, [startCity, destinationCity]);
+
   const ucsFrame = getTraceFrame(data, "ucs", step);
   const astarFrame = getTraceFrame(data, "astar", step);
   const ucsExpanded = getExpandedCities(data, "ucs", step);
@@ -363,9 +373,7 @@ export default function SearchMap() {
           ].filter(Boolean).join(" ");
 
           const chooseCity = () => {
-            const selectedField = selecting;
-            setCity(selectedField, city.id);
-            if (selectedField === "destination") void useSearchStore.getState().run();
+            setCity(selecting, city.id);
           };
           const handleCityKeyDown = (event: KeyboardEvent<SVGGElement>) => {
             if (event.key === "Enter" || event.key === " ") {

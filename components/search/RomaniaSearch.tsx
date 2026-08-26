@@ -103,10 +103,11 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
             className={styles.resetButton}
             type="button"
             onClick={reset}
-            aria-label="Reset selection"
-            title="Reset"
+            aria-label="Clear selection"
+            title="Clear Selection"
           >
             <ResetIcon />
+            <span>Clear Selection</span>
           </button>
         )}
         <PlaybackControls

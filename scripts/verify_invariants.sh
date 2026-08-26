@@ -113,6 +113,8 @@ keeps the expansion ring populated after a start city is chosen on the map
 rejects malformed discovered nodes
 rejects malformed frontier nodes
 reports invalid JSON clearly
+reset returns to a blank state without touching speed
+resets to blank and snaps the map back to its default viewport
 returns 0 when data is null
 returns only the cities in the current frontier
 rolling-restarts even when the clicked city is already a current endpoint
@@ -123,6 +125,7 @@ runs the selected Rust search and starts playback
 shows a useful error when the Wasm search fails
 shows final paths only for completed algorithms
 shows the all-pairs benchmark and exact selected-route details
+starts with nothing selected and no reset button
 toggles selecting when the same city is clicked again before a route is complete
 updates the route details for the selected starting point and destination
 uses one button that switches between play and pause

@@ -442,3 +442,69 @@ for "the clicked city happens to already be selected."
 is complete"* and *"rolling-restarts even when the clicked city is already a current
 endpoint"*. Both go red if the `routeComplete` branch is removed or reordered after
 the same-city check.
+
+---
+
+## §10 — `search-ui-no-clean-slate-reset`
+
+Rootcause file: [`rootcause/search-ui-no-clean-slate-reset.json`](rootcause/search-ui-no-clean-slate-reset.json)
+
+### Symptom
+
+**There is no error message.** On load, the app always starts pre-populated with the
+Arad → Bucharest sample route rather than a blank slate. A single city click
+immediately re-runs the search against whatever the other city happens to be (the
+default, or a stale prior selection), instead of waiting for a deliberate second pick.
+There was no way to clear a selection back to "nothing chosen."
+
+### Diagnose
+
+```bash
+grep -n "startCity: number" stores/useSearchStore.ts
+```
+
+`startCity`/`destinationCity` were typed as plain `number`, seeded to concrete
+defaults (`0`/`12`), with `data` seeded to the committed sample response. The type
+itself had no way to represent "nothing selected," so the store was built around
+always holding a valid pair rather than gating on two explicit picks — and `setCity`
+called `run()` on every single change as a consequence.
+
+### Fix
+
+Five-phase change, each phase typechecked/built/tested before the next:
+
+1. **Types + gating** (`stores/useSearchStore.ts`) — widened `startCity`/
+   `destinationCity` to `number | null`, seeded initial state to `null`/`null`/`data:
+   null` (no more preloaded sample), and rewrote `setCity` to only call `run()` once
+   both cities are non-null, with a matching guard inside `run()` itself as a safety
+   net.
+2. **Consumers** — every place that dereferenced the now-nullable fields as if they
+   were always numbers (`components/search/RoutePlanner.tsx`'s `CitySearch`,
+   `components/benchmark/BenchmarkCharts.tsx`'s name and per-pair runtime lookups) now
+   guards against `null` and renders a clean "nothing selected yet" placeholder
+   instead of crashing or indexing with `null`.
+3. **Reset button** — a `reset()` store action plus a standalone button in
+   `RomaniaSearch.tsx`, centered at the bottom of the search UI (not inside
+   `PlaybackControls.tsx`'s bottom-right animation cluster, which stays purely about
+   playback transport). Renders only once at least one city is picked
+   (`startCity !== null || destinationCity !== null`).
+4. **Map viewport** (`components/search/SearchMap.tsx`) — a `useEffect` watching
+   `startCity`/`destinationCity` resets the local, non-store `mapViewport` to its
+   default when *both* become `null`. This condition is deliberately specific to a
+   real `reset()` call: §9's rolling-restart only ever nulls `destinationCity` while
+   setting `startCity` to the newly clicked city, so it never satisfies "both null"
+   and never touches the map's pan/zoom — only the Reset button does.
+5. **Tests** — added coverage for the blank initial state, the two-pick gate, and
+   `reset()` end-to-end (state *and* map viewport). Several pre-existing tests whose
+   `beforeEach` seeded an already-complete route needed fixing along the way, both
+   here and again for §9 — see that section's "unexpected but necessary" note.
+
+### Prevent
+
+`stores/useSearchStore.test.ts` — *"runs the search only once both cities are
+chosen"* and *"reset returns to a blank state without touching speed"*.
+`components/search/RomaniaSearch.test.tsx` — *"starts with nothing selected and no
+reset button"* and *"resets to blank and snaps the map back to its default
+viewport"* (the only test that exercises the Reset button through a real click and
+checks the map's `viewBox` afterward). All four are in
+`scripts/verify_invariants.sh`'s frontend test-inventory list.

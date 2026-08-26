@@ -132,6 +132,34 @@ describe("useSearchStore", () => {
     expect(mockedRunSearch).not.toHaveBeenCalled();
   });
 
+  it("reset returns to a blank state without touching speed", () => {
+    useSearchStore.setState({
+      startCity: 4,
+      destinationCity: 19,
+      data: sample,
+      step: 3,
+      isPlaying: true,
+      isLoading: true,
+      error: "some error",
+      selecting: "destination",
+      speed: 2,
+    });
+
+    useSearchStore.getState().reset();
+
+    expect(useSearchStore.getState()).toMatchObject({
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+      data: null,
+      step: 0,
+      isPlaying: false,
+      isLoading: false,
+      error: null,
+      speed: 2,
+    });
+  });
+
   it("clamps frames and toggles playback safely", () => {
     const lastStep = Math.max(sample.ucs.trace.length, sample.astar.trace.length) - 1;
 

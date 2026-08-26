@@ -89,6 +89,46 @@ describe("RomaniaSearch", () => {
     expect(useSearchStore.getState().isPlaying).toBe(true);
   });
 
+  it("starts with nothing selected and no reset button", () => {
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
+    render(<RomaniaSearch />);
+
+    expect(screen.queryByRole("button", { name: "Clear selection" })).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "STARTING POINT" })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "DESTINATION" })).toHaveValue("");
+  });
+
+  it("resets to blank and snaps the map back to its default viewport", async () => {
+    const user = userEvent.setup();
+    mockedRunSearch.mockResolvedValue(sample);
+    useSearchStore.setState({
+      data: sample,
+      startCity: 4,
+      destinationCity: 19,
+      selecting: "start",
+    });
+    const { container } = render(<RomaniaSearch />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+
+    await user.click(screen.getByRole("button", { name: "Zoom in" }));
+    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+
+    await user.click(screen.getByRole("button", { name: "Clear selection" }));
+
+    expect(useSearchStore.getState()).toMatchObject({
+      startCity: null,
+      destinationCity: null,
+      data: null,
+    });
+    expect(map).toHaveAttribute("viewBox", "120 50 900 650");
+    expect(screen.queryByRole("button", { name: "Clear selection" })).not.toBeInTheDocument();
+  });
+
   it("collapses the route planner into a compact map button", async () => {
     const user = userEvent.setup();
     render(<RomaniaSearch />);
