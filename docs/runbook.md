@@ -306,3 +306,139 @@ exact byte-for-byte diff, it checks structure and coverage only — every pair p
 row-major, positive finite runtimes for both algorithms — because timing is inherently
 non-deterministic run to run and machine to machine; an exact-value diff would be a
 false alarm on every run.
+
+---
+
+## §8 — `benchmark-ring-null-after-city-change`
+
+### Symptom
+
+In the results drawer, the **SELECTED ROUTE** ring shows `—` and *"Run a route to
+compare expansions"* instead of a percentage, and stays that way, after a starting
+point is chosen on the map. The **NATIVE SPEED SAMPLE** ring beside it updates to the
+new pair correctly. The route summary reads *"Run this route to see its details."* and
+the frame scrubber reads `0 / 0`.
+
+The asymmetry between the two rings is the diagnostic tell — see Diagnose below.
+
+### Diagnose
+
+The two rings read different sources, which is why one survives and one does not:
+
+| Ring | Source | Survives `data: null`? |
+|---|---|---|
+| SELECTED ROUTE (expansions) | the store's live `data` | no — falls back to `—` |
+| NATIVE SPEED SAMPLE (runtime) | `all-pairs-runtime.json`, keyed on `startCity`/`destinationCity` | yes |
+
+So a blank *left* ring next to a correct *right* ring means `data` is null, not that the
+lookup is wrong. `setCity()` in `stores/useSearchStore.ts` sets `data: null` on every
+city change, deliberately, so a stale trace is never drawn against a new route. The
+question is therefore always *why nothing re-ran*, never *why the data is wrong*.
+
+Confirm in the browser console with the drawer open:
+
+```js
+document.querySelector('aside[aria-labelledby="benchmark-panel-title"]').innerText
+```
+
+`SELECTED ROUTE / —` together with a populated `NATIVE SPEED SAMPLE` is this bug.
+
+### Fix
+
+Keep the re-run trigger in the store, never in the caller. `setCity()` calls
+`void get().run()` on **both** branches — the changed-city branch and the same-city
+early return:
+
+```ts
+setCity: (field, city) => {
+  const current = field === "start" ? get().startCity : get().destinationCity;
+  const nextSelecting = field === "start" ? "destination" : "start";
+
+  if (current === city) {
+    set({ selecting: nextSelecting });
+    void get().run();          // the same-city path re-runs too
+    return;
+  }
+
+  requestGeneration += 1;
+  set({ /* …city, selecting, data: null, step: 0, … */ } as Partial<SearchState>);
+  void get().run();
+},
+```
+
+`components/search/SearchMap.tsx`'s `chooseCity()` drops its
+`if (selectedField === "destination")` guard and just calls `setCity(selecting, city.id)`.
+`RoutePlanner.tsx` needs no change — its `onSelect` handlers re-run through the store.
+
+Do **not** re-add a `run()` call in a caller. That is what split the behaviour across
+two call sites in the first place.
+
+### Prevent
+
+Three tests, all of which go red if the store's trigger is removed:
+
+- `stores/useSearchStore.test.ts` — *"runs the search only once both cities are
+  chosen"* and *"toggles selecting when the same city is clicked again before a route
+  is complete"* (renamed from *"re-runs the search after either city changes"* /
+  *"re-runs when the same city is picked again"* by §9's rolling-restart change; the
+  behavior these two protect — no run() until both cities are non-null, and the
+  same-city early-return toggling `selecting` — is unchanged, only the starting state
+  and names moved). The second covers the early-return branch, which the old
+  caller-side guard used to handle for the destination field.
+- `components/benchmark/BenchmarkPanel.test.tsx` — *"keeps the expansion ring populated
+  after a start city is chosen on the map"*. This one renders `RomaniaSearch` **and**
+  `BenchmarkPanel` together and clicks a real map marker, because the gap that hid this
+  bug was that no test crossed selection with the benchmark panel.
+
+The panel tests that seed the store with `setState({ data, startCity, destinationCity })`
+cannot catch this class of bug at all — they bypass `setCity` and so never execute the
+`data: null` path. When testing anything about the panel reacting to a *selection*, drive
+the selection, do not seed the result.
+
+---
+
+## §9 — `search-ui-third-click-no-rolling-restart`
+
+Rootcause file: [`rootcause/search-ui-third-click-no-rolling-restart.json`](rootcause/search-ui-third-click-no-rolling-restart.json)
+
+### Symptom
+
+**There is no error message.** Once a route is complete (both a start and a
+destination chosen), clicking a third city just overwrites whichever field
+`selecting` happens to point to — leaving one endpoint of the *old* route paired with
+the newly clicked city, instead of starting a clean new route.
+
+### Diagnose
+
+```bash
+grep -n "routeComplete" stores/useSearchStore.ts
+```
+
+`setCity()` only ever branched on which single field was clicked and whether that
+field's value changed — it had no notion of "a complete route already exists," so a
+third click was handled identically to the first or second.
+
+### Fix
+
+`setCity()` now checks `startCity !== null && destinationCity !== null` at the top,
+before anything else. When true, it takes a rolling-restart branch **regardless of
+which field was clicked or which field `selecting` points to**: the clicked city
+becomes the new `startCity`, `destinationCity` resets to `null`, `selecting` becomes
+`"destination"`, and `data`/`step`/`isPlaying`/`error` are wiped — no search fires
+until the next click supplies a destination. `requestGeneration` is bumped on this
+branch too, so a search already in flight from the discarded route can't land
+afterward and repopulate `data`. Deliberately **not** touched: the map's pan/zoom
+viewport (`SearchMap.tsx`'s local, non-store state) — only the dedicated Reset button
+resets that.
+
+Edge case, intentional: clicking a city that is *already* one of the two current
+endpoints, while the route is complete, still restarts from it. The route-complete
+check happens before the existing same-city early return, so there is no special case
+for "the clicked city happens to already be selected."
+
+### Prevent
+
+`stores/useSearchStore.test.ts` — *"rolling-restarts from a third click once a route
+is complete"* and *"rolling-restarts even when the clicked city is already a current
+endpoint"*. Both go red if the `routeComplete` branch is removed or reordered after
+the same-city check.

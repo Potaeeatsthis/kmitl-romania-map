@@ -1,0 +1,12 @@
+{
+  "id": "search-ui-third-click-no-rolling-restart",
+  "date": "2026-08-26",
+  "symptom": "Once a route is complete (both startCity and destinationCity set), clicking a third city just overwrites whichever field `selecting` happens to point to, leaving one endpoint of the old route mixed with a new city rather than starting a clean new route.",
+  "rootcause": "setCity in stores/useSearchStore.ts only ever branches on which single field was clicked (start vs destination) and whether that field's value actually changed -- it has no notion of 'a complete route already exists.' A third click is treated identically to the first or second, so it silently mutates one half of an already-complete pair instead of recognizing the route is done and starting over.",
+  "fix": "setCity now checks, at the moment of the click, whether both startCity and destinationCity are already non-null. If so, it takes a rolling-restart branch regardless of what `selecting` currently points to: the clicked city becomes the new startCity, destinationCity is cleared to null, selecting is set to 'destination', and data/step/isPlaying/error are wiped -- with no search firing until the next click supplies a destination. The requestGeneration counter is bumped on this branch too, so a search in flight from the discarded route can't land afterward and repopulate data. The map's pan/zoom viewport (SearchMap's local state, not store-backed) is deliberately left untouched -- only the dedicated Reset button snaps that back.",
+  "recurrence_risk": "low",
+  "invariant": null,
+  "automation_gap": null,
+  "tags": ["frontend", "store", "ux", "search-ui"],
+  "notes": "Builds directly on docs/rootcause/search-ui-no-clean-slate-reset.json's null-widening work. Same-city edge case deliberately not special-cased: clicking a current endpoint while the route is complete still restarts from that city, per explicit product decision, rather than being treated as a no-op."
+}

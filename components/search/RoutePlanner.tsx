@@ -79,13 +79,13 @@ function CitySearch({
   onSelect,
 }: {
   label: string;
-  selectedCity: number;
+  selectedCity: number | null;
   onFocus: () => void;
   onSelect: (cityId: number) => void;
 }) {
   const listId = useId();
-  const selected = romaniaGraph.cities[selectedCity];
-  const [query, setQuery] = useState(selected.name);
+  const selected = selectedCity !== null ? romaniaGraph.cities[selectedCity] : undefined;
+  const [query, setQuery] = useState(selected?.name ?? "");
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const normalizedQuery = normalizeCityName(query);
@@ -99,8 +99,8 @@ function CitySearch({
   const emptyStatusId = listId + "-empty";
 
   useEffect(() => {
-    setQuery(selected.name);
-  }, [selected.name]);
+    setQuery(selected?.name ?? "");
+  }, [selected?.name]);
 
   const choose = (cityId: number) => {
     onSelect(cityId);
@@ -123,7 +123,7 @@ function CitySearch({
       choose(matches[activeIndex].id);
     } else if (event.key === "Escape") {
       setIsOpen(false);
-      setQuery(selected.name);
+      setQuery(selected?.name ?? "");
     }
   };
 
@@ -151,7 +151,7 @@ function CitySearch({
         onBlur={() => {
           window.setTimeout(() => {
             setIsOpen(false);
-            setQuery(romaniaGraph.cities[selectedCity].name);
+            setQuery(selectedCity !== null ? romaniaGraph.cities[selectedCity]?.name ?? "" : "");
           }, 100);
         }}
         onChange={(event) => {

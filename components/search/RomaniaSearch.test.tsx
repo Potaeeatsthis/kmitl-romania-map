@@ -70,8 +70,16 @@ describe("RomaniaSearch", () => {
   it("runs automatically after two cities are chosen on the map", async () => {
     const user = userEvent.setup();
     mockedRunSearch.mockResolvedValue(sample);
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
     render(<RomaniaSearch />);
 
+    // The search only fires once both a start and a destination are chosen -- a
+    // single click never searches against a stale or default city.
     await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
     expect(mockedRunSearch).not.toHaveBeenCalled();
 

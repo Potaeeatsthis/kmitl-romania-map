@@ -1,20 +1,29 @@
 // components/benchmark/BenchmarkPanel.test.tsx
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SearchResponse } from "../../lib/types";
 import sampleData from "../../public/data/arad-bucharest-search.json";
+import { runSearch } from "../../lib/wasm/client";
 import { useSearchStore } from "../../stores/useSearchStore";
+import RomaniaSearch from "../search/RomaniaSearch";
 import BenchmarkPanel from "./BenchmarkPanel";
 
+vi.mock("../../lib/wasm/client", () => ({
+  runSearch: vi.fn(),
+}));
+
 const sample = sampleData as SearchResponse;
+const mockedRunSearch = vi.mocked(runSearch);
 
 beforeEach(() => {
+  mockedRunSearch.mockReset();
   useSearchStore.setState({
     data: sample,
     startCity: 0,
     destinationCity: 12,
+    selecting: "start",
     isLoading: false,
     error: null,
   });
@@ -79,6 +88,37 @@ describe("BenchmarkPanel", () => {
     expect(screen.getByText("39%")).toBeInTheDocument();
     expect(screen.getByText("39% fewer expansions")).toBeInTheDocument();
     expect(screen.getByText(/Timisoara → Lugoj → Mehadia → Drobeta/)).toBeInTheDocument();
+  });
+
+  // Regression: choosing a start city on the map nulls the store's `data`. Until the
+  // store re-ran on every city change, the expansion ring fell back to "—" and stayed
+  // there, while the runtime ring beside it updated normally. docs/runbook.md §8.
+  it("keeps the expansion ring populated after a start city is chosen on the map", async () => {
+    const user = userEvent.setup();
+    mockedRunSearch.mockResolvedValue(sample);
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
+
+    render(
+      <>
+        <RomaniaSearch />
+        <BenchmarkPanel />
+      </>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
+    await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
+    await user.click(screen.getByRole("button", { name: "Choose Bucharest as destination" }));
+
+    await waitFor(() => expect(mockedRunSearch).toHaveBeenCalledWith(4, 12));
+    await waitFor(() => {
+      expect(screen.queryByText("Run a route to compare expansions")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("31% fewer expansions")).toBeInTheDocument();
   });
 
   it("closes with Escape and returns focus to the results button", async () => {

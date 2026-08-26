@@ -6,6 +6,7 @@ import MapLegend from "./MapLegend";
 import PlaybackControls from "./PlaybackControls";
 import RoutePlanner from "./RoutePlanner";
 import SearchMap from "./SearchMap";
+import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./RomaniaSearch.module.css";
 
 const THEME_STORAGE_KEY = "romania-search-theme";
@@ -31,6 +32,10 @@ function applyDocumentTheme(theme: ColorTheme, persist: boolean) {
 export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNode }) {
   const [theme, setTheme] = useState<ColorTheme>("light");
   const [isPlaybackMinimized, setIsPlaybackMinimized] = useState(false);
+  const startCity = useSearchStore((state) => state.startCity);
+  const destinationCity = useSearchStore((state) => state.destinationCity);
+  const reset = useSearchStore((state) => state.reset);
+  const showReset = startCity !== null || destinationCity !== null;
 
   useEffect(() => {
     let storedTheme: string | null = null;
@@ -93,11 +98,33 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
         <SearchMap />
         <RoutePlanner />
         <MapLegend />
+        {showReset && (
+          <button
+            className={styles.resetButton}
+            type="button"
+            onClick={reset}
+            aria-label="Reset selection"
+            title="Reset"
+          >
+            <ResetIcon />
+          </button>
+        )}
         <PlaybackControls
           minimized={isPlaybackMinimized}
           onMinimizedChange={setIsPlaybackMinimized}
         />
       </section>
     </main>
+  );
+}
+
+function ResetIcon() {
+  return (
+    <svg className={styles.resetIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
+      <path
+        d="M0 0h4v4h-4ZM16 0h4v4h-4ZM4 4h4v4h-4ZM12 4h4v4h-4ZM8 8h4v4h-4ZM4 12h4v4h-4ZM12 12h4v4h-4ZM0 16h4v4h-4ZM16 16h4v4h-4Z"
+        fill="currentColor"
+      />
+    </svg>
   );
 }

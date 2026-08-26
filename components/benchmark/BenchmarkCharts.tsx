@@ -106,12 +106,32 @@ export default function BenchmarkCharts() {
 
   const allUcs = benchmark.all_pairs.results.find((result) => result.algorithm === "ucs");
   const allAstar = benchmark.all_pairs.results.find((result) => result.algorithm === "astar");
-  const startName = romaniaGraph.cities[startCity]?.name ?? "Unknown city";
-  const destinationName = romaniaGraph.cities[destinationCity]?.name ?? "Unknown city";
 
   if (!allUcs || !allAstar) {
     return <p role="status">Benchmark data is incomplete.</p>;
   }
+
+  if (startCity === null || destinationCity === null) {
+    return (
+      <div className={styles.wrapper + " " + styles.stack}>
+        <div className={styles.header}>
+          <p className={styles.kicker}>BENCHMARK</p>
+          <h2 className={styles.title}>UCS vs Current-flow A*</h2>
+        </div>
+        <p className={styles.pending} role="status">
+          Choose a starting point and a destination to see route details.
+        </p>
+        <p className={styles.heroMethod}>
+          All {benchmark.all_pairs.route_count.toLocaleString("en-US")} pairs:{" "}
+          {allUcs.expanded.toLocaleString("en-US")} → {allAstar.expanded.toLocaleString("en-US")} expansions
+          ({benchmark.all_pairs.comparison.expanded_reduction_percent}% fewer).
+        </p>
+      </div>
+    );
+  }
+
+  const startName = romaniaGraph.cities[startCity]?.name ?? "Unknown city";
+  const destinationName = romaniaGraph.cities[destinationCity]?.name ?? "Unknown city";
 
   // Native, precomputed per-pair timing (I5: never measured live in the browser).
   const selectedRuntime: PairRuntime | undefined =

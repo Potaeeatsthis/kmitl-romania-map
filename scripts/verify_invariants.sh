@@ -93,7 +93,7 @@ fi
 
 echo
 echo "Frontend test inventory"
-# The same argument as above, for the 22 vitest cases. Deleting one makes `npm test`
+# The same argument as above, for the 25 vitest cases. Deleting one makes `npm test`
 # greener, and until scripts/verify_mutation.sh grew a vitest gate (M13-M15) nothing
 # in this harness could see the frontend suite at all.
 #
@@ -109,16 +109,21 @@ closes with Escape and returns focus to the results button
 expanded cities include cities through the current step
 filters city options by the beginning of the name
 keeps the closed drawer out of keyboard navigation
+keeps the expansion ring populated after a start city is chosen on the map
 rejects malformed discovered nodes
 rejects malformed frontier nodes
 reports invalid JSON clearly
 returns 0 when data is null
 returns only the cities in the current frontier
+rolling-restarts even when the clicked city is already a current endpoint
+rolling-restarts from a third click once a route is complete
 runs automatically after two cities are chosen on the map
+runs the search only once both cities are chosen
 runs the selected Rust search and starts playback
 shows a useful error when the Wasm search fails
 shows final paths only for completed algorithms
 shows the all-pairs benchmark and exact selected-route details
+toggles selecting when the same city is clicked again before a route is complete
 updates the route details for the selected starting point and destination
 uses one button that switches between play and pause
 uses the multiplication sign for the close control
