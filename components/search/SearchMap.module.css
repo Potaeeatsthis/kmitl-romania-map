@@ -24,15 +24,19 @@
 .mapPanning .city { cursor: grabbing; }
 
 .roads .roadCasing {
+  fill: none;
   stroke: var(--road-casing);
   stroke-width: 5.5;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .roads .roadCenter {
+  fill: none;
   stroke: var(--road-center);
   stroke-width: 1.5;
   stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .roadLabels text {
@@ -45,22 +49,28 @@
   text-anchor: middle;
 }
 
-.searchTree line {
+.searchTree path {
+  fill: none;
   stroke-width: 1.5;
   stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-dasharray: 4 5;
   opacity: 0.62;
 }
 
-.expandedTree line {
+.expandedTree path {
+  fill: none;
   stroke-width: 2.5;
   stroke-linecap: round;
+  stroke-linejoin: round;
   opacity: 0.94;
 }
 
-.finalPath line {
+.finalPath path {
+  fill: none;
   stroke-width: 4;
   stroke-linecap: round;
+  stroke-linejoin: round;
   opacity: 1;
 }
 

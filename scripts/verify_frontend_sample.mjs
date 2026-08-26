@@ -121,4 +121,68 @@ for (const algorithm of ["ucs", "astar"]) {
 }
 
 assert.equal(sample.ucs.cost, sample.astar.cost, "UCS and A* costs must match");
+
+// ---------------------------------------------------------------- road geometry
+// The generated road geometry must stay in sync with the graph and the city
+// positions. A missing or malformed polyline shows up as a straight line on the
+// map — exactly the defect the geometry layer exists to prevent.
+
+const graphTsSource = read("../lib/romaniaGraph.ts");
+const geoSource = read("../lib/roadGeometry.ts");
+const geoKeyMatches = [...geoSource.matchAll(/"(\d+-\d+)":\s*\[/g)].map((m) => m[1]);
+
+// Derive road keys from the graph source
+const graphRoadMatches = [...graphTsSource.slice(graphTsSource.indexOf("roads: [")).matchAll(/\[\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\]/g)];
+const roadKeysFromGraph = graphRoadMatches.map((m) => {
+  const a = Number(m[1]);
+  const b = Number(m[2]);
+  return `${Math.min(a, b)}-${Math.max(a, b)}`;
+}).sort();
+
+// Exactly one key per road, no extras
+assert.deepEqual(
+  geoKeyMatches.sort(),
+  roadKeysFromGraph,
+  "roadGeometry keys must match the roads in romaniaGraph.ts exactly",
+);
+
+// Parse city positions for endpoint checks
+const cityPositions = new Map();
+for (const match of [...graphTsSource.matchAll(/\{\s*id:\s*(\d+)\s*,\s*name:\s*"[^"]+"\s*,\s*x:\s*([\d.]+)\s*,\s*y:\s*([\d.]+)\s*\}/g)]) {
+  cityPositions.set(Number(match[1]), { x: Number(match[2]), y: Number(match[3]) });
+}
+
+// Parse each polyline and validate
+const polylinePattern = /"(\d+)-(\d+)":\s*\[((?:\[[\d., -]+\](?:,\s*)?)+)\]/g;
+for (const match of geoSource.matchAll(polylinePattern)) {
+  const key = `${match[1]}-${match[2]}`;
+  const fromId = Number(match[1]);
+  const toId = Number(match[2]);
+  const pointsStr = match[3];
+
+  // Parse individual points
+  const points = [...pointsStr.matchAll(/\[([\d.e+-]+),\s*([\d.e+-]+)\]/g)].map((pm) => [Number(pm[1]), Number(pm[2])]);
+
+  // At least 2 points
+  assert.ok(points.length >= 2, `roadGeometry["${key}"] must have at least 2 points, got ${points.length}`);
+
+  // No NaN or non-finite
+  for (const [x, y] of points) {
+    assert.ok(Number.isFinite(x) && Number.isFinite(y), `roadGeometry["${key}"] has NaN or non-finite coordinate`);
+  }
+
+  // Endpoints match committed city positions within 0.01 px
+  const startCity = cityPositions.get(fromId);
+  const endCity = cityPositions.get(toId);
+  const first = points[0];
+  const last = points[points.length - 1];
+
+  const startDist = Math.hypot(first[0] - startCity.x, first[1] - startCity.y);
+  const endDist = Math.hypot(last[0] - endCity.x, last[1] - endCity.y);
+
+  assert.ok(startDist <= 0.01, `roadGeometry["${key}"] first point (${first}) is ${startDist.toFixed(4)} px from city ${fromId} (${startCity.x}, ${startCity.y})`);
+  assert.ok(endDist <= 0.01, `roadGeometry["${key}"] last point (${last}) is ${endDist.toFixed(4)} px from city ${toId} (${endCity.x}, ${endCity.y})`);
+}
+
+console.log("road geometry contract: PASS");
 console.log("frontend sample contract: PASS");

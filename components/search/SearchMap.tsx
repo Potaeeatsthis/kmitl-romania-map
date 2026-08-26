@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   KeyboardEvent,
   MouseEvent as ReactMouseEvent,
@@ -8,6 +8,7 @@ import type {
 } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
 import { romaniaGraph } from "../../lib/romaniaGraph";
+import { getRoadPathD, polylineMidpoint, getRoadPoints } from "../../lib/roadPath";
 import {
   getExpandedCities,
   getFinalPath,
@@ -37,8 +38,6 @@ type PanGesture = {
   unitsPerPixel: number;
   moved: boolean;
 };
-
-type CityPosition = (typeof romaniaGraph.cities)[number];
 
 const INITIAL_MAP_VIEWPORT: MapViewport = {
   zoom: MAP_MIN_ZOOM,
@@ -105,11 +104,6 @@ export default function SearchMap() {
   const destinationCity = useSearchStore((state) => state.destinationCity);
   const selecting = useSearchStore((state) => state.selecting);
   const setCity = useSearchStore((state) => state.setCity);
-
-  const cityById = useMemo(
-    () => new Map(romaniaGraph.cities.map((city) => [city.id, city])),
-    [],
-  );
 
   useEffect(() => {
     const map = mapRef.current;
@@ -303,31 +297,25 @@ export default function SearchMap() {
 
         <g className={styles.roads} aria-hidden="true">
           {romaniaGraph.roads.map(([from, to]) => {
-            const roadStart = cityById.get(from);
-            const roadEnd = cityById.get(to);
-            if (!roadStart || !roadEnd) return null;
             return (
               <g key={`${from}-${to}`}>
-                <line className={styles.roadCasing} x1={roadStart.x} y1={roadStart.y} x2={roadEnd.x} y2={roadEnd.y} />
-                <line className={styles.roadCenter} x1={roadStart.x} y1={roadStart.y} x2={roadEnd.x} y2={roadEnd.y} />
+                <path className={styles.roadCasing} d={getRoadPathD(from, to, 0)} />
+                <path className={styles.roadCenter} d={getRoadPathD(from, to, 0)} />
               </g>
             );
           })}
         </g>
 
-        {ucsFrame && <SearchTreeLines discovered={ucsFrame.discovered} cityById={cityById} className={styles.ucsTree} offset={-2} />}
-        {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} cityById={cityById} className={styles.astarTree} offset={2} />}
-        {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} cityById={cityById} className={styles.ucsPath} offset={-3} />}
-        {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} cityById={cityById} className={styles.astarPath} offset={3} />}
-        {ucsComplete && data && <PathLines path={data.ucs.path} cityById={cityById} className={styles.ucsPath} offset={-3} />}
-        {astarComplete && data && <PathLines path={data.astar.path} cityById={cityById} className={styles.astarPath} offset={3} />}
+        {ucsFrame && <SearchTreeLines discovered={ucsFrame.discovered} className={styles.ucsTree} offset={-2} />}
+        {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} className={styles.astarTree} offset={2} />}
+        {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} className={styles.ucsPath} offset={-3} />}
+        {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} className={styles.astarPath} offset={3} />}
+        {ucsComplete && data && <PathLines path={data.ucs.path} className={styles.ucsPath} offset={-3} />}
+        {astarComplete && data && <PathLines path={data.astar.path} className={styles.astarPath} offset={3} />}
 
         <g className={styles.roadLabels} aria-hidden="true">
           {romaniaGraph.roads.map(([from, to, distance]) => {
-            const roadStart = cityById.get(from);
-            const roadEnd = cityById.get(to);
-            if (!roadStart || !roadEnd) return null;
-            const position = roadLabelPosition(roadStart, roadEnd);
+            const position = roadLabelPosition(from, to);
             return <text key={`${from}-${to}`} x={position.x} y={position.y}>{distance}</text>;
           })}
         </g>
@@ -440,53 +428,45 @@ function ZoomOutIcon() {
   return <svg className={styles.zoomIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h12" /></svg>;
 }
 
-function roadLabelPosition(start: CityPosition, end: CityPosition) {
-  const deltaX = end.x - start.x;
-  const deltaY = end.y - start.y;
-  const length = Math.hypot(deltaX, deltaY) || 1;
+function roadLabelPosition(from: number, to: number) {
+  const mid = polylineMidpoint(getRoadPoints(from, to));
   const offset = 13;
   return {
-    x: (start.x + end.x) / 2 - (deltaY / length) * offset,
-    y: (start.y + end.y) / 2 + (deltaX / length) * offset,
+    x: mid.x + mid.nx * offset,
+    y: mid.y + mid.ny * offset,
   };
 }
 
-function SearchTreeLines({ discovered, cityById, className, offset }: { discovered: DiscoveredNode[]; cityById: Map<number, CityPosition>; className: string; offset: number }) {
+function SearchTreeLines({ discovered, className, offset }: { discovered: DiscoveredNode[]; className: string; offset: number }) {
   return (
     <g className={styles.searchTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null ? null : (
-        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} cityById={cityById} className={className} offset={offset} />
+        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} />
       ))}
     </g>
   );
 }
 
-function ExpandedTreeLines({ discovered, expanded, cityById, className, offset }: { discovered: DiscoveredNode[]; expanded: Set<number>; cityById: Map<number, CityPosition>; className: string; offset: number }) {
+function ExpandedTreeLines({ discovered, expanded, className, offset }: { discovered: DiscoveredNode[]; expanded: Set<number>; className: string; offset: number }) {
   return (
     <g className={styles.expandedTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null || !expanded.has(node.city) ? null : (
-        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} cityById={cityById} className={className} offset={offset} />
+        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} />
       ))}
     </g>
   );
 }
 
-function PathLines({ path, cityById, className, offset }: { path: number[]; cityById: Map<number, CityPosition>; className: string; offset: number }) {
+function PathLines({ path, className, offset }: { path: number[]; className: string; offset: number }) {
   return (
     <g className={styles.finalPath} aria-hidden="true">
       {path.slice(0, -1).map((city, index) => (
-        <GraphLine key={`${city}-${path[index + 1]}`} from={city} to={path[index + 1]} cityById={cityById} className={className} offset={offset} />
+        <GraphLine key={`${city}-${path[index + 1]}`} from={city} to={path[index + 1]} className={className} offset={offset} />
       ))}
     </g>
   );
 }
 
-function GraphLine({ from, to, cityById, className, offset }: { from: number; to: number; cityById: Map<number, CityPosition>; className: string; offset: number }) {
-  const start = cityById.get(from);
-  const end = cityById.get(to);
-  if (!start || !end) return null;
-  const length = Math.hypot(end.x - start.x, end.y - start.y) || 1;
-  const shiftX = (-(end.y - start.y) / length) * offset;
-  const shiftY = ((end.x - start.x) / length) * offset;
-  return <line className={className} x1={start.x + shiftX} y1={start.y + shiftY} x2={end.x + shiftX} y2={end.y + shiftY} />;
+function GraphLine({ from, to, className, offset }: { from: number; to: number; className: string; offset: number }) {
+  return <path className={className} d={getRoadPathD(from, to, offset)} />;
 }
