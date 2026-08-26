@@ -425,24 +425,37 @@ describe("RomaniaSearch", () => {
     }
   });
 
-  it("fills each crossed county with larger same-color dots that thin out from the route", () => {
+  it("reveals only dark A* county dots as the expanded route advances", () => {
+    const firstRouteStep = sample.astar.explored_order.indexOf(sample.astar.path[1]);
+    useSearchStore.setState({ step: Math.max(0, firstRouteStep - 1) });
+    const view = render(<RomaniaSearch />);
+
+    expect(view.container.querySelector("." + mapStyles.routeDots)).toBeNull();
+
+    useSearchStore.setState({ step: firstRouteStep });
+    view.rerender(<RomaniaSearch />);
+    const partialField = view.container.querySelector(
+      "." + mapStyles.routeDots + "." + mapStyles.astarRouteDots,
+    );
+
+    expect(partialField).not.toBeNull();
+    expect(view.container.querySelector("." + mapStyles.routeDots + "." + mapStyles.ucsPath)).toBeNull();
+
     useSearchStore.setState({
       step: Math.max(sample.ucs.trace.length, sample.astar.trace.length) - 1,
     });
-    const { container } = render(<RomaniaSearch />);
+    view.rerender(<RomaniaSearch />);
+    const completeField = view.container.querySelector(
+      "." + mapStyles.routeDots + "." + mapStyles.astarRouteDots,
+    );
 
-    for (const algorithm of ["ucs", "astar"] as const) {
-      const colorClass = algorithm === "ucs" ? mapStyles.ucsPath : mapStyles.astarPath;
-      const field = container.querySelector("." + mapStyles.routeDots + "." + colorClass);
-
-      expect(field).not.toBeNull();
-      expect(field!.querySelectorAll("[data-route-county]").length).toBeGreaterThan(1);
-      expect(field!.querySelector("." + mapStyles.routeDotsNear)).not.toBeNull();
-      expect(field!.querySelector("." + mapStyles.routeDotsMid)).not.toBeNull();
-      expect(field!.querySelector("." + mapStyles.routeDotsFar)).not.toBeNull();
-      for (const dot of field!.querySelectorAll("circle")) {
-        expect(dot).toHaveAttribute("r", "1.8");
-      }
+    expect(completeField!.querySelectorAll("[data-route-county]").length).toBeGreaterThan(1);
+    expect(completeField!.querySelector("." + mapStyles.routeDotsNear)).not.toBeNull();
+    expect(completeField!.querySelector("." + mapStyles.routeDotsMid)).not.toBeNull();
+    expect(completeField!.querySelector("." + mapStyles.routeDotsFar)).not.toBeNull();
+    for (const dot of completeField!.querySelectorAll("circle")) {
+      expect(dot).toHaveAttribute("r", "1.8");
+      expect(dot.getAttribute("style")).toContain("--route-dot-delay");
     }
   });
 });

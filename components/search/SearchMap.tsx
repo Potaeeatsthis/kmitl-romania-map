@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type {
+  CSSProperties,
   KeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
@@ -13,6 +14,7 @@ import { getRouteCountyDots } from "../../lib/routeCountyDots";
 import type { RouteDotDensity } from "../../lib/routeCountyDots";
 import {
   getExpandedCities,
+  getExpandedPathPrefix,
   getFinalPath,
   getFrontierCities,
   getTraceFrame,
@@ -153,6 +155,7 @@ export default function SearchMap() {
   const astarFrame = getTraceFrame(data, "astar", step);
   const ucsExpanded = getExpandedCities(data, "ucs", step);
   const astarExpanded = getExpandedCities(data, "astar", step);
+  const astarDotPath = data ? getExpandedPathPrefix(data.astar.path, astarExpanded) : [];
   const ucsFrontier = getFrontierCities(ucsFrame);
   const astarFrontier = getFrontierCities(astarFrame);
   const ucsComplete = Boolean(data && step >= data.ucs.trace.length - 1);
@@ -342,8 +345,7 @@ export default function SearchMap() {
         {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} className={styles.astarTree} offset={2} />}
         {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} className={styles.ucsPath} offset={-3} />}
         {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} className={styles.astarPath} offset={3} />}
-        {ucsComplete && data && <PathDots path={data.ucs.path} className={styles.ucsPath} offset={-3} />}
-        {astarComplete && data && <PathDots path={data.astar.path} className={styles.astarPath} offset={3} />}
+        {astarDotPath.length > 1 && <PathDots path={astarDotPath} className={styles.astarRouteDots} offset={3} />}
         {ucsComplete && data && <PathLines path={data.ucs.path} className={styles.ucsPath} offset={-3} />}
         {astarComplete && data && <PathLines path={data.astar.path} className={styles.astarPath} offset={3} />}
 
@@ -506,13 +508,16 @@ function PathDots({ path, className, offset }: { path: number[]; className: stri
           data-route-county={county.countyIndex}
           clipPath={"url(#route-county-" + county.countyIndex + ")"}
         >
-          {county.dots.map((dot, index) => (
+          {county.dots.map((dot) => (
             <circle
-              key={index}
+              key={`${dot.x}-${dot.y}`}
               className={routeDotDensityClass[dot.density]}
               cx={dot.x}
               cy={dot.y}
               r="1.8"
+              style={{
+                "--route-dot-delay": `${Math.abs(Math.round(dot.x * 3 + dot.y * 5)) % 10 * 12}ms`,
+              } as CSSProperties}
             />
           ))}
         </g>

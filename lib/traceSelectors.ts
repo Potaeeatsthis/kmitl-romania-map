@@ -50,6 +50,11 @@ export function getExpandedCities(
   return new Set(exploredOrder.slice(0, index + 1));
 }
 
+export function getExpandedPathPrefix(path: number[], expanded: Set<number>): number[] {
+  const firstUnexpandedIndex = path.findIndex((city) => !expanded.has(city));
+  return firstUnexpandedIndex === -1 ? path : path.slice(0, firstUnexpandedIndex);
+}
+
 export function getFrontierCities(
   frame: ReturnType<typeof getTraceFrame>,
 ): Set<number> {

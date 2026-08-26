@@ -70,14 +70,40 @@
   pointer-events: none;
 }
 
-.routeDots circle { fill: currentColor; }
+.routeDots circle {
+  fill: currentColor;
+  opacity: 0;
+  animation: routeDotFill 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--route-dot-density-delay) + var(--route-dot-delay));
+}
 
-.routeDotsNear { opacity: 0.76; }
-.routeDotsMid { opacity: 0.56; }
-.routeDotsFar { opacity: 0.38; }
+.routeDotsNear {
+  --route-dot-opacity: 0.82;
+  --route-dot-density-delay: 0ms;
+}
 
-.routeDots.ucsPath { color: var(--green-mid); }
-.routeDots.astarPath { color: var(--green-bright); }
+.routeDotsMid {
+  --route-dot-opacity: 0.6;
+  --route-dot-density-delay: 90ms;
+}
+
+.routeDotsFar {
+  --route-dot-opacity: 0.42;
+  --route-dot-density-delay: 180ms;
+}
+
+.routeDots.astarRouteDots { color: var(--action); }
+
+@keyframes routeDotFill {
+  to { opacity: var(--route-dot-opacity); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .routeDots circle {
+    animation: none;
+    opacity: var(--route-dot-opacity);
+  }
+}
 
 .finalPath path {
   fill: none;
