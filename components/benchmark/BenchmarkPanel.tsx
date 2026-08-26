@@ -64,7 +64,7 @@ export default function BenchmarkPanel() {
             onClick={() => setOpen(false)}
             aria-label="Close benchmark results"
           >
-            <span className={styles.closeGlyph} aria-hidden="true">╳</span>
+            <span className={styles.closeGlyph} aria-hidden="true">×</span>
           </button>
         </div>
         <div className={styles.drawerBody}>

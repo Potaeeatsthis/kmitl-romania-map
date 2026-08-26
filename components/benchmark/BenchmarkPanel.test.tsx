@@ -93,12 +93,12 @@ describe("BenchmarkPanel", () => {
     });
   });
 
-  it("uses the box-drawing cross for the close control", async () => {
+  it("uses the multiplication sign for the close control", async () => {
     const user = userEvent.setup();
     render(<BenchmarkPanel />);
 
     await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
 
-    expect(screen.getByText("╳")).toBeInTheDocument();
+    expect(screen.getByText("×")).toBeInTheDocument();
   });
 });

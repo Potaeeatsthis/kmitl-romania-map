@@ -110,7 +110,7 @@
 }
 
 .closeGlyph {
-  font-family: "Departure Mono", "Courier New", monospace;
+  font-family: var(--font-interface);
   font-weight: 400;
   font-size: 19px;
   line-height: 1;

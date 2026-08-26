@@ -121,7 +121,7 @@ shows final paths only for completed algorithms
 shows the all-pairs benchmark and exact selected-route details
 updates the route details for the selected starting point and destination
 uses one button that switches between play and pause
-uses the box-drawing cross for the close control
+uses the multiplication sign for the close control
 uses the longest algorithm trace as the timeline length
 TESTS
 missing=""
