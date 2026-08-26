@@ -221,6 +221,149 @@ describe("RomaniaSearch", () => {
     fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 550, clientY: 325 });
   });
 
+  // Regression: setPointerCapture used to fire unconditionally on every pointerdown
+  // once zoomed, which redirects the click that follows to the capturing element
+  // instead of the city <g> under the pointer. docs/runbook.md, rootcause
+  // search-map-zoom-blocks-city-clicks.
+  //
+  // Note: jsdom does not simulate the browser's click-redirection-on-capture
+  // behavior, so this test alone would still pass against the pre-fix code (verified
+  // directly: stashing the fix and re-running left this test green). It's kept as a
+  // behavioral spec of the intended outcome, but the next test is the one that
+  // actually catches this regression, by asserting on the underlying mechanism
+  // jsdom *can* observe -- exactly when setPointerCapture is called.
+  it("selects a city by clicking even after zooming in", async () => {
+    const user = userEvent.setup();
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
+    const { container } = render(<RomaniaSearch />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+
+    expect(map).not.toBeNull();
+    vi.spyOn(map!, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 900,
+      bottom: 650,
+      left: 0,
+      width: 900,
+      height: 650,
+      toJSON: () => ({}),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Zoom in" }));
+    await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
+
+    expect(useSearchStore.getState().startCity).toBe(4);
+  });
+
+  it("does not capture the pointer until the drag threshold is crossed", () => {
+    const { container } = render(<RomaniaSearch />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+
+    expect(map).not.toBeNull();
+    vi.spyOn(map!, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 900,
+      bottom: 650,
+      left: 0,
+      width: 900,
+      height: 650,
+      toJSON: () => ({}),
+    });
+    // jsdom doesn't implement real setPointerCapture semantics; assign a spy directly
+    // so the assertions below reflect this component's own calls, not a jsdom stub.
+    const captureSpy = vi.fn();
+    Object.assign(map!, { setPointerCapture: captureSpy });
+
+    fireEvent.click(screen.getByRole("button", { name: "Zoom in" }));
+
+    fireEvent.pointerDown(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 450, clientY: 325 });
+    expect(captureSpy).not.toHaveBeenCalled();
+
+    fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 450, clientY: 325 });
+    expect(captureSpy).not.toHaveBeenCalled();
+
+    fireEvent.pointerDown(map!, { pointerId: 2, pointerType: "mouse", button: 0, clientX: 450, clientY: 325 });
+    fireEvent.pointerMove(map!, { pointerId: 2, pointerType: "mouse", buttons: 1, clientX: 550, clientY: 325 });
+    expect(captureSpy).toHaveBeenCalledWith(2);
+  });
+
+  it("does not select a city when the pointer drags across the map", async () => {
+    const user = userEvent.setup();
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
+    const { container } = render(<RomaniaSearch />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+
+    expect(map).not.toBeNull();
+    vi.spyOn(map!, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 900,
+      bottom: 650,
+      left: 0,
+      width: 900,
+      height: 650,
+      toJSON: () => ({}),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Zoom in" }));
+    fireEvent.pointerDown(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 450, clientY: 325 });
+    fireEvent.pointerMove(map!, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 550, clientY: 325 });
+    fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 550, clientY: 325 });
+
+    expect(map).toHaveAttribute("viewBox", "130 115 720 520");
+    expect(useSearchStore.getState().startCity).toBeNull();
+    expect(useSearchStore.getState().destinationCity).toBeNull();
+  });
+
+  it("leaves the map viewport untouched when a zoomed-in click triggers a rolling restart", async () => {
+    const user = userEvent.setup();
+    useSearchStore.setState({
+      data: sample,
+      startCity: 0,
+      destinationCity: 12,
+      selecting: "start",
+    });
+    const { container } = render(<RomaniaSearch />);
+    const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
+
+    expect(map).not.toBeNull();
+    vi.spyOn(map!, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 900,
+      bottom: 650,
+      left: 0,
+      width: 900,
+      height: 650,
+      toJSON: () => ({}),
+    });
+
+    await user.click(screen.getByRole("button", { name: "Zoom in" }));
+    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+
+    // Route is already complete (0/12) -- this click rolling-restarts from Timisoara.
+    await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
+
+    expect(useSearchStore.getState()).toMatchObject({ startCity: 4, destinationCity: null });
+    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+  });
+
   it("zooms continuously with a two-finger pinch gesture", () => {
     const { container } = render(<RomaniaSearch />);
     const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");

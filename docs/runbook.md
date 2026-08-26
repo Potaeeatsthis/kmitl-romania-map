@@ -508,3 +508,79 @@ reset button"* and *"resets to blank and snaps the map back to its default
 viewport"* (the only test that exercises the Reset button through a real click and
 checks the map's `viewBox` afterward). All four are in
 `scripts/verify_invariants.sh`'s frontend test-inventory list.
+
+---
+
+## §11 — `search-map-zoom-blocks-city-clicks`
+
+Rootcause file: [`rootcause/search-map-zoom-blocks-city-clicks.json`](rootcause/search-map-zoom-blocks-city-clicks.json)
+
+### Symptom
+
+**There is no error message.** At default zoom, clicking a city selects it normally.
+After zooming in (wheel, pinch, or the `+` button), clicking a city does nothing —
+`setCity` never fires, no matter where on the city you click.
+
+### Diagnose
+
+```bash
+grep -n "setPointerCapture" components/search/SearchMap.tsx
+```
+
+`SearchMap.tsx`'s `beginMapPan()` called `event.currentTarget.setPointerCapture()`
+unconditionally on every mouse pointerdown once `mapZoom > MAP_MIN_ZOOM`, before
+knowing whether the gesture would become a drag or stay a plain click. Per the
+Pointer Events spec, once a pointer is captured, the `click` event that follows is
+*also* redirected to the capturing element — here, the `<svg>` root, since that's
+where `onPointerDown` is bound — rather than hit-tested against whatever is actually
+under the pointer. A city's own `onClick={chooseCity}` lives on the nested `<g
+role="button">`, so it never received the click. At default zoom,
+`handleMapPointerDown`'s `mapZoom <= MAP_MIN_ZOOM` guard short-circuits before
+`beginMapPan`/`setPointerCapture` ever runs, which is why clicking worked fine there
+and the bug was zoom-gated. The identical unconditional call existed in the
+single-touch branch of the touch pointerdown handler too.
+
+**Testing note, worth knowing before writing a similar test again:** jsdom does not
+implement the browser's actual click-redirection-on-capture behavior. A test that
+zooms in, clicks a city via `userEvent.click()`, and asserts the store updated will
+pass whether or not the fix is applied — verified directly by temporarily reverting
+the fix and re-running. It's kept as a behavioral spec, but the regression test that
+actually catches this class of bug asserts on the mechanism jsdom *can* observe:
+exactly when `setPointerCapture` is called.
+
+### Fix
+
+Deferred `setPointerCapture` until the gesture is confirmed a drag. `pointerdown` now
+only arms `panGestureRef` (records start position/viewport, `moved: false`) without
+capturing. `handleMapPointerMove` calls `setPointerCapture` at the exact moment
+`panGesture.moved` flips from `false` to `true` — the existing 4px-movement
+threshold that was already being tracked for the click-suppression logic, just not
+yet used to gate capture itself. A plain click never crosses that threshold, so
+capture — and the click-redirection side effect — never happens, and the city's
+native `onClick` fires normally. A genuine drag still captures and pans exactly as
+before.
+
+The single-touch branch got the same fix. The two-touch (pinch) branch is
+unambiguous the instant a second finger lands — it can never be a tap — so it keeps
+capturing immediately, now for *both* touch pointer IDs (`for (const pointerId of
+mapTouchesRef.current.keys())`) rather than just the one that triggered the
+`pointerdown`, preserving the original robustness if a finger slides outside the SVG
+mid-pinch.
+
+### Prevent
+
+`components/search/RomaniaSearch.test.tsx`:
+- *"does not capture the pointer until the drag threshold is crossed"* — the test
+  that actually catches this regression (confirmed by reverting the fix and watching
+  it fail). Spies directly on `setPointerCapture` and asserts it's uncalled through a
+  full pointerdown/pointerup with no movement, then called only once movement crosses
+  the threshold.
+- *"selects a city by clicking even after zooming in"* — behavioral spec of the
+  intended outcome (see the jsdom caveat above).
+- *"does not select a city when the pointer drags across the map"* — the inverse
+  invariant: a genuine drag pans and leaves both cities `null`.
+- *"leaves the map viewport untouched when a zoomed-in click triggers a rolling
+  restart"* — closes the gap flagged in the investigation that preceded this fix:
+  confirms §9's rolling-restart and this fix compose correctly while zoomed.
+
+All four are in `scripts/verify_invariants.sh`'s frontend test-inventory list.

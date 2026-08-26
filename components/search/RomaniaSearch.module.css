@@ -207,7 +207,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   border: 0;
   border-radius: 10px;
   background: var(--green-pale);
@@ -226,13 +225,6 @@
 .resetButton:focus-visible {
   outline: 3px solid var(--green-bright);
   outline-offset: 3px;
-}
-
-.resetIcon {
-  display: block;
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
 }
 
 @keyframes resetReveal {

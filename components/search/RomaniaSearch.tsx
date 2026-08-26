@@ -106,8 +106,7 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
             aria-label="Clear selection"
             title="Clear Selection"
           >
-            <ResetIcon />
-            <span>Clear Selection</span>
+            Clear Selection
           </button>
         )}
         <PlaybackControls
@@ -116,16 +115,5 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
         />
       </section>
     </main>
-  );
-}
-
-function ResetIcon() {
-  return (
-    <svg className={styles.resetIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
-      <path
-        d="M0 0h4v4h-4ZM16 0h4v4h-4ZM4 4h4v4h-4ZM12 4h4v4h-4ZM8 8h4v4h-4ZM4 12h4v4h-4ZM12 12h4v4h-4ZM0 16h4v4h-4ZM16 16h4v4h-4Z"
-        fill="currentColor"
-      />
-    </svg>
   );
 }

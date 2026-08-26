@@ -158,6 +158,12 @@ export default function SearchMap() {
   const finalPath = getFinalPath(data, ucsComplete, astarComplete);
   const mapZoom = mapViewport.zoom;
 
+  // Deliberately does NOT setPointerCapture here. Capturing at pointerdown -- before
+  // we know whether the gesture is a click or a drag -- redirects the click event
+  // that follows a plain tap/click to the capturing element instead of the city <g>
+  // actually under the pointer, so the city's own onClick never fires. Capture is
+  // acquired only once handleMapPointerMove confirms real movement (see there). See
+  // docs/rootcause/search-map-zoom-blocks-city-clicks.json.
   const beginMapPan = (event: ReactPointerEvent<SVGSVGElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const viewWidth = MAP_VIEW_BOX.width / mapZoom;
@@ -173,13 +179,11 @@ export default function SearchMap() {
       unitsPerPixel: 1 / renderedScale,
       moved: false,
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
   const handleMapPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (event.pointerType === "touch") {
       mapTouchesRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      event.currentTarget.setPointerCapture?.(event.pointerId);
 
       if (mapTouchesRef.current.size === 2) {
         const startDistance = getTouchDistance(Array.from(mapTouchesRef.current.values()));
@@ -188,6 +192,12 @@ export default function SearchMap() {
           panGestureRef.current = null;
           setIsMapPanning(false);
           suppressMapClickUntilRef.current = Date.now() + 500;
+          // A confirmed second touch is unambiguously a pinch, never a tap -- capture
+          // both touches immediately so neither loses tracking if a finger slides
+          // outside the SVG mid-gesture.
+          for (const pointerId of mapTouchesRef.current.keys()) {
+            event.currentTarget.setPointerCapture?.(pointerId);
+          }
           event.preventDefault();
         }
       } else if (mapZoom > MAP_MIN_ZOOM) {
@@ -226,6 +236,11 @@ export default function SearchMap() {
     const deltaY = event.clientY - panGesture.startY;
     if (!panGesture.moved && Math.hypot(deltaX, deltaY) <= 4) return;
 
+    if (!panGesture.moved) {
+      // First move past the threshold: this is now confirmed a drag, not a click --
+      // capture the pointer here, and only here.
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    }
     panGesture.moved = true;
     setIsMapPanning(true);
     setMapViewport(clampMapViewport({

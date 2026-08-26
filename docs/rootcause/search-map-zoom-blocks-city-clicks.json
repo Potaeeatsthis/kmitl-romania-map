@@ -1,0 +1,12 @@
+{
+  "id": "search-map-zoom-blocks-city-clicks",
+  "date": "2026-08-27",
+  "symptom": "When the map is zoomed in, clicking a city no longer selects it. Clicking works normally at default zoom.",
+  "rootcause": "SearchMap.tsx's beginMapPan() called event.currentTarget.setPointerCapture() unconditionally on every mouse pointerdown once mapZoom > MAP_MIN_ZOOM, before knowing whether the gesture would become a drag. Per the Pointer Events spec, once a pointer is captured, the click event that follows is also redirected to the capturing element (the <svg> root, since that's where onPointerDown is bound) rather than hit-tested against whatever is actually under the pointer -- so a city <g>'s own onClick={chooseCity} never fired for a plain click-without-drag once zoomed in. At default zoom, handleMapPointerDown's `mapZoom <= MAP_MIN_ZOOM` guard short-circuits before beginMapPan/setPointerCapture ever runs, which is why clicking worked fine there and the bug was zoom-gated.",
+  "fix": "Deferred setPointerCapture until the gesture is confirmed a drag: pointerdown now only arms panGestureRef (records start position/viewport, moved: false) without capturing. handleMapPointerMove calls setPointerCapture at the exact moment panGesture.moved flips from false to true (the existing 4px-movement threshold), i.e. only once real panning begins. A plain click never crosses that threshold, so capture -- and the click-redirection side effect -- never happens, and the city's native onClick fires normally. A genuine drag still captures and pans exactly as before.",
+  "recurrence_risk": "medium",
+  "invariant": null,
+  "automation_gap": null,
+  "tags": ["frontend", "search-map", "pointer-events", "ux"],
+  "notes": "This exact combination (zoom + city click) had zero test coverage before this fix, which is how it shipped -- see docs/runbook.md for the tests added alongside the fix. General lesson for any future pointer-capture-based drag implementation in this codebase: never call setPointerCapture at pointerdown time if a plain click on a descendant element must still work; only capture once movement confirms an actual drag."
+}
