@@ -424,4 +424,25 @@ describe("RomaniaSearch", () => {
       expect(city.querySelector("text")).toHaveClass(mapStyles.highlightedCityLabel);
     }
   });
+
+  it("fills each crossed county with larger same-color dots that thin out from the route", () => {
+    useSearchStore.setState({
+      step: Math.max(sample.ucs.trace.length, sample.astar.trace.length) - 1,
+    });
+    const { container } = render(<RomaniaSearch />);
+
+    for (const algorithm of ["ucs", "astar"] as const) {
+      const colorClass = algorithm === "ucs" ? mapStyles.ucsPath : mapStyles.astarPath;
+      const field = container.querySelector("." + mapStyles.routeDots + "." + colorClass);
+
+      expect(field).not.toBeNull();
+      expect(field!.querySelectorAll("[data-route-county]").length).toBeGreaterThan(1);
+      expect(field!.querySelector("." + mapStyles.routeDotsNear)).not.toBeNull();
+      expect(field!.querySelector("." + mapStyles.routeDotsMid)).not.toBeNull();
+      expect(field!.querySelector("." + mapStyles.routeDotsFar)).not.toBeNull();
+      for (const dot of field!.querySelectorAll("circle")) {
+        expect(dot).toHaveAttribute("r", "1.8");
+      }
+    }
+  });
 });

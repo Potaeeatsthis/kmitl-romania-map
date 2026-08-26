@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   KeyboardEvent,
   MouseEvent as ReactMouseEvent,
@@ -9,6 +9,8 @@ import type {
 import { countyOutlines } from "../../lib/countyOutlines";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import { getRoadPathD, polylineMidpoint, getRoadPoints } from "../../lib/roadPath";
+import { getRouteCountyDots } from "../../lib/routeCountyDots";
+import type { RouteDotDensity } from "../../lib/routeCountyDots";
 import {
   getExpandedCities,
   getFinalPath,
@@ -311,6 +313,11 @@ export default function SearchMap() {
             <stop offset="50%" stopColor="var(--label-astar)" />
             <stop offset="100%" stopColor="var(--label-astar)" />
           </linearGradient>
+          {countyOutlines.map((path, index) => (
+            <clipPath id={"route-county-" + index} key={index}>
+              <path d={path} />
+            </clipPath>
+          ))}
         </defs>
 
         <g className={styles.countryOutline} aria-hidden="true">
@@ -335,6 +342,8 @@ export default function SearchMap() {
         {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} className={styles.astarTree} offset={2} />}
         {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} className={styles.ucsPath} offset={-3} />}
         {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} className={styles.astarPath} offset={3} />}
+        {ucsComplete && data && <PathDots path={data.ucs.path} className={styles.ucsPath} offset={-3} />}
+        {astarComplete && data && <PathDots path={data.astar.path} className={styles.astarPath} offset={3} />}
         {ucsComplete && data && <PathLines path={data.ucs.path} className={styles.ucsPath} offset={-3} />}
         {astarComplete && data && <PathLines path={data.astar.path} className={styles.astarPath} offset={3} />}
 
@@ -454,9 +463,10 @@ function ZoomOutIcon() {
 function roadLabelPosition(from: number, to: number) {
   const mid = polylineMidpoint(getRoadPoints(from, to));
   const offset = 13;
+  const round = (value: number) => Number(value.toFixed(2));
   return {
-    x: mid.x + mid.nx * offset,
-    y: mid.y + mid.ny * offset,
+    x: round(mid.x + mid.nx * offset),
+    y: round(mid.y + mid.ny * offset),
   };
 }
 
@@ -475,6 +485,37 @@ function ExpandedTreeLines({ discovered, expanded, className, offset }: { discov
     <g className={styles.expandedTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null || !expanded.has(node.city) ? null : (
         <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} />
+      ))}
+    </g>
+  );
+}
+
+const routeDotDensityClass: Record<RouteDotDensity, string> = {
+  near: styles.routeDotsNear,
+  mid: styles.routeDotsMid,
+  far: styles.routeDotsFar,
+};
+
+function PathDots({ path, className, offset }: { path: number[]; className: string; offset: number }) {
+  const counties = useMemo(() => getRouteCountyDots(path, offset), [path, offset]);
+  return (
+    <g className={[styles.routeDots, className].join(" ")} aria-hidden="true">
+      {counties.map((county) => (
+        <g
+          key={county.countyIndex}
+          data-route-county={county.countyIndex}
+          clipPath={"url(#route-county-" + county.countyIndex + ")"}
+        >
+          {county.dots.map((dot, index) => (
+            <circle
+              key={index}
+              className={routeDotDensityClass[dot.density]}
+              cx={dot.x}
+              cy={dot.y}
+              r="1.8"
+            />
+          ))}
+        </g>
       ))}
     </g>
   );

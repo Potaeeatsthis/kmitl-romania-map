@@ -66,6 +66,19 @@
   opacity: 0.94;
 }
 
+.routeDots {
+  pointer-events: none;
+}
+
+.routeDots circle { fill: currentColor; }
+
+.routeDotsNear { opacity: 0.76; }
+.routeDotsMid { opacity: 0.56; }
+.routeDotsFar { opacity: 0.38; }
+
+.routeDots.ucsPath { color: var(--green-mid); }
+.routeDots.astarPath { color: var(--green-bright); }
+
 .finalPath path {
   fill: none;
   stroke-width: 4;
