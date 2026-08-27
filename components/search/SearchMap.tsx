@@ -33,6 +33,7 @@ const MAX_WHEEL_ZOOM_EXPONENT = 0.35;
 
 type MapTouchPoint = { x: number; y: number };
 type MapViewport = { zoom: number; centerX: number; centerY: number };
+type MapDisplayMode = "default" | "terrain" | "satellite";
 type PinchGesture = { startDistance: number; startViewport: MapViewport };
 type PanGesture = {
   pointerId: number;
@@ -47,6 +48,18 @@ const INITIAL_MAP_VIEWPORT: MapViewport = {
   zoom: MAP_MIN_ZOOM,
   centerX: MAP_VIEW_BOX.x + MAP_VIEW_BOX.width / 2,
   centerY: MAP_VIEW_BOX.y + MAP_VIEW_BOX.height / 2,
+};
+
+const mapDisplayModes: { value: MapDisplayMode; label: string }[] = [
+  { value: "default", label: "Default" },
+  { value: "terrain", label: "Terrain" },
+  { value: "satellite", label: "Satellite" },
+];
+
+const mapDisplayModeClass: Record<MapDisplayMode, string> = {
+  default: styles.displayDefault,
+  terrain: styles.displayTerrain,
+  satellite: styles.displaySatellite,
 };
 
 const labelOffsets: Record<number, { x: number; y: number }> = {
@@ -96,6 +109,7 @@ function getTouchDistance([first, second]: MapTouchPoint[]) {
 export default function SearchMap() {
   const [mapViewport, setMapViewport] = useState<MapViewport>(INITIAL_MAP_VIEWPORT);
   const [isMapPanning, setIsMapPanning] = useState(false);
+  const [displayMode, setDisplayMode] = useState<MapDisplayMode>("default");
   const mapRef = useRef<SVGSVGElement>(null);
   const mapTouchesRef = useRef(new Map<number, MapTouchPoint>());
   const pinchGestureRef = useRef<PinchGesture | null>(null);
@@ -293,9 +307,10 @@ export default function SearchMap() {
     mapZoom > MAP_MIN_ZOOM ? styles.mapPannable : "",
     isMapPanning ? styles.mapPanning : "",
   ].filter(Boolean).join(" ");
+  const mapPanelClassName = [styles.mapPanel, mapDisplayModeClass[displayMode]].join(" ");
 
   return (
-    <div className={styles.mapPanel}>
+    <div className={mapPanelClassName}>
       <svg
         ref={mapRef}
         className={mapClassName}
@@ -441,6 +456,25 @@ export default function SearchMap() {
           );
         })}
       </svg>
+
+      <div className={styles.displayModeControls} role="group" aria-label="Map display mode">
+        {mapDisplayModes.map((mode) => (
+          <button
+            key={mode.value}
+            className={[
+              styles.displayModeButton,
+              displayMode === mode.value ? styles.displayModeButtonActive : "",
+            ].filter(Boolean).join(" ")}
+            type="button"
+            aria-pressed={displayMode === mode.value}
+            aria-label={`Use ${mode.label.toLowerCase()} map display`}
+            title={`${mode.label} map display`}
+            onClick={() => setDisplayMode(mode.value)}
+          >
+            {mode.label}
+          </button>
+        ))}
+      </div>
 
       <div className={styles.zoomControls} role="group" aria-label={`Map zoom controls, ${Math.round(mapZoom * 100)}%`}>
         <button className={styles.zoomButton} type="button" onClick={() => updateMapZoom(MAP_ZOOM_STEP)} disabled={mapZoom >= MAP_MAX_ZOOM - 0.001} aria-label="Zoom in" title="Zoom in">

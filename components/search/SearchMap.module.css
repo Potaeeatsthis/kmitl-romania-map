@@ -9,6 +9,34 @@
   background: var(--map-surface);
 }
 
+.displayDefault {
+  --map-label-text: var(--ink);
+}
+
+.displayTerrain {
+  --map-surface: color-mix(in srgb, var(--green-pale) 72%, var(--surface));
+  --county-fill: color-mix(in srgb, var(--green-soft) 58%, var(--surface));
+  --county-line: color-mix(in srgb, var(--green) 34%, var(--line));
+  --country-outline: color-mix(in srgb, var(--green-dark) 38%, var(--line));
+  --road-casing: color-mix(in srgb, var(--surface) 82%, var(--green-pale));
+  --road-center: color-mix(in srgb, var(--green-dark) 38%, var(--muted));
+  --road-label: color-mix(in srgb, var(--green-dark) 64%, var(--muted));
+  --city-stroke: color-mix(in srgb, var(--green-dark) 45%, var(--muted));
+  --map-label-text: var(--ink);
+}
+
+.displaySatellite {
+  --map-surface: #17211f;
+  --county-fill: #21342f;
+  --county-line: #304d45;
+  --country-outline: #719486;
+  --road-casing: #111816;
+  --road-center: #7f9189;
+  --road-label: #cad8d1;
+  --city-stroke: #9fb4ab;
+  --map-label-text: #f1f7f4;
+}
+
 .map {
   display: block;
   width: 100%;
@@ -141,7 +169,7 @@
 }
 
 .city text {
-  fill: var(--ink);
+  fill: var(--map-label-text, var(--ink));
   font: 11px var(--font-interface);
   text-anchor: middle;
   paint-order: stroke;
@@ -216,6 +244,61 @@
   stroke-width: 2.4;
 }
 
+.displayModeControls {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  z-index: 20;
+  min-height: 44px;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-raised);
+}
+
+.displayModeButton {
+  height: 36px;
+  min-width: 76px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--green-dark);
+  cursor: pointer;
+  font: 400 11px / 1 var(--font-interface);
+  letter-spacing: 0;
+  transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+}
+
+.displayModeButton:hover {
+  background: var(--green-pale);
+}
+
+.displayModeButton:active {
+  transform: scale(0.97);
+}
+
+.displayModeButton:focus-visible {
+  outline: 3px solid var(--green-bright);
+  outline-offset: 3px;
+}
+
+.displayModeButtonActive {
+  background: var(--action-strong);
+  color: var(--on-accent);
+}
+
+.displayModeButtonActive:hover {
+  background: var(--action-strong);
+}
+
 .zoomControls {
   position: absolute;
   top: 50%;
@@ -271,10 +354,23 @@
 
 @media (max-width: 800px) {
   .mapPanel { border-radius: 12px; }
+  .displayModeControls {
+    left: 10px;
+    bottom: 10px;
+    max-width: calc(100% - 76px);
+    overflow-x: auto;
+  }
+
+  .displayModeButton {
+    min-width: 0;
+    padding: 0 9px;
+  }
+
   .zoomControls { right: 10px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .city .cityNode,
-  .city .cityLabelBackground { transition: none; }
+  .city .cityLabelBackground,
+  .displayModeButton { transition: none; }
 }
