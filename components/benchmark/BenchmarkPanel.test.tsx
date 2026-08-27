@@ -9,6 +9,7 @@ import { runSearch } from "../../lib/wasm/client";
 import { useSearchStore } from "../../stores/useSearchStore";
 import RomaniaSearch from "../search/RomaniaSearch";
 import BenchmarkPanel from "./BenchmarkPanel";
+import styles from "./BenchmarkPanel.module.css";
 
 vi.mock("../../lib/wasm/client", () => ({
   runSearch: vi.fn(),
@@ -24,12 +25,47 @@ beforeEach(() => {
     startCity: 0,
     destinationCity: 12,
     selecting: "start",
+    step: Math.max(sample.ucs.trace.length, sample.astar.trace.length) - 1,
+    isPlaying: false,
+    speed: 1,
     isLoading: false,
     error: null,
   });
 });
 
 describe("BenchmarkPanel", () => {
+  it("shows clear idle, processing, paused, and complete button states", () => {
+    useSearchStore.setState({ data: null, step: 0, isPlaying: false, isLoading: false });
+    const view = render(<BenchmarkPanel />);
+    const resultsButton = screen.getByRole("button", { name: "Open benchmark results" });
+
+    expect(screen.getByText("Results")).toBeInTheDocument();
+    expect(resultsButton).not.toHaveClass(styles.tabProcessing, styles.tabPaused, styles.tabComplete);
+
+    useSearchStore.setState({ isLoading: true });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("Processing…")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabProcessing);
+
+    useSearchStore.setState({ data: sample, step: 0, isPlaying: false, isLoading: false });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("Paused")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabPaused);
+
+    useSearchStore.setState({ isPlaying: true });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("Processing…")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabProcessing);
+
+    useSearchStore.setState({
+      step: Math.max(sample.ucs.trace.length, sample.astar.trace.length) - 1,
+      isPlaying: false,
+    });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("View results")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabComplete);
+  });
+
   it("keeps the closed drawer out of keyboard navigation", async () => {
     const user = userEvent.setup();
     render(<BenchmarkPanel />);

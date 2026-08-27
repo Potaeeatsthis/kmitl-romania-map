@@ -2,16 +2,48 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { getTimelineLength } from "../../lib/traceSelectors";
+import { useSearchStore } from "../../stores/useSearchStore";
 import BenchmarkCharts from "./BenchmarkCharts";
 import styles from "./BenchmarkPanel.module.css";
 
 const PANEL_TITLE_ID = "benchmark-panel-title";
+const PANEL_STATUS_ID = "benchmark-results-status";
+
+type ResultsStatus = "idle" | "processing" | "paused" | "complete";
+
+const statusLabels: Record<ResultsStatus, string> = {
+  idle: "Results",
+  processing: "Processing…",
+  paused: "Paused",
+  complete: "View results",
+};
 
 export default function BenchmarkPanel() {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const wasOpenRef = useRef(false);
+  const data = useSearchStore((state) => state.data);
+  const step = useSearchStore((state) => state.step);
+  const isPlaying = useSearchStore((state) => state.isPlaying);
+  const isLoading = useSearchStore((state) => state.isLoading);
+  const timelineLength = getTimelineLength(data);
+  const animationComplete = Boolean(
+    data && (timelineLength === 0 || step >= timelineLength - 1),
+  );
+  const status: ResultsStatus = isLoading
+    ? "processing"
+    : !data
+      ? "idle"
+      : animationComplete
+        ? "complete"
+        : isPlaying ? "processing" : "paused";
+  const statusClass = status === "processing"
+    ? styles.tabProcessing
+    : status === "paused"
+      ? styles.tabPaused
+      : status === "complete" ? styles.tabComplete : "";
 
   useEffect(() => {
     if (!open) return;
@@ -40,12 +72,20 @@ export default function BenchmarkPanel() {
         <button
           ref={triggerRef}
           type="button"
-          className={styles.tab}
+          className={`${styles.tab} ${statusClass}`.trim()}
           onClick={() => setOpen(true)}
           aria-label="Open benchmark results"
+          aria-describedby={status === "idle" ? undefined : PANEL_STATUS_ID}
         >
           <ResultsIcon />
-          <span className={styles.tabLabel}>Results</span>
+          <span
+            id={PANEL_STATUS_ID}
+            className={styles.tabLabel}
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {statusLabels[status]}
+          </span>
         </button>
       )}
 

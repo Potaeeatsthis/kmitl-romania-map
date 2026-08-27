@@ -1,6 +1,6 @@
 /* components/benchmark/BenchmarkPanel.module.css */
 .tab {
-  min-width: 108px;
+  min-width: 152px;
   height: 44px;
   padding: 0 14px;
   display: inline-flex;
@@ -30,6 +30,56 @@
 .tabLabel {
   font-size: 10px;
   letter-spacing: 0.08em;
+}
+
+.tab.tabProcessing {
+  border-color: #62c98d;
+  background: #62c98d;
+  color: #1b1919;
+  animation: statusButtonPulse 1.1s ease-in-out infinite;
+}
+
+.tab.tabProcessing:hover {
+  border-color: #3faf70;
+  background: #3faf70;
+  color: #1b1919;
+  animation: none;
+}
+
+.tab.tabPaused {
+  border-color: #2f7a50;
+  background: #2f7a50;
+  color: #ffffff;
+}
+
+.tab.tabPaused:hover {
+  border-color: #256442;
+  background: #256442;
+  color: #ffffff;
+}
+
+.tab.tabComplete {
+  border-color: var(--green-bright, #00ed64);
+  background: var(--green-bright, #00ed64);
+  color: #1b1919;
+}
+
+.tab.tabComplete:hover {
+  border-color: var(--run-surface-hover, #62c98d);
+  background: var(--run-surface-hover, #62c98d);
+  color: #1b1919;
+}
+
+@keyframes statusButtonPulse {
+  0%, 100% {
+    border-color: #3faf70;
+    background: #3faf70;
+  }
+
+  50% {
+    border-color: #62c98d;
+    background: #62c98d;
+  }
 }
 
 .tabIcon {
@@ -132,6 +182,7 @@
 
 @media (max-width: 800px) {
   .tab {
+    position: relative;
     width: 44px;
     min-width: 44px;
     padding: 0;
@@ -139,7 +190,15 @@
   }
 
   .tabLabel {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .drawer {
@@ -165,5 +224,9 @@
   .drawer,
   .tab {
     transition: none;
+  }
+
+  .tabProcessing {
+    animation: none;
   }
 }
