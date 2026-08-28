@@ -23,6 +23,30 @@ import type { DiscoveredNode } from "../../lib/types";
 import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./SearchMap.module.css";
 
+import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
+
+const GOOGLE_MAP_CENTER = { lat: 45.9432, lng: 24.9668 };
+
+function GoogleBackgroundMap({ mapType }: { mapType: "terrain" | "satellite" }) {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  if (!apiKey) return null;
+
+  return (
+    <APIProvider apiKey={apiKey}>
+      <GoogleMap
+        defaultCenter={GOOGLE_MAP_CENTER}
+        defaultZoom={7}
+        mapTypeId={mapType}
+        disableDefaultUI
+        gestureHandling="none"
+        keyboardShortcuts={false}
+        clickableIcons={false}
+        style={{ width: "100%", height: "100%" }}
+      />
+    </APIProvider>
+  );
+}
+
 const MAP_VIEW_BOX = { x: 120, y: 50, width: 900, height: 650 } as const;
 const MAP_MIN_ZOOM = 1;
 const MAP_MAX_ZOOM = 2;
@@ -311,6 +335,11 @@ export default function SearchMap() {
 
   return (
     <div className={mapPanelClassName}>
+      {displayMode !== "default" && (
+        <div className={styles.mapBackgroundImage}>
+          <GoogleBackgroundMap mapType={displayMode === "satellite" ? "satellite" : "terrain"} />
+        </div>
+      )}
       <svg
         ref={mapRef}
         className={mapClassName}

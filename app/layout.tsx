@@ -4,24 +4,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
-
-const THEME_BOOT_SCRIPT = `
-  (() => {
-    try {
-      const saved = localStorage.getItem("romania-search-theme");
-      const theme = saved === "light" || saved === "dark"
-        ? saved
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-      document.documentElement.dataset.theme = theme;
-      document.documentElement.style.colorScheme = theme;
-    } catch {
-      document.documentElement.dataset.theme = "light";
-      document.documentElement.style.colorScheme = "light";
-    }
-  })();
-`;
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: "KMITL Romania Map",
@@ -31,10 +14,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
-      </head>
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <Script src="/theme-boot.js" strategy="beforeInteractive" />
+      </body>
     </html>
   );
 }

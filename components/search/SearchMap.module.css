@@ -37,6 +37,15 @@
   --map-label-text: #f1f7f4;
 }
 
+.mapBackgroundImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .map {
   display: block;
   width: 100%;
@@ -44,6 +53,8 @@
   background: var(--map-surface);
   touch-action: none;
   user-select: none;
+  position: relative;
+  z-index: 1;
 }
 
 .mapPannable { cursor: grab; }
@@ -373,4 +384,26 @@
   .city .cityNode,
   .city .cityLabelBackground,
   .displayModeButton { transition: none; }
+}
+
+
+.mapBackgroundImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.displayTerrain .map,
+.displaySatellite .map {
+  background: transparent;
+}
+
+.displayTerrain .countryOutline path,
+.displaySatellite .countryOutline path,
+.displayTerrain .countyLines path,
+.displaySatellite .countyLines path {
+  fill: transparent;
 }
