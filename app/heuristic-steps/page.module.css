@@ -1,0 +1,135 @@
+.page {
+  min-height: 100vh;
+  padding: 32px 5vw 60px;
+  color: var(--ink);
+  background: var(--green-pale);
+  font-family: var(--font-interface);
+}
+
+.header {
+  max-width: 1100px;
+  margin: 0 auto 28px;
+  padding-bottom: 16px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.kicker {
+  margin: 0 0 6px;
+  color: var(--green);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+}
+
+.title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 400;
+}
+
+.nav {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.nav a {
+  color: var(--green-mid);
+}
+
+.empty,
+.errorText {
+  max-width: 1100px;
+  margin: 40px auto;
+  color: var(--muted);
+}
+
+.errorText {
+  color: #b23a2a;
+}
+
+.content {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.routeLine {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.controls button {
+  padding: 8px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.controls button:disabled {
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.stepLabel {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.matrixScroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.matrixTable {
+  border-collapse: collapse;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.matrixTable td {
+  padding: 5px 7px;
+  border: 1px solid var(--line);
+  text-align: center;
+}
+
+.pivotRow td {
+  background: color-mix(in srgb, var(--green-soft) 60%, var(--surface));
+}
+
+.pivotColumn {
+  background: color-mix(in srgb, var(--green-soft) 60%, var(--surface));
+  font-weight: 600;
+}
+
+.result {
+  margin-top: 10px;
+  font-size: 16px;
+}
+
+.result strong {
+  color: var(--green-mid);
+  font-size: 20px;
+}

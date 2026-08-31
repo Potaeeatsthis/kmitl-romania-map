@@ -1,5 +1,6 @@
 // components/search/RomaniaSearch.test.tsx
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -47,7 +48,7 @@ describe("RomaniaSearch", () => {
 
     const listbox = screen.getByRole("listbox");
 
-    expect(within(listbox).getAllByRole("option").map((option) => option.textContent)).toEqual([
+    expect(within(listbox).getAllByRole("option").map((option: HTMLElement) => option.textContent)).toEqual([
       "Arad",
     ]);
   });

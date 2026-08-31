@@ -2,8 +2,11 @@
 
 import { romaniaGraph } from "../romaniaGraph";
 import type {
+  ConductanceEdge,
   DiscoveredNode,
+  EliminationStep,
   FrontierNode,
+  HeuristicExplanation,
   SearchResponse,
   SearchResult,
   SearchStep,
@@ -12,6 +15,7 @@ import type {
 type WasmModule = {
   default: (input?: { module_or_path: string | URL }) => Promise<unknown>;
   searchPairJson: (start: number, goal: number) => string;
+  explainCurrentFlowJson: (start: number, goal: number) => string;
 };
 
 let wasmModulePromise: Promise<WasmModule> | null = null;
@@ -50,6 +54,18 @@ export async function runSearch(start: number, goal: number): Promise<SearchResp
   return parseSearchResponse(wasm.searchPairJson(start, goal));
 }
 
+export async function explainCurrentFlow(
+  start: number,
+  goal: number,
+): Promise<HeuristicExplanation> {
+  if (!isCityIndex(start) || !isCityIndex(goal)) {
+    throw new Error("Start and destination must be valid city indices.");
+  }
+
+  const wasm = await loadWasm();
+  return parseHeuristicExplanation(wasm.explainCurrentFlowJson(start, goal));
+}
+
 export function parseSearchResponse(json: string): SearchResponse {
   let result: unknown;
 
@@ -63,10 +79,65 @@ export function parseSearchResponse(json: string): SearchResponse {
   return result;
 }
 
+export function parseHeuristicExplanation(json: string): HeuristicExplanation {
+  let result: unknown;
+
+  try {
+    result = JSON.parse(json);
+  } catch {
+    throw new Error("Rust returned invalid JSON.");
+  }
+
+  assertHeuristicExplanation(result);
+  return result;
+}
+
 function assertSearchResponse(value: unknown): asserts value is SearchResponse {
   if (!isRecord(value) || !isSearchResult(value.ucs) || !isSearchResult(value.astar)) {
     throw new Error("Rust returned an unexpected search result format.");
   }
+}
+
+function assertHeuristicExplanation(value: unknown): asserts value is HeuristicExplanation {
+  if (
+    !isRecord(value) ||
+    !isCityIndex(value.start) ||
+    !isCityIndex(value.goal) ||
+    !Array.isArray(value.conductances) ||
+    !value.conductances.every(isConductanceEdge) ||
+    !isMatrix(value.laplacian) ||
+    !Array.isArray(value.steps) ||
+    !value.steps.every(isEliminationStep) ||
+    !isNonNegativeNumber(value.effective_resistance)
+  ) {
+    throw new Error("Rust returned an unexpected heuristic explanation format.");
+  }
+}
+
+function isConductanceEdge(value: unknown): value is ConductanceEdge {
+  return (
+    isRecord(value) &&
+    isCityIndex(value.city_a) &&
+    isCityIndex(value.city_b) &&
+    isNonNegativeInteger(value.distance) &&
+    isNonNegativeNumber(value.conductance)
+  );
+}
+
+function isEliminationStep(value: unknown): value is EliminationStep {
+  return (
+    isRecord(value) &&
+    isNonNegativeInteger(value.pivot_column) &&
+    isNonNegativeInteger(value.pivot_row) &&
+    isMatrix(value.matrix_after)
+  );
+}
+
+function isMatrix(value: unknown): value is number[][] {
+  return (
+    Array.isArray(value) &&
+    value.every((row) => Array.isArray(row) && row.every((cell) => typeof cell === "number"))
+  );
 }
 
 function isSearchResult(value: unknown): value is SearchResult {

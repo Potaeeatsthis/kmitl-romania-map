@@ -34,3 +34,25 @@ export interface SearchResponse {
   ucs: SearchResult;
   astar: SearchResult;
 }
+
+export interface ConductanceEdge {
+  city_a: number;
+  city_b: number;
+  distance: number;
+  conductance: number;
+}
+
+export interface EliminationStep {
+  pivot_column: number;
+  pivot_row: number;
+  matrix_after: number[][];
+}
+
+export interface HeuristicExplanation {
+  start: number;
+  goal: number;
+  conductances: ConductanceEdge[];
+  laplacian: number[][];
+  steps: EliminationStep[];
+  effective_resistance: number;
+}

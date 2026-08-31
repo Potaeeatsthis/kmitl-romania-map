@@ -1,0 +1,162 @@
+.svg {
+  /* ---- self-contained theme tokens: light ---- */
+  --ink: #102a1e;
+  --muted: #526d60;
+  --green: #137a47;
+  --green-dark: #0b5631;
+  --green-bright: #00ed64;
+  --green-mid: #00684a;
+  --green-soft: #cfe7d8;
+  --green-pale: #edf8f1;
+  --line: #c9dfd2;
+  --surface: #ffffff;
+  --map-surface: #f5f8f6;
+  --road-casing: #ffffff;
+  --road-center: #aabbb1;
+  --city-stroke: #557867;
+  --county-fill: #e4f0e8;
+  --county-line: #c5dacd;
+  --country-outline: #9ebbaa;
+  --considered-line: #b7862e;
+  --considered-text: #8a641f;
+  --considered-fill: #f0dcb0;
+
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  background: var(--map-surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* ---- self-contained theme tokens: dark ---- */
+:global(html[data-theme="dark"]) .svg {
+  --ink: #d6d7da;
+  --muted: #a9adb5;
+  --green: #00ed64;
+  --green-dark: #00ed64;
+  --green-bright: #00ed64;
+  --green-mid: #eeeeee;
+  --green-soft: #2d3a2a;
+  --green-pale: #272525;
+  --line: #393e46;
+  --surface: #242222;
+  --map-surface: #1b1919;
+  --road-casing: #2c2a2a;
+  --road-center: #555c66;
+  --city-stroke: #8a919b;
+  --county-fill: #201e1e;
+  --county-line: #32343a;
+  --country-outline: #555c66;
+  --considered-line: #d6a85f;
+  --considered-text: #e8c98a;
+  --considered-fill: #3a2f1a;
+}
+
+/* ---- base map layers ---- */
+
+.countyLines path {
+  fill: var(--county-fill);
+  stroke: var(--county-line);
+  stroke-width: 0.8;
+}
+
+.countryOutline path {
+  fill: none;
+  stroke: var(--country-outline);
+  stroke-width: 2.2;
+}
+
+.roads .roadCasing {
+  fill: none;
+  stroke: var(--road-casing);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.roads .roadCenter {
+  fill: none;
+  stroke: var(--road-center);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+/* the final route, drawn as a thick continuous highlighted line */
+.pathRoads .roadPath {
+  fill: none;
+  stroke: var(--green-mid);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.92;
+}
+
+/* the single edge from the current focus node to the chosen next node */
+.roadChosen {
+  fill: none;
+  stroke: var(--green-dark);
+  stroke-width: 5.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1 0;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--green-mid) 45%, transparent));
+}
+
+/* ---- markers ---- */
+
+.markerHalo {
+  fill: none;
+  opacity: 0.35;
+}
+
+.markerNode {
+  stroke-width: 2;
+  rx: 4;
+}
+
+.markerLabel {
+  font: 600 12px var(--font-interface, sans-serif);
+  paint-order: stroke;
+  stroke: var(--map-surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+.markerNote {
+  font: 600 10.5px var(--font-mono, monospace);
+  paint-order: stroke;
+  stroke: var(--map-surface);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+}
+
+/* focus: the node we're standing at */
+.marker_focus .markerHalo { fill: var(--green-dark); opacity: 0.16; }
+.marker_focus .markerNode { fill: var(--surface); stroke: var(--green-dark); stroke-width: 2.6; }
+.marker_focus .markerLabel { fill: var(--green-dark); font-weight: 700; }
+.marker_focus .markerNote { fill: var(--green-dark); }
+
+/* chosen: the neighbor A* actually expands next */
+.marker_chosen .markerHalo { fill: var(--green-mid); opacity: 0.22; }
+.marker_chosen .markerNode { fill: var(--green-mid); stroke: var(--green-dark); }
+.marker_chosen .markerLabel { fill: var(--green-mid); font-weight: 700; }
+.marker_chosen .markerNote { fill: var(--green-mid); }
+
+/* considered: frontier city that lost out */
+.marker_considered .markerHalo { fill: var(--considered-line); opacity: 0.14; }
+.marker_considered .markerNode { fill: var(--considered-fill); stroke: var(--considered-line); }
+.marker_considered .markerLabel { fill: var(--considered-text); }
+.marker_considered .markerNote { fill: var(--considered-text); }
+
+/* path: any other city on the final route, shown for context in the overview */
+.marker_path .markerHalo { display: none; }
+.marker_path .markerNode { fill: var(--surface); stroke: var(--green); stroke-width: 1.6; opacity: 0.8; }
+.marker_path .markerLabel { fill: var(--muted); font-weight: 500; }
+
+/* goal */
+.marker_goal .markerHalo { fill: var(--green-dark); opacity: 0.2; }
+.marker_goal .markerNode { fill: var(--green-dark); stroke: var(--green-dark); }
+.marker_goal .markerLabel { fill: var(--green-dark); font-weight: 700; }
