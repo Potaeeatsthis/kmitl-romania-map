@@ -169,7 +169,9 @@ function SummaryView({
 
       <section className={styles.card}>
         <h2>1. Conductance of every road</h2>
-        <div className={styles.kclFormula}>G = 1 / R (Ω⁻¹)</div>
+        <div className={styles.kclFormula}>
+          G = 1 / R (Ω<sup>−1</sup>)
+        </div>
         <div className={styles.tableScroll}>
           <table className={styles.table}>
             <thead>
@@ -201,7 +203,9 @@ function SummaryView({
           <strong>{goalName} at 0 V</strong> (grounded). At every other node, current in = current
           out:
         </p>
-        <div className={styles.kclFormula}>Σⱼ Gᵢⱼ (Vᵢ − Vⱼ) = Iᵢ</div>
+        <div className={styles.kclFormula}>
+          Σ<sub>j</sub> G<sub>ij</sub> (V<sub>i</sub> − V<sub>j</sub>) = I<sub>i</sub>
+        </div>
       </section>
 
       {nodesToAnalyze.map((cityId, index) => {

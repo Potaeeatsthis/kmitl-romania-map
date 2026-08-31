@@ -1,4 +1,6 @@
 .page {
+  --font-mono: "Departure Mono", "Courier New", monospace;
+
   min-height: 100vh;
   padding: 32px 5vw 60px;
   color: var(--ink);
