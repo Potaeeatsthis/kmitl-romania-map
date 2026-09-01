@@ -1,0 +1,579 @@
+.page {
+  min-height: 100vh;
+  padding: 32px 5vw 60px;
+  color: var(--ink);
+  background: var(--green-pale);
+  font-family: var(--font-interface);
+}
+
+.header {
+  max-width: 1400px;
+  margin: 0 auto 28px;
+  padding-bottom: 16px;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.kicker {
+  margin: 0 0 6px;
+  color: var(--green);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
+
+.title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 400;
+}
+
+.nav {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.nav a {
+  color: var(--green-mid);
+}
+
+.empty,
+.errorText {
+  max-width: 1400px;
+  margin: 40px auto;
+  color: var(--muted);
+}
+
+.errorText {
+  color: #b23a2a;
+}
+
+.content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.routeLine {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.sectionDivider {
+  margin: 10px 0 -4px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--green-dark);
+}
+
+.card {
+  padding: 24px 26px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 20px rgba(19, 122, 71, 0.06);
+}
+
+.card h2 {
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.nodeTitle {
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.voltageTag {
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--green-pale);
+  border: 1px solid var(--green-mid);
+  color: var(--green-mid);
+  font-size: 11px;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+}
+
+.sourceTag {
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--green-mid);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.narrative {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.hint {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.setupText {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.kclFormula {
+  margin: 10px 0 12px;
+  padding: 14px 18px;
+  border-radius: 8px;
+  border: 1px dashed var(--green-mid);
+  background: var(--green-pale);
+  font-family: var(--font-mono, monospace);
+  font-size: 15px;
+  text-align: center;
+  color: var(--green-dark);
+}
+
+.kclFormula strong {
+  color: var(--green-mid);
+}
+
+/* ---- legend ---- */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 10px 0 16px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 2px solid;
+  display: inline-block;
+}
+
+.legendFocus { border-color: var(--green-dark); background: var(--surface); }
+.legendChosen { border-color: var(--green-mid); background: color-mix(in srgb, var(--green-mid) 30%, var(--surface)); }
+.legendConsidered { border-color: #b7862e; background: color-mix(in srgb, #b7862e 25%, var(--surface)); }
+
+.legendSwatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legendHot { background: #d97a1f; }
+.legendCold { background: #1f7ea8; }
+
+.legendDotIcon {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00ed64;
+  box-shadow: 0 0 4px #00ed64;
+  display: inline-block;
+}
+
+/* ---- tables ---- */
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.table thead th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.table tbody tr:nth-child(even) {
+  background: var(--green-pale);
+}
+
+.chosenRow {
+  background: color-mix(in srgb, var(--green-soft) 45%, var(--surface)) !important;
+  font-weight: 600;
+}
+
+/* ---- KCL block ---- */
+
+.kclBlock {
+  padding: 16px 18px;
+  border-radius: 8px;
+  background: var(--green-pale);
+}
+
+.kclTitle {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kclTermBlock {
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dotted var(--line);
+}
+
+.kclTermBlock:last-of-type {
+  border-bottom: none;
+}
+
+.kclTermLine {
+  margin: 0 0 4px;
+  padding-left: 2px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.kclTermIndex {
+  color: var(--muted);
+}
+
+.kclTermNote {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.kclSumLine {
+  margin: 10px 0 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.kclSumLine strong {
+  color: var(--green-mid);
+}
+
+.kclCheckOk {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--green-mid);
+  font-weight: 500;
+}
+
+.kclCheckFail {
+  margin: 0;
+  font-size: 12.5px;
+  color: #b23a2a;
+  font-weight: 500;
+}
+
+/* ---- step headings ---- */
+
+.stepHeading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepBadge {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--green-mid);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---- worked-arithmetic blocks, one substitution per line ---- */
+
+.derivationLabel {
+  margin: 16px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+.derivationBlock {
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: var(--green-pale);
+  border: 1px dashed var(--line);
+}
+
+.derivationLine {
+  margin: 0 0 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.derivationResult {
+  margin: 6px 0 0;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.derivationResult strong {
+  color: var(--green-mid);
+}
+
+/* ---- bracket-style matrix, like real math notation: [ ... ] drawn
+   around a scrollable table with big square-bracket borders ---- */
+
+.matrixBracketOuter {
+  position: relative;
+  margin: 14px 0 18px;
+  padding: 0 16px;
+}
+
+.matrixBracketOuter::before,
+.matrixBracketOuter::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 9px;
+  border-top: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+}
+
+.matrixBracketOuter::before {
+  left: 0;
+  border-left: 3px solid var(--ink);
+}
+
+.matrixBracketOuter::after {
+  right: 0;
+  border-right: 3px solid var(--ink);
+}
+
+.matrixBracketScroll {
+  overflow-x: auto;
+  padding: 8px 6px;
+}
+
+.bracketTable {
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.bracketTable th,
+.bracketTable td {
+  padding: 6px 10px;
+  text-align: center;
+}
+
+.bracketTable thead th {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+}
+
+.bracketTable tbody th {
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-align: right;
+  padding-right: 10px;
+}
+
+.diagCell {
+  font-weight: 700;
+  color: var(--green-dark);
+  background: color-mix(in srgb, var(--green-soft) 45%, var(--surface));
+}
+
+.matrixHighlightCol {
+  background: color-mix(in srgb, var(--green-bright) 18%, var(--surface));
+  font-weight: 700;
+  color: var(--green-dark);
+}
+
+.matrixHighlightRow {
+  background: color-mix(in srgb, #f4c569 22%, var(--surface));
+}
+
+.matrixHighlightLabel {
+  color: var(--green-dark) !important;
+  font-weight: 700 !important;
+}
+
+.matrixDividerAfter {
+  border-right: 2px solid var(--ink);
+}
+
+/* ---- collapsible full-size matrices ---- */
+
+.matrixDetails {
+  margin: 12px 0 18px;
+}
+
+.matrixSummary {
+  cursor: pointer;
+  padding: 10px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--green-pale);
+  color: var(--green-dark);
+  font-size: 12.5px;
+  font-weight: 600;
+  list-style: none;
+}
+
+.matrixSummary::-webkit-details-marker {
+  display: none;
+}
+
+.matrixSummary::before {
+  content: "▸ ";
+}
+
+.matrixDetails[open] .matrixSummary::before {
+  content: "▾ ";
+}
+
+.matrixDetails[open] .matrixSummary {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+
+/* ---- small per-terminal local matrix ---- */
+
+.localMatrixBlock {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ---- explored-but-not-chosen block ---- */
+
+.exploredBlock {
+  margin: 4px 0 20px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  background: color-mix(in srgb, #f4c569 22%, var(--surface));
+}
+
+.exploredTitle {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #7a5a1c;
+}
+
+.exploredIntro {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #7a5a1c;
+}
+
+.exploredNote {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: #7a5a1c;
+  line-height: 1.5;
+}
+
+/* ---- candidate comparison table ---- */
+
+.candidateTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.candidateTable th,
+.candidateTable td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.candidateTable thead th {
+  color: #7a5a1c;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.candidateTable tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+}
+
+.derivationSubLabel {
+  margin: 14px 0 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.kclTermSetup {
+  margin: 0 0 6px;
+  padding-left: 2px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.kclTermSetup strong {
+  color: var(--green-mid);
+}

@@ -63,6 +63,11 @@ export default function HeuristicStepsPage() {
       ? `/heuristic-summary?start=${startCity}&goal=${destinationCity}`
       : "/heuristic-summary";
 
+  const circuitHref =
+    startCity !== null && destinationCity !== null
+      ? `/circuit-flow?start=${startCity}&goal=${destinationCity}`
+      : "/circuit-flow";
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -73,6 +78,7 @@ export default function HeuristicStepsPage() {
         <nav className={styles.nav}>
           <Link href="/">← Back to map</Link>
           <Link href={summaryHref}>View summary →</Link>
+          <Link href={circuitHref}>⚡ Circuit view →</Link>
         </nav>
       </header>
 

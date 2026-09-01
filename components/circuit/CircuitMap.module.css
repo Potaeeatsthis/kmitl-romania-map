@@ -1,0 +1,154 @@
+.svg {
+  --ink: #102a1e;
+  --muted: #526d60;
+  --green: #137a47;
+  --green-dark: #0b5631;
+  --green-bright: #00ed64;
+  --green-mid: #00684a;
+  --green-pale: #edf8f1;
+  --line: #c9dfd2;
+  --surface: #ffffff;
+  --map-surface: #f5f8f6;
+  --county-fill: #e4f0e8;
+  --county-line: #c5dacd;
+  --country-outline: #9ebbaa;
+  --wire-faint: #b9c9c0;
+  --considered-line: #b7862e;
+  --volt-hot: #d97a1f;
+  --volt-cold: #1f7ea8;
+
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  max-height: 460px;
+  background: var(--map-surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+:global(html[data-theme="dark"]) .svg {
+  --ink: #d6d7da;
+  --muted: #a9adb5;
+  --green: #00ed64;
+  --green-dark: #00ed64;
+  --green-bright: #00ed64;
+  --green-mid: #eeeeee;
+  --green-pale: #272525;
+  --line: #393e46;
+  --surface: #242222;
+  --map-surface: #1b1919;
+  --county-fill: #201e1e;
+  --county-line: #32343a;
+  --country-outline: #555c66;
+  --wire-faint: #3c4642;
+  --considered-line: #d6a85f;
+  --volt-hot: #e8a24d;
+  --volt-cold: #4db6d9;
+}
+
+.countyLines path {
+  fill: var(--county-fill);
+  stroke: var(--county-line);
+  stroke-width: 0.8;
+}
+
+.countryOutline path {
+  fill: none;
+  stroke: var(--country-outline);
+  stroke-width: 2.2;
+}
+
+/* ---- label pills: sit behind every text label so overlapping wires,
+   county borders, or other labels don't bleed through and make text
+   unreadable when two labels land close together ---- */
+.labelPill {
+  fill: var(--map-surface);
+  opacity: 0.88;
+  stroke: var(--line);
+  stroke-width: 0.6;
+}
+
+/* ---- edges ---- */
+
+.wireLine {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge_faint .wireLine {
+  stroke: var(--wire-faint);
+  stroke-width: 1.6;
+  opacity: 0.5;
+}
+
+.edge_considered .wireLine {
+  stroke: var(--considered-line);
+  stroke-width: 3;
+  opacity: 0.85;
+}
+
+.edge_hot .wireLine {
+  stroke: var(--green-mid);
+  stroke-width: 4.5;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--green-bright) 40%, transparent));
+}
+
+.resistorSymbol {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.edge_hot .resistorSymbol { stroke: var(--green-dark); }
+.edge_considered .resistorSymbol { stroke: var(--considered-line); }
+
+.edgeLabel {
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  dominant-baseline: middle;
+}
+
+.edge_hot .edgeLabel { fill: var(--green-dark); font-weight: 700; }
+.edge_considered .edgeLabel { fill: var(--considered-line); }
+
+.currentDot { fill: var(--green-bright); }
+.edge_hot .currentDot {
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--green-bright) 70%, transparent));
+}
+.edge_considered .currentDot { fill: var(--considered-line); }
+.edge_faint .currentDot { fill: var(--wire-faint); opacity: 0.6; }
+
+/* ---- nodes ---- */
+
+.nodeCircle {
+  stroke-width: 2;
+  fill: color-mix(in srgb, var(--volt-hot) calc(var(--v-t) * 100%), var(--volt-cold));
+}
+
+.node_focus .nodeCircle { stroke: var(--green-dark); stroke-width: 3; }
+.node_chosen .nodeCircle { stroke: var(--green-mid); stroke-width: 2.6; }
+.node_considered .nodeCircle { stroke: var(--considered-line); stroke-width: 2; stroke-dasharray: 2 1.5; }
+.node_path .nodeCircle { stroke: var(--ink); stroke-width: 1.6; opacity: 0.85; }
+.node_goal .nodeCircle { stroke: var(--ink); stroke-width: 3; }
+
+.nodeLabel {
+  font-family: var(--font-interface, sans-serif);
+  font-weight: 600;
+  fill: var(--ink);
+  dominant-baseline: middle;
+}
+
+.nodeVoltage {
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  fill: var(--muted);
+  dominant-baseline: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currentDot { filter: none; }
+}
