@@ -28,6 +28,8 @@ instead, because nobody will ever arrive here with a string to search for.
 | *(no error text)* App loads pre-populated with Arad → Bucharest instead of a blank slate; a single city click searches against a stale/default city; no way to clear a selection | `search-ui-no-clean-slate-reset` | §10 |
 | *(no error text)* Clicking a city on the map does nothing once the map is zoomed in; works fine at default zoom | `search-map-zoom-blocks-city-clicks` | §11 |
 
+| `useSearchParams() should be wrapped in a suspense boundary` during static export | `calculation-missing-suspense` | §12 |
+
 ## Step 2 — Apply the known fix
 
 Read `docs/rootcause/<slug>.json` for the symptom, rootcause, and fix. Open

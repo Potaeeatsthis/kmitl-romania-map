@@ -584,3 +584,14 @@ mid-pinch.
   confirms §9's rolling-restart and this fix compose correctly while zoomed.
 
 All four are in `scripts/verify_invariants.sh`'s frontend test-inventory list.
+
+
+## 12 — Calculation page fails static export
+
+**Symptom:** `next build` reports that `useSearchParams()` needs a Suspense boundary on `/heuristic-summary`.
+
+**Diagnose:** Development rendering succeeds, but static export suspends while resolving browser query parameters. Check the route for a parent Suspense or loading boundary.
+
+**Fix:** Add `app/heuristic-summary/loading.tsx`; the shared `CalculationPage` shell wraps the new teaching routes in Suspense.
+
+**Prevent:** Run `npm run build`, already part of CI. The build itself exercises this requirement; unit tests and typechecking do not. See `docs/rootcause/calculation-missing-suspense.json`.

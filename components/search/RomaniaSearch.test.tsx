@@ -141,6 +141,16 @@ describe("RomaniaSearch", () => {
     expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
   });
 
+  it("keeps the map key visible without a disclosure control", () => {
+    render(<RomaniaSearch />);
+
+    const legend = screen.getByRole("complementary", { name: "Map key" });
+
+    expect(legend).toHaveTextContent("Not discovered");
+    expect(legend).toHaveTextContent("Final optimal path");
+    expect(screen.queryByRole("button", { name: "Map key" })).not.toBeInTheDocument();
+  });
+
   it("uses a Departure Mono black star to enable and save dark mode", async () => {
     const user = userEvent.setup();
     render(<RomaniaSearch />);

@@ -12,8 +12,11 @@ const ITEMS = [
 
 export default function MapLegend() {
   return (
-    <details className={styles.legend}>
-      <summary><LegendIcon />Map key</summary>
+    <aside className={styles.legend} aria-labelledby="map-legend-title">
+      <h2 className={styles.legendTitle} id="map-legend-title">
+        <LegendIcon />
+        Map key
+      </h2>
       <div className={styles.legendContent}>
         {ITEMS.map((item) => (
           <div className={styles.legendRow} key={item.label}>
@@ -22,7 +25,7 @@ export default function MapLegend() {
           </div>
         ))}
       </div>
-    </details>
+    </aside>
   );
 }
 
