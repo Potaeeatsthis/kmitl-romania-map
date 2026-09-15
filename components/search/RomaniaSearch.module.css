@@ -30,6 +30,9 @@
   --county-fill: #e4f0e8;
   --county-line: #c5dacd;
   --country-outline: #9ebbaa;
+  --neighbor-fill: #ece9e3;
+  --neighbor-line: #b8b2a3;
+  --sea-fill: #dbe9f2;
   --panel-surface: rgba(255, 255, 255, 0.97);
   --input-placeholder: #5e7469;
   --input-hover: #8db9a0;
@@ -83,6 +86,9 @@
   --county-fill: #201e1e;
   --county-line: #32343a;
   --country-outline: #555c66;
+  --neighbor-fill: #242424;
+  --neighbor-line: #4a4a4e;
+  --sea-fill: #16232b;
   --panel-surface: rgba(36, 34, 34, 0.97);
   --input-placeholder: #a9adb5;
   --input-hover: #137a47;

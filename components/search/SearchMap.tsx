@@ -9,6 +9,7 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
+import { neighboringCountries, seaAreas } from "../../lib/neighboringContext";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import { getRoadPathD, polylineMidpoint, getRoadPoints } from "../../lib/roadPath";
 import { getRouteCountyDots } from "../../lib/routeCountyDots";
@@ -48,7 +49,51 @@ function GoogleBackgroundMap({ mapType }: { mapType: "terrain" | "satellite" }) 
   );
 }
 
-const MAP_VIEW_BOX = { x: 120, y: 50, width: 900, height: 650 } as const;
+// Padded out from Romania's own tight bounds (120,50,900,650) so neighboring
+// countries and the Black Sea have room to render as visual-only context.
+// This is a *reference* shape, not the final one: getEffectiveMapExtent below
+// stretches whichever dimension is needed so it always matches the panel's
+// own rendered aspect ratio -- see the comment there for why.
+const BASE_MAP_EXTENT = { x: -60, y: -60, width: 1200, height: 870 } as const;
+type MapExtent = { x: number; y: number; width: number; height: number };
+
+// The SVG's viewBox is a fixed shape (BASE_MAP_EXTENT's aspect ratio, ~1.38),
+// but the panel it renders into is whatever shape the browser window makes it
+// -- often much wider. With preserveAspectRatio="meet" that mismatch always
+// left empty bars on one axis (the entire viewBox is shown, just not filling
+// the panel), and "slice" (fill by cropping) was tried and rejected because
+// it crops real map content. The only way to have neither bars nor cropping
+// is for the viewBox itself to already match the panel's shape: widen (or
+// heighten) BASE_MAP_EXTENT, centered on the same point, so its aspect ratio
+// equals the panel's. Falls back to the unmodified reference shape until the
+// panel has actually been measured (and in tests, where ResizeObserver does
+// not exist) -- a brief/absent "meet" gap on first paint beats a layout that
+// depends on a browser API jsdom doesn't implement.
+// The neighboring-country/sea backdrop (lib/neighboringContext.ts) is pre-generated
+// for a fixed geographic window (see CLIP_BOUNDS in scripts/fetch_neighboring_context.mjs)
+// -- it isn't fetched live, so stretching the extent further than that window
+// covers would reveal genuinely blank territory (flat backdrop grey, no real
+// border data) rather than more real map. These caps match that window (with
+// a safety margin) so the stretch below never asks for more than we have.
+const MAP_MAX_ASPECT = 2.35;
+const MAP_MIN_ASPECT = 0.8;
+
+function getEffectiveMapExtent(containerAspect: number | null): MapExtent {
+  if (!containerAspect || !Number.isFinite(containerAspect)) return BASE_MAP_EXTENT;
+
+  const clampedAspect = Math.min(MAP_MAX_ASPECT, Math.max(MAP_MIN_ASPECT, containerAspect));
+  const baseAspect = BASE_MAP_EXTENT.width / BASE_MAP_EXTENT.height;
+  const centerX = BASE_MAP_EXTENT.x + BASE_MAP_EXTENT.width / 2;
+  const centerY = BASE_MAP_EXTENT.y + BASE_MAP_EXTENT.height / 2;
+
+  if (clampedAspect > baseAspect) {
+    const width = BASE_MAP_EXTENT.height * clampedAspect;
+    return { x: centerX - width / 2, y: BASE_MAP_EXTENT.y, width, height: BASE_MAP_EXTENT.height };
+  }
+  const height = BASE_MAP_EXTENT.width / clampedAspect;
+  return { x: BASE_MAP_EXTENT.x, y: centerY - height / 2, width: BASE_MAP_EXTENT.width, height };
+}
+
 const MAP_MIN_ZOOM = 1;
 const MAP_MAX_ZOOM = 2;
 const MAP_ZOOM_STEP = 0.25;
@@ -69,10 +114,13 @@ type PanGesture = {
   moved: boolean;
 };
 
+// BASE_MAP_EXTENT's center, not the (possibly stretched) effective extent's --
+// getEffectiveMapExtent always stretches symmetrically around the same center
+// point, so the two are always equal and this stays a plain constant.
 const INITIAL_MAP_VIEWPORT: MapViewport = {
   zoom: MAP_MIN_ZOOM,
-  centerX: MAP_VIEW_BOX.x + MAP_VIEW_BOX.width / 2,
-  centerY: MAP_VIEW_BOX.y + MAP_VIEW_BOX.height / 2,
+  centerX: BASE_MAP_EXTENT.x + BASE_MAP_EXTENT.width / 2,
+  centerY: BASE_MAP_EXTENT.y + BASE_MAP_EXTENT.height / 2,
 };
 
 const mapDisplayModes: { value: MapDisplayMode; label: string }[] = [
@@ -101,14 +149,14 @@ function clampMapZoom(zoom: number) {
   return Math.min(MAP_MAX_ZOOM, Math.max(MAP_MIN_ZOOM, zoom));
 }
 
-function clampMapViewport(viewport: MapViewport): MapViewport {
+function clampMapViewport(viewport: MapViewport, extent: MapExtent): MapViewport {
   const zoom = clampMapZoom(viewport.zoom);
-  const width = MAP_VIEW_BOX.width / zoom;
-  const height = MAP_VIEW_BOX.height / zoom;
-  const minCenterX = MAP_VIEW_BOX.x + width / 2;
-  const maxCenterX = MAP_VIEW_BOX.x + MAP_VIEW_BOX.width - width / 2;
-  const minCenterY = MAP_VIEW_BOX.y + height / 2;
-  const maxCenterY = MAP_VIEW_BOX.y + MAP_VIEW_BOX.height - height / 2;
+  const width = extent.width / zoom;
+  const height = extent.height / zoom;
+  const minCenterX = extent.x + width / 2;
+  const maxCenterX = extent.x + extent.width - width / 2;
+  const minCenterY = extent.y + height / 2;
+  const maxCenterY = extent.y + extent.height - height / 2;
 
   return {
     zoom,
@@ -117,9 +165,9 @@ function clampMapViewport(viewport: MapViewport): MapViewport {
   };
 }
 
-function getMapViewBox(viewport: MapViewport) {
-  const width = MAP_VIEW_BOX.width / viewport.zoom;
-  const height = MAP_VIEW_BOX.height / viewport.zoom;
+function getMapViewBox(viewport: MapViewport, extent: MapExtent) {
+  const width = extent.width / viewport.zoom;
+  const height = extent.height / viewport.zoom;
   const x = viewport.centerX - width / 2;
   const y = viewport.centerY - height / 2;
   const values = [x, y, width, height].map((value) => Number(value.toFixed(2)));
@@ -135,6 +183,11 @@ export default function SearchMap() {
   const [mapViewport, setMapViewport] = useState<MapViewport>(INITIAL_MAP_VIEWPORT);
   const [isMapPanning, setIsMapPanning] = useState(false);
   const [displayMode, setDisplayMode] = useState<MapDisplayMode>("default");
+  // Null until the panel has actually been measured (and permanently null in
+  // tests, where jsdom has no ResizeObserver) -- getEffectiveMapExtent treats
+  // that as "use the fixed reference shape, unmodified".
+  const [containerAspect, setContainerAspect] = useState<number | null>(null);
+  const mapExtent = useMemo(() => getEffectiveMapExtent(containerAspect), [containerAspect]);
   const mapRef = useRef<SVGSVGElement>(null);
   const mapTouchesRef = useRef(new Map<number, MapTouchPoint>());
   const pinchGestureRef = useRef<PinchGesture | null>(null);
@@ -173,12 +226,37 @@ export default function SearchMap() {
       setMapViewport((viewport) => clampMapViewport({
         ...viewport,
         zoom: viewport.zoom * Math.exp(exponent),
-      }));
+      }, mapExtent));
     };
 
     map.addEventListener("wheel", handleTrackpadZoom, { passive: false });
     return () => map.removeEventListener("wheel", handleTrackpadZoom);
+  }, [mapExtent]);
+
+  // Keeps the SVG's own viewBox always matching the panel's actual rendered
+  // shape, so preserveAspectRatio="meet" never has empty space left over on
+  // either axis and nothing needs to crop -- see getEffectiveMapExtent above.
+  // Absent in tests (jsdom has no ResizeObserver): containerAspect just stays
+  // null there, which getEffectiveMapExtent already treats as "unmodified".
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver((entries) => {
+      const { width, height } = entries[0].contentRect;
+      if (width <= 0 || height <= 0) return;
+      setContainerAspect(width / height);
+    });
+    observer.observe(map);
+    return () => observer.disconnect();
   }, []);
+
+  // The panel can resize (window resize, sidebar toggle) while zoomed or panned
+  // away from center -- re-clamp so the viewport never ends up outside the
+  // extent that resize just changed.
+  useEffect(() => {
+    setMapViewport((viewport) => clampMapViewport(viewport, mapExtent));
+  }, [mapExtent]);
 
   // Only a real reset() sets BOTH cities to null at once -- the rolling-restart on a
   // third click clears destinationCity but sets startCity to the newly clicked city,
@@ -210,8 +288,8 @@ export default function SearchMap() {
   // docs/rootcause/search-map-zoom-blocks-city-clicks.json.
   const beginMapPan = (event: ReactPointerEvent<SVGSVGElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const viewWidth = MAP_VIEW_BOX.width / mapZoom;
-    const viewHeight = MAP_VIEW_BOX.height / mapZoom;
+    const viewWidth = mapExtent.width / mapZoom;
+    const viewHeight = mapExtent.height / mapZoom;
     const renderedScale = Math.min(rect.width / viewWidth, rect.height / viewHeight);
     if (!Number.isFinite(renderedScale) || renderedScale <= 0) return;
 
@@ -267,7 +345,7 @@ export default function SearchMap() {
       setMapViewport(clampMapViewport({
         ...pinchGesture.startViewport,
         zoom: pinchGesture.startViewport.zoom * (distance / pinchGesture.startDistance),
-      }));
+      }, mapExtent));
       suppressMapClickUntilRef.current = Date.now() + 500;
       event.preventDefault();
       return;
@@ -291,7 +369,7 @@ export default function SearchMap() {
       zoom: panGesture.startViewport.zoom,
       centerX: panGesture.startViewport.centerX - deltaX * panGesture.unitsPerPixel,
       centerY: panGesture.startViewport.centerY - deltaY * panGesture.unitsPerPixel,
-    }));
+    }, mapExtent));
     suppressMapClickUntilRef.current = Date.now() + 500;
     event.preventDefault();
   };
@@ -324,7 +402,7 @@ export default function SearchMap() {
     setMapViewport((viewport) => clampMapViewport({
       ...viewport,
       zoom: viewport.zoom + delta,
-    }));
+    }, mapExtent));
   };
 
   const mapClassName = [
@@ -344,7 +422,7 @@ export default function SearchMap() {
       <svg
         ref={mapRef}
         className={mapClassName}
-        viewBox={getMapViewBox(mapViewport)}
+        viewBox={getMapViewBox(mapViewport, mapExtent)}
         preserveAspectRatio="xMidYMid meet"
         aria-label="Animated Romania road graph. Selectable cities set the active route field. Pinch on a touchscreen or use a touchpad to zoom, then drag to move the map."
         role="group"
@@ -366,7 +444,65 @@ export default function SearchMap() {
               <path d={path} />
             </clipPath>
           ))}
+          {/* Countries clipped to this small viewport show a hard straight cut wherever
+              their real border falls outside it -- Hungary's is the most visible since
+              its own territory reaches furthest past our frame. Fading every shape out
+              near the frame's edge (radially, from the map's own center) turns every
+              such cut into a soft vignette instead, and also blends the "meet"
+              letterbox strip into the same fade rather than a sharp color edge. */}
+          {/* An ellipse inscribed (with a little overhang) in the extent's own
+              rectangle, via gradientTransform, rather than a fixed circle --
+              extent is now a dynamic shape (see getEffectiveMapExtent), so a
+              hardcoded center/radius would vignette a wide panel off-center
+              and cut a narrow one short. */}
+          <radialGradient
+            id="neighboring-fade-gradient"
+            gradientUnits="userSpaceOnUse"
+            cx="0"
+            cy="0"
+            r="1"
+            gradientTransform={`translate(${mapExtent.x + mapExtent.width / 2} ${mapExtent.y + mapExtent.height / 2}) scale(${mapExtent.width * 0.58} ${mapExtent.height * 0.58})`}
+          >
+            <stop offset="55%" stopColor="white" stopOpacity="1" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
+          </radialGradient>
+          <mask id="neighboring-fade" maskUnits="userSpaceOnUse" x={mapExtent.x} y={mapExtent.y} width={mapExtent.width} height={mapExtent.height}>
+            <rect x={mapExtent.x} y={mapExtent.y} width={mapExtent.width} height={mapExtent.height} fill="url(#neighboring-fade-gradient)" />
+          </mask>
         </defs>
+
+        {displayMode === "default" && (
+          <g className={styles.neighboringContext} aria-hidden="true">
+            {/* Unmasked and always fully opaque -- the far corners (behind the Route
+                and Map key panels) must stay filled grey, never fade toward the panel
+                background the way the shapes below are allowed to. */}
+            <rect
+              className={styles.neighborBackdrop}
+              x={mapExtent.x}
+              y={mapExtent.y}
+              width={mapExtent.width}
+              height={mapExtent.height}
+            />
+          <g mask="url(#neighboring-fade)">
+            {seaAreas.map((path, index) => <path key={index} className={styles.seaArea} d={path} />)}
+            {neighboringCountries.map((country) =>
+              country.paths.map((path, index) => (
+                <path key={`${country.name}-${index}`} className={styles.neighborCountry} d={path} />
+              )),
+            )}
+          </g>
+            {/* Labels stay outside the fade -- they're already positioned deep inside
+                each shape (see visualCenter in the generator script), and legibility
+                matters more here than matching the vignette. */}
+            {neighboringCountries
+              .filter((country) => country.label !== null)
+              .map((country) => (
+                <text key={country.name} className={styles.neighborLabel} x={country.label!.x} y={country.label!.y}>
+                  {country.name === "Republic of Serbia" ? "Serbia" : country.name}
+                </text>
+              ))}
+          </g>
+        )}
 
         <g className={styles.countryOutline} aria-hidden="true">
           {countyOutlines.map((path, index) => <path key={index} d={path} />)}

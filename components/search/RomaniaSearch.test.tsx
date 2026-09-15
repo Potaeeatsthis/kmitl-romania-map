@@ -117,7 +117,7 @@ describe("RomaniaSearch", () => {
     const map = container.querySelector("svg[aria-label^=\"Animated Romania road graph\"]");
 
     await user.click(screen.getByRole("button", { name: "Zoom in" }));
-    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+    expect(map).toHaveAttribute("viewBox", "60 27 960 696");
 
     await user.click(screen.getByRole("button", { name: "Clear selection" }));
 
@@ -126,7 +126,7 @@ describe("RomaniaSearch", () => {
       destinationCity: null,
       data: null,
     });
-    expect(map).toHaveAttribute("viewBox", "120 50 900 650");
+    expect(map).toHaveAttribute("viewBox", "-60 -60 1200 870");
     expect(screen.queryByRole("button", { name: "Clear selection" })).not.toBeInTheDocument();
   });
 
@@ -193,15 +193,15 @@ describe("RomaniaSearch", () => {
     const zoomIn = screen.getByRole("button", { name: "Zoom in" });
     const zoomOut = screen.getByRole("button", { name: "Zoom out" });
 
-    expect(map).toHaveAttribute("viewBox", "120 50 900 650");
+    expect(map).toHaveAttribute("viewBox", "-60 -60 1200 870");
     expect(zoomOut).toBeDisabled();
 
     await user.click(zoomIn);
-    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+    expect(map).toHaveAttribute("viewBox", "60 27 960 696");
     expect(zoomOut).toBeEnabled();
 
     await user.click(zoomOut);
-    expect(map).toHaveAttribute("viewBox", "120 50 900 650");
+    expect(map).toHaveAttribute("viewBox", "-60 -60 1200 870");
     expect(zoomOut).toBeDisabled();
   });
 
@@ -249,7 +249,7 @@ describe("RomaniaSearch", () => {
     fireEvent.pointerDown(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 450, clientY: 325 });
     fireEvent.pointerMove(map!, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 550, clientY: 325 });
 
-    expect(map).toHaveAttribute("viewBox", "130 115 720 520");
+    expect(map).toHaveAttribute("viewBox", "-47.08 27 960 696");
 
     fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 550, clientY: 325 });
   });
@@ -358,7 +358,7 @@ describe("RomaniaSearch", () => {
     fireEvent.pointerMove(map!, { pointerId: 1, pointerType: "mouse", buttons: 1, clientX: 550, clientY: 325 });
     fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "mouse", button: 0, clientX: 550, clientY: 325 });
 
-    expect(map).toHaveAttribute("viewBox", "130 115 720 520");
+    expect(map).toHaveAttribute("viewBox", "-47.08 27 960 696");
     expect(useSearchStore.getState().startCity).toBeNull();
     expect(useSearchStore.getState().destinationCity).toBeNull();
   });
@@ -388,13 +388,13 @@ describe("RomaniaSearch", () => {
     });
 
     await user.click(screen.getByRole("button", { name: "Zoom in" }));
-    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+    expect(map).toHaveAttribute("viewBox", "60 27 960 696");
 
     // Route is already complete (0/12) -- this click rolling-restarts from Timisoara.
     await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
 
     expect(useSearchStore.getState()).toMatchObject({ startCity: 4, destinationCity: null });
-    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+    expect(map).toHaveAttribute("viewBox", "60 27 960 696");
   });
 
   it("zooms continuously with a two-finger pinch gesture", () => {
@@ -406,7 +406,7 @@ describe("RomaniaSearch", () => {
     fireEvent.pointerDown(map!, { pointerId: 2, pointerType: "touch", clientX: 200, clientY: 100 });
     fireEvent.pointerMove(map!, { pointerId: 2, pointerType: "touch", clientX: 250, clientY: 100 });
 
-    expect(map).toHaveAttribute("viewBox", "270 158.33 600 433.33");
+    expect(map).toHaveAttribute("viewBox", "140 85 800 580");
     expect(screen.getByRole("group", { name: "Map zoom controls, 150%" })).toBeInTheDocument();
 
     fireEvent.pointerUp(map!, { pointerId: 1, pointerType: "touch", clientX: 100, clientY: 100 });
@@ -426,7 +426,7 @@ describe("RomaniaSearch", () => {
     fireEvent(map!, wheel);
 
     expect(wheel.defaultPrevented).toBe(true);
-    expect(map).toHaveAttribute("viewBox", "210 115 720 520");
+    expect(map).toHaveAttribute("viewBox", "60 27 960 696");
     expect(screen.getByRole("group", { name: "Map zoom controls, 125%" })).toBeInTheDocument();
   });
 

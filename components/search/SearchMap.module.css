@@ -243,6 +243,34 @@
 .startCity .cityNode { stroke-dasharray: 2 1; }
 .destinationCity .cityNode { rx: 5px; }
 
+.seaArea {
+  fill: var(--sea-fill);
+  stroke: none;
+}
+
+.neighborBackdrop {
+  fill: var(--neighbor-fill);
+  stroke: none;
+}
+
+.neighborCountry {
+  fill: var(--neighbor-fill);
+  stroke: var(--neighbor-line);
+  stroke-width: 1.6;
+}
+
+.neighborLabel {
+  fill: var(--muted);
+  font: 600 12px var(--font-interface);
+  letter-spacing: 0.5px;
+  text-anchor: middle;
+  text-transform: uppercase;
+  paint-order: stroke;
+  stroke: var(--map-surface);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
 .countyLines path {
   fill: var(--county-fill);
   stroke: var(--county-line);
