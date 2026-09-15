@@ -29,15 +29,35 @@ import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
 
 const GOOGLE_MAP_CENTER = { lat: 45.9432, lng: 24.9668 };
 
-function GoogleBackgroundMap({ mapType }: { mapType: "terrain" | "satellite" }) {
+// Same equirectangular projection as scripts/lib/project.mjs (the two can't
+// share an import: one is a build-time Node script, this is browser runtime
+// code) -- inverse only, to turn the SVG-space viewport center into a
+// lat/lng. The Google background has no native tie to our own SVG
+// coordinate system, so panning/zooming the schematic overlay does nothing
+// to it unless we compute and pass an equivalent center/zoom explicitly.
+const PROJECTION = { lonScale: 91.952899, lonOffset: -1726.368333, latScale: -131.39377, latOffset: 6415.664401 };
+
+function unprojectToLatLng(x: number, y: number) {
+  return { lng: (x - PROJECTION.lonOffset) / PROJECTION.lonScale, lat: (y - PROJECTION.latOffset) / PROJECTION.latScale };
+}
+
+function GoogleBackgroundMap({
+  mapType,
+  center,
+  zoom,
+}: {
+  mapType: "terrain" | "satellite";
+  center: { lat: number; lng: number };
+  zoom: number;
+}) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) return null;
 
   return (
     <APIProvider apiKey={apiKey}>
       <GoogleMap
-        defaultCenter={GOOGLE_MAP_CENTER}
-        defaultZoom={7}
+        center={center}
+        zoom={zoom}
         mapTypeId={mapType}
         disableDefaultUI
         gestureHandling="none"
@@ -187,6 +207,9 @@ export default function SearchMap() {
   // tests, where jsdom has no ResizeObserver) -- getEffectiveMapExtent treats
   // that as "use the fixed reference shape, unmodified".
   const [containerAspect, setContainerAspect] = useState<number | null>(null);
+  // Separate from containerAspect: the Google Maps zoom-level calculation below
+  // needs the actual rendered pixel width, not just the aspect ratio.
+  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const mapExtent = useMemo(() => getEffectiveMapExtent(containerAspect), [containerAspect]);
   const mapRef = useRef<SVGSVGElement>(null);
   const mapTouchesRef = useRef(new Map<number, MapTouchPoint>());
@@ -246,6 +269,7 @@ export default function SearchMap() {
       const { width, height } = entries[0].contentRect;
       if (width <= 0 || height <= 0) return;
       setContainerAspect(width / height);
+      setContainerWidth(width);
     });
     observer.observe(map);
     return () => observer.disconnect();
@@ -279,6 +303,34 @@ export default function SearchMap() {
   const astarComplete = Boolean(data && step >= data.astar.trace.length - 1);
   const finalPath = getFinalPath(data, ucsComplete, astarComplete);
   const mapZoom = mapViewport.zoom;
+
+  // Keeps the Google Maps background (Terrain/Satellite modes) in sync with the
+  // schematic overlay's own pan/zoom -- otherwise the SVG zooms in on Romania
+  // while the imagery underneath just sits at its fixed initial view. Zoom is
+  // derived by matching how many degrees of longitude the current viewBox
+  // spans against how many degrees a Google Maps zoom level spans at the
+  // panel's actual pixel width (Google: 360deg over 256*2^zoom px).
+  // Standard (non-vector) map tiles only render at integer zoom levels, but
+  // MAP_MIN_ZOOM..MAP_MAX_ZOOM only spans a single doubling (one whole Google
+  // zoom level) in total -- rounding to the nearest integer would make nearly
+  // every zoom step land on the same tile zoom, with the one real crossing
+  // landing wherever the container width happens to put it (often right at
+  // the end, which read as "only the last zoom step does anything"). Instead,
+  // tiles are always fetched at the floor -- never sharper than needed, so
+  // `scale` below is always >= 1 and the wrapper never shrinks smaller than
+  // the panel and reveals blank edges -- and `scale` CSS-zooms those tiles
+  // continuously in between, so every step visibly moves the background,
+  // snapping back to a freshly-loaded 1x whenever floor(rawZoom) increments.
+  const googleView = useMemo(() => {
+    const center = unprojectToLatLng(mapViewport.centerX, mapViewport.centerY);
+    if (!containerWidth) return { center: GOOGLE_MAP_CENTER, zoom: 7, scale: 1 };
+    const viewWidthSvgUnits = mapExtent.width / mapViewport.zoom;
+    const lonSpanDegrees = viewWidthSvgUnits / PROJECTION.lonScale;
+    const rawZoom = Math.log2((360 * containerWidth) / (256 * lonSpanDegrees));
+    const zoom = Math.floor(rawZoom);
+    const scale = 2 ** (rawZoom - zoom);
+    return { center, zoom, scale };
+  }, [mapViewport, mapExtent, containerWidth]);
 
   // Deliberately does NOT setPointerCapture here. Capturing at pointerdown -- before
   // we know whether the gesture is a click or a drag -- redirects the click event
@@ -415,8 +467,15 @@ export default function SearchMap() {
   return (
     <div className={mapPanelClassName}>
       {displayMode !== "default" && (
-        <div className={styles.mapBackgroundImage}>
-          <GoogleBackgroundMap mapType={displayMode === "satellite" ? "satellite" : "terrain"} />
+        <div
+          className={styles.mapBackgroundImage}
+          style={{ transform: `scale(${googleView.scale})`, transformOrigin: "center center" }}
+        >
+          <GoogleBackgroundMap
+            mapType={displayMode === "satellite" ? "satellite" : "terrain"}
+            center={googleView.center}
+            zoom={googleView.zoom}
+          />
         </div>
       )}
       <svg
