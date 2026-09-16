@@ -243,6 +243,10 @@
 .startCity .cityNode { stroke-dasharray: 2 1; }
 .destinationCity .cityNode { rx: 5px; }
 
+.terrainVignette {
+  pointer-events: none;
+}
+
 .seaArea {
   fill: var(--sea-fill);
   stroke: none;

@@ -595,3 +595,120 @@ All four are in `scripts/verify_invariants.sh`'s frontend test-inventory list.
 **Fix:** Add `app/heuristic-summary/loading.tsx`; the shared `CalculationPage` shell wraps the new teaching routes in Suspense.
 
 **Prevent:** Run `npm run build`, already part of CI. The build itself exercises this requirement; unit tests and typechecking do not. See `docs/rootcause/calculation-missing-suspense.json`.
+
+
+## §13 — `terrain-border-mercator-mismatch`
+
+Rootcause file: [`rootcause/terrain-border-mercator-mismatch.json`](rootcause/terrain-border-mercator-mismatch.json)
+
+### Symptom
+
+**There is no error message.** In the Terrain map view, Google's own black
+country-border line visibly drifts away from our green SVG-drawn Romania border.
+The gap is smallest near the center of the current viewport and grows toward the
+edges — worst near the Moldova/Ukraine border and the Black Sea coast.
+
+### Diagnose
+
+This is not the county-outline-vs-neighboring-country seam covered by
+`scripts/fetch_neighboring_context.mjs` (that's two of *our own* backdrop layers,
+already patched with `inflateOutward`) — it's our SVG layer against Google's live
+basemap tiles, never previously diagnosed.
+
+First rule out a bad projection fit: refit `components/search/SearchMap.tsx`'s
+`PROJECTION` constants via least squares against all 20 cities' known lon/lat
+(`scripts/fetch_road_geometry.mjs`'s `CITY_COORDS`) vs. their committed `x,y`
+(`lib/romaniaGraph.ts`). If the refit reproduces the existing constants almost
+exactly, the transform is already optimal and the residual (a few px, from
+hand-adjusted city layout, not a bug) is not the cause of a large, edge-growing
+mismatch — look elsewhere.
+
+```bash
+node -e "
+const CITY_COORDS = /* from scripts/fetch_road_geometry.mjs */;
+const XY = /* from lib/romaniaGraph.ts */;
+// linear regression x~lon, y~lat, compare to PROJECTION in SearchMap.tsx
+"
+```
+
+The real cause: Google Maps always renders in **Web Mercator** (latitude scale
+grows with `sec(lat)`, i.e. with distance from the equator). Our SVG overlay
+(`countyOutlines.ts`, `romaniaGraph.ts`) is deliberately **linear equirectangular**
+("no distortion, bounding-box fit" — see `lib/countyOutlines.ts`'s header comment)
+so the schematic diagram stays undistorted. The two projections agree on longitude
+but diverge on latitude, growing with distance from the view's center latitude —
+confirmed by checking that the committed city positions fit a *linear* latitude
+model better than a Mercator-transformed one (RMSE 1.6 vs 1.8 across all 20
+cities), i.e. the diagram truly is linear by construction, not an approximation of
+Mercator.
+
+### Fix
+
+Don't chase pixel alignment — it's structurally impossible here without either
+re-projecting every piece of committed SVG geometry into Web Mercator, or moving
+the background to a projection-controllable renderer (MapLibre, listed as a future
+enhancement in CLAUDE.md's Build order, step 5). Instead, turn off Google's own
+country-boundary stroke on Terrain via the style array, so only our own single,
+deliberately-schematic border shows:
+
+```ts
+// components/search/SearchMap.tsx — TERRAIN_MAP_STYLES
+{ featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] }
+```
+
+Same reasoning already applied earlier in the same array to hide Google's own
+place-name labels in favor of our own SVG labels.
+
+### Prevent
+
+No script check: nothing in this repo renders or screenshots the composited map,
+so pixel alignment between the Google tile background and the SVG overlay isn't
+testable by the existing gates. The prevention is a documented convention instead
+— see `automation_gap` in the rootcause file: never rely on a Mercator-based
+background's own border/label rendering to visually agree with our
+linear-equirectangular schematic layer; always suppress the competing feature via
+`TERRAIN_MAP_STYLES` rather than trying to align it.
+
+### Update — the same cause on roads (2026-09-16)
+
+**Symptom:** a thin gray sliver of Google's real road visibly peeks out from
+under our thicker route line at some curves in Terrain/Satellite view, worst on
+roads that span more latitude (e.g. the Mehadia–Lugoj mountain pass, "70").
+
+**Diagnose:** same root cause as above (Web Mercator vs. linear equirectangular),
+just visible on roads instead of the border. Unlike the border, this one *is*
+fixable by re-projecting, not hiding — every road/city coordinate is a known,
+invertible equirectangular transform, so no new external GIS data or OSRM
+refetch is needed.
+
+**Fix:** new `lib/mercatorProjection.ts` — moved `PROJECTION`/`unprojectToLatLng`
+there from `SearchMap.tsx`, added a Web Mercator `mercatorY(lat)` helper and a
+least-squares-fit `MERCATOR_LAT_SCALE`/`MERCATOR_LAT_OFFSET` (fit against the
+same 20 city control points; longitude is untouched since both projections
+scale it identically). Exports precomputed `mercatorCityPositions` and
+`mercatorRoadGeometry` — parallel Mercator-space copies of `romaniaGraph.ts`'s
+city positions and `roadGeometry.ts`'s road points.
+
+`lib/roadPath.ts`'s `getRoadPoints`/`getRoadPathD` gained an optional
+`variant: "default" | "mercator"` parameter (default preserves today's exact
+behavior; the memoization cache key now includes it). `SearchMap.tsx` computes
+`roadVariant = displayMode === "default" ? "default" : "mercator"` once, and
+threads it into the road base layer, road labels, city node positions, and all
+four trace-line families (`SearchTreeLines`/`ExpandedTreeLines`/`PathLines`/
+`GraphLine`, which already funneled through one shared `getRoadPathD` call, so
+this was one change, not four). The "Default" schematic view never reads the
+Mercator tables — it's pixel-identical to before.
+
+`PathDots` (the county-clipped route-progress dot texture) was deliberately
+left on the default variant always — it's a decorative density texture clipped
+by county polygons (which stay equirectangular per the border fix above), not
+a marker riding on the line, so reprojecting only its distance calculation
+would have desynced it from the unmoved county clip regions for no benefit.
+
+**Prevent:** same as above — no script check, verified by manually zooming into
+Terrain/Satellite at the known trouble spots (Arad–Zerind, Mehadia–Lugoj,
+Sibiu–Rimnicu Vâlcea) and confirming the sliver is gone. See the rootcause
+file's updated `fix`/`notes` for the full reasoning, including why this went
+the *opposite* direction from the border fix (reproject our data vs. hide
+Google's) and why that's not a contradiction — roads have committed source
+coordinates to reproject from; the border doesn't.

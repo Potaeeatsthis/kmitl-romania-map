@@ -9,9 +9,11 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
+import { mercatorCityPositions, PROJECTION, unprojectToLatLng } from "../../lib/mercatorProjection";
 import { neighboringCountries, seaAreas } from "../../lib/neighboringContext";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import { getRoadPathD, polylineMidpoint, getRoadPoints } from "../../lib/roadPath";
+import type { RoadVariant } from "../../lib/roadPath";
 import { getRouteCountyDots } from "../../lib/routeCountyDots";
 import type { RouteDotDensity } from "../../lib/routeCountyDots";
 import {
@@ -29,17 +31,28 @@ import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
 
 const GOOGLE_MAP_CENTER = { lat: 45.9432, lng: 24.9668 };
 
-// Same equirectangular projection as scripts/lib/project.mjs (the two can't
-// share an import: one is a build-time Node script, this is browser runtime
-// code) -- inverse only, to turn the SVG-space viewport center into a
-// lat/lng. The Google background has no native tie to our own SVG
-// coordinate system, so panning/zooming the schematic overlay does nothing
-// to it unless we compute and pass an equivalent center/zoom explicitly.
-const PROJECTION = { lonScale: 91.952899, lonOffset: -1726.368333, latScale: -131.39377, latOffset: 6415.664401 };
-
-function unprojectToLatLng(x: number, y: number) {
-  return { lng: (x - PROJECTION.lonOffset) / PROJECTION.lonScale, lat: (y - PROJECTION.latOffset) / PROJECTION.latScale };
-}
+// Our own SVG overlay already draws every label we want (Romanian cities, plus
+// neighboring-country context in neighboringContext.ts). The plain "satellite"
+// map type has no place-name layer at all, so it never clutters -- match that
+// on terrain by turning off all of Google's own labels, everywhere.
+//
+// The country border stroke is turned off too, not just its label: Google
+// renders it in true Web Mercator, while our SVG border (countyOutlines.ts) is
+// a deliberately undistorted linear-equirectangular schematic. The two
+// projections agree on longitude but diverge on latitude scaling further from
+// the view's center, so Google's line visibly drifts from ours near the map
+// edges -- see docs/rootcause/terrain-border-mercator-mismatch.json. That's
+// structural (fixable only by re-projecting all SVG geometry, or moving to a
+// projection-controllable renderer like MapLibre), so instead of showing two
+// disagreeing borders, only our own is shown.
+const TERRAIN_MAP_STYLES = [
+  { elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+  // Neighboring countries' own internal divisions (e.g. Hungarian megye,
+  // Ukrainian oblast borders) render as dashed lines -- unrelated real-world
+  // context, no different in kind from the country border above.
+  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
+];
 
 function GoogleBackgroundMap({
   mapType,
@@ -59,6 +72,7 @@ function GoogleBackgroundMap({
         center={center}
         zoom={zoom}
         mapTypeId={mapType}
+        styles={mapType === "terrain" ? TERRAIN_MAP_STYLES : undefined}
         disableDefaultUI
         gestureHandling="none"
         keyboardShortcuts={false}
@@ -203,6 +217,12 @@ export default function SearchMap() {
   const [mapViewport, setMapViewport] = useState<MapViewport>(INITIAL_MAP_VIEWPORT);
   const [isMapPanning, setIsMapPanning] = useState(false);
   const [displayMode, setDisplayMode] = useState<MapDisplayMode>("default");
+  // Roads/cities are drawn from a parallel Mercator-projected coordinate set
+  // whenever a Google background is visible, so they line up with Google's
+  // own (Mercator) rendering instead of our undistorted equirectangular
+  // schematic -- see lib/mercatorProjection.ts. County outlines stay
+  // equirectangular always; see docs/rootcause/terrain-border-mercator-mismatch.json.
+  const roadVariant: RoadVariant = displayMode === "default" ? "default" : "mercator";
   // Null until the panel has actually been measured (and permanently null in
   // tests, where jsdom has no ResizeObserver) -- getEffectiveMapExtent treats
   // that as "use the fixed reference shape, unmodified".
@@ -528,7 +548,35 @@ export default function SearchMap() {
           <mask id="neighboring-fade" maskUnits="userSpaceOnUse" x={mapExtent.x} y={mapExtent.y} width={mapExtent.width} height={mapExtent.height}>
             <rect x={mapExtent.x} y={mapExtent.y} width={mapExtent.width} height={mapExtent.height} fill="url(#neighboring-fade-gradient)" />
           </mask>
+          {/* Terrain/Satellite has no separate neighboring-country shapes to fade
+              (it's one continuous Google image) -- same ellipse as the fade above,
+              inverted: transparent over Romania, opaque toward the edges, painted
+              as an overlay directly on top of the Google background instead of a
+              mask on top of vector shapes. */}
+          <radialGradient
+            id="terrain-vignette-gradient"
+            gradientUnits="userSpaceOnUse"
+            cx="0"
+            cy="0"
+            r="1"
+            gradientTransform={`translate(${mapExtent.x + mapExtent.width / 2} ${mapExtent.y + mapExtent.height / 2}) scale(${mapExtent.width * 0.58} ${mapExtent.height * 0.58})`}
+          >
+            <stop offset="45%" stopColor="var(--neighbor-fill)" stopOpacity="0" />
+            <stop offset="100%" stopColor="var(--neighbor-fill)" stopOpacity="0.92" />
+          </radialGradient>
         </defs>
+
+        {displayMode !== "default" && (
+          <rect
+            className={styles.terrainVignette}
+            aria-hidden="true"
+            x={mapExtent.x}
+            y={mapExtent.y}
+            width={mapExtent.width}
+            height={mapExtent.height}
+            fill="url(#terrain-vignette-gradient)"
+          />
+        )}
 
         {displayMode === "default" && (
           <g className={styles.neighboringContext} aria-hidden="true">
@@ -574,32 +622,33 @@ export default function SearchMap() {
           {romaniaGraph.roads.map(([from, to]) => {
             return (
               <g key={`${from}-${to}`}>
-                <path className={styles.roadCasing} d={getRoadPathD(from, to, 0)} />
-                <path className={styles.roadCenter} d={getRoadPathD(from, to, 0)} />
+                <path className={styles.roadCasing} d={getRoadPathD(from, to, 0, roadVariant)} />
+                <path className={styles.roadCenter} d={getRoadPathD(from, to, 0, roadVariant)} />
               </g>
             );
           })}
         </g>
 
-        {ucsFrame && <SearchTreeLines discovered={ucsFrame.discovered} className={styles.ucsTree} offset={-2} />}
-        {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} className={styles.astarTree} offset={2} />}
-        {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} className={styles.ucsPath} offset={-3} />}
-        {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} className={styles.astarPath} offset={3} />}
+        {ucsFrame && <SearchTreeLines discovered={ucsFrame.discovered} className={styles.ucsTree} offset={-2} variant={roadVariant} />}
+        {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} className={styles.astarTree} offset={2} variant={roadVariant} />}
+        {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} className={styles.ucsPath} offset={-3} variant={roadVariant} />}
+        {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} className={styles.astarPath} offset={3} variant={roadVariant} />}
         {astarDotPath.length > 1 && <PathDots path={astarDotPath} className={styles.astarRouteDots} offset={3} />}
-        {ucsComplete && data && <PathLines path={data.ucs.path} className={styles.ucsPath} offset={-3} />}
-        {astarComplete && data && <PathLines path={data.astar.path} className={styles.astarPath} offset={3} />}
+        {ucsComplete && data && <PathLines path={data.ucs.path} className={styles.ucsPath} offset={-3} variant={roadVariant} />}
+        {astarComplete && data && <PathLines path={data.astar.path} className={styles.astarPath} offset={3} variant={roadVariant} />}
 
         <g className={styles.roadLabels} aria-hidden="true">
           {romaniaGraph.roads.map(([from, to, distance]) => {
-            const position = roadLabelPosition(from, to);
+            const position = roadLabelPosition(from, to, roadVariant);
             return <text key={`${from}-${to}`} x={position.x} y={position.y}>{distance}</text>;
           })}
         </g>
 
         {romaniaGraph.cities.map((city) => {
+          const position = displayMode === "default" ? city : (mercatorCityPositions.get(city.id) ?? city);
           const offset = labelOffsets[city.id] ?? { x: 0, y: 22 };
-          const labelX = city.x + offset.x;
-          const labelY = city.y + offset.y;
+          const labelX = position.x + offset.x;
+          const labelY = position.y + offset.y;
           const isTwoLineLabel = city.id === 9;
           const labelWidth = (isTwoLineLabel ? 7 : city.name.length) * 6.6 + 10;
           const ucsLabelHighlighted = ucsFrame
@@ -668,7 +717,7 @@ export default function SearchMap() {
                   rx="3"
                 />
               )}
-              <rect className={styles.cityNode} x={city.x - 5} y={city.y - 5} width="10" height="10" rx="2" />
+              <rect className={styles.cityNode} x={position.x - 5} y={position.y - 5} width="10" height="10" rx="2" />
               <text className={labelHighlightClass ? styles.highlightedCityLabel : undefined} x={labelX} y={labelY}>
                 {city.id === 9 ? (
                   <>
@@ -721,8 +770,8 @@ function ZoomOutIcon() {
   return <svg className={styles.zoomIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h12" /></svg>;
 }
 
-function roadLabelPosition(from: number, to: number) {
-  const mid = polylineMidpoint(getRoadPoints(from, to));
+function roadLabelPosition(from: number, to: number, variant: RoadVariant = "default") {
+  const mid = polylineMidpoint(getRoadPoints(from, to, variant));
   const offset = 13;
   const round = (value: number) => Number(value.toFixed(2));
   return {
@@ -731,21 +780,21 @@ function roadLabelPosition(from: number, to: number) {
   };
 }
 
-function SearchTreeLines({ discovered, className, offset }: { discovered: DiscoveredNode[]; className: string; offset: number }) {
+function SearchTreeLines({ discovered, className, offset, variant }: { discovered: DiscoveredNode[]; className: string; offset: number; variant: RoadVariant }) {
   return (
     <g className={styles.searchTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null ? null : (
-        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} />
+        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} variant={variant} />
       ))}
     </g>
   );
 }
 
-function ExpandedTreeLines({ discovered, expanded, className, offset }: { discovered: DiscoveredNode[]; expanded: Set<number>; className: string; offset: number }) {
+function ExpandedTreeLines({ discovered, expanded, className, offset, variant }: { discovered: DiscoveredNode[]; expanded: Set<number>; className: string; offset: number; variant: RoadVariant }) {
   return (
     <g className={styles.expandedTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null || !expanded.has(node.city) ? null : (
-        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} />
+        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} variant={variant} />
       ))}
     </g>
   );
@@ -785,16 +834,16 @@ function PathDots({ path, className, offset }: { path: number[]; className: stri
   );
 }
 
-function PathLines({ path, className, offset }: { path: number[]; className: string; offset: number }) {
+function PathLines({ path, className, offset, variant }: { path: number[]; className: string; offset: number; variant: RoadVariant }) {
   return (
     <g className={styles.finalPath} aria-hidden="true">
       {path.slice(0, -1).map((city, index) => (
-        <GraphLine key={`${city}-${path[index + 1]}`} from={city} to={path[index + 1]} className={className} offset={offset} />
+        <GraphLine key={`${city}-${path[index + 1]}`} from={city} to={path[index + 1]} className={className} offset={offset} variant={variant} />
       ))}
     </g>
   );
 }
 
-function GraphLine({ from, to, className, offset }: { from: number; to: number; className: string; offset: number }) {
-  return <path className={className} d={getRoadPathD(from, to, offset)} />;
+function GraphLine({ from, to, className, offset, variant }: { from: number; to: number; className: string; offset: number; variant: RoadVariant }) {
+  return <path className={className} d={getRoadPathD(from, to, offset, variant)} />;
 }

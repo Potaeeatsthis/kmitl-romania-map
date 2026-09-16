@@ -29,6 +29,7 @@ instead, because nobody will ever arrive here with a string to search for.
 | *(no error text)* Clicking a city on the map does nothing once the map is zoomed in; works fine at default zoom | `search-map-zoom-blocks-city-clicks` | §11 |
 
 | `useSearchParams() should be wrapped in a suspense boundary` during static export | `calculation-missing-suspense` | §12 |
+| *(no error text)* In Terrain/Satellite view, Google's own black country-border line (or a thin sliver of Google's own real road) visibly drifts from our green SVG border/route, worst near the map edges or on roads spanning more latitude | `terrain-border-mercator-mismatch` | §13 |
 
 ## Step 2 — Apply the known fix
 
