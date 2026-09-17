@@ -1,0 +1,17 @@
+.navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px 24px;
+  font-size: 13px;
+}
+.navigation a { color: var(--green-dark); text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.navigation a:focus-visible { outline: 3px solid var(--green-bright); outline-offset: 3px; }
+.back { white-space: nowrap; }
+.steps { display: flex; flex-wrap: wrap; gap: 10px 16px; margin: 0; padding: 0; list-style: none; }
+.steps li a { display: inline-flex; align-items: center; gap: 7px; }
+.number { display: inline-block; color: var(--muted); font: 400 22px / 1 var(--font-interface); }
+.active .number { color: var(--green-dark); }
+.active a { font-weight: 600; }
+@media (max-width: 760px) { .navigation { align-items: flex-start; flex-direction: column; gap: 12px; } }

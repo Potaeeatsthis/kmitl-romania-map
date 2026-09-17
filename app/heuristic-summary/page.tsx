@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
+import CalculationStepper from "../../components/heuristic/CalculationStepper";
 import RouteMap, { computeViewBox } from "../../components/heuristic/RouteMap";
 import type { RouteMapMarker } from "../../components/heuristic/RouteMap";
 import { buildGroundedKirchhoffSystem } from "../../lib/kirchhoff";
@@ -13,8 +14,6 @@ import type { HeuristicExplanation, SearchResponse } from "../../lib/types";
 import { explainCurrentFlow, runSearch } from "../../lib/wasm/client";
 import styles from "./page.module.css";
 
-const MATRIX_ZERO_EPSILON = 0.00005;
-
 type Edge = {
   neighborId: number;
   distance: number;
@@ -22,20 +21,12 @@ type Edge = {
 };
 
 function parseCityParam(value: string | null): number | null {
-  if (value === null) return null;
+  if (value === null || value.trim() === "") return null;
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0 || parsed >= romaniaGraph.cities.length) {
     return null;
   }
   return parsed;
-}
-
-function shortCityName(cityId: number): string {
-  return romaniaGraph.cities[cityId].name.slice(0, 3);
-}
-
-function formatMatrixValue(value: number): string {
-  return Math.abs(value) < MATRIX_ZERO_EPSILON ? "0" : value.toFixed(4);
 }
 
 export default function HeuristicSummaryPage() {
@@ -83,30 +74,18 @@ export default function HeuristicSummaryPage() {
     };
   }, [startCity, destinationCity]);
 
-  const stepsHref =
-    startCity !== null && destinationCity !== null
-      ? `/heuristic-steps?start=${startCity}&goal=${destinationCity}`
-      : "/heuristic-steps";
-  const circuitHref =
-    startCity !== null && destinationCity !== null
-      ? `/circuit-flow?start=${startCity}&goal=${destinationCity}`
-      : "/circuit-flow";
+  const query = startCity !== null && destinationCity !== null ? `?start=${startCity}&goal=${destinationCity}` : "";
 
   return (
     <main className={styles.page}>
       <header className={styles.header}>
         <div className={styles.headerCopy}>
-          <h1 className={styles.title}>How the current-flow heuristic works</h1>
+          <h1 className={styles.title}>How A* chose this route</h1>
           <p className={styles.headerIntro}>
-            Follow the electrical model, its Kirchhoff matrix, and every A* decision from start to destination.
+            Follow every A* decision. Select any h(n) value to see its conductance and Kirchhoff calculation.
           </p>
         </div>
-        <nav className={styles.nav} aria-label="Calculation pages">
-          <Link href="/">← Back to map</Link>
-          <Link href={stepsHref.replace("heuristic-steps", "kirchhoff-matrix")}>Build the Kirchhoff matrix →</Link>
-          <Link href={stepsHref}>See matrix elimination →</Link>
-          <Link href={circuitHref}>Circuit view →</Link>
-        </nav>
+        <CalculationStepper query={query} />
       </header>
 
       {startCity === null || destinationCity === null ? (
@@ -134,7 +113,6 @@ function SummaryView({
   const startName = romaniaGraph.cities[explanation.start].name;
   const goalName = romaniaGraph.cities[explanation.goal].name;
   const system = buildGroundedKirchhoffSystem(explanation);
-  const isTrivialRoute = explanation.start === explanation.goal;
   const path = search.astar.path;
   const pathNames = path.map((cityId) => romaniaGraph.cities[cityId].name).join(" → ");
   const trace = search.astar.trace;
@@ -164,10 +142,6 @@ function SummaryView({
     cityId,
     role: cityId === explanation.start ? "focus" : cityId === explanation.goal ? "goal" : "path",
   }));
-  const startRoads = explanation.conductances.filter(
-    (edge) => edge.city_a === explanation.start || edge.city_b === explanation.start,
-  );
-  const matrixExampleTerms = startRoads.map((edge) => `1/${edge.distance}`).join(" + ");
   const walkthroughSteps = trace
     .map((step, traceIndex) => ({ step, traceIndex }))
     .filter(({ step }) => step.expanded_city !== explanation.goal);
@@ -191,201 +165,6 @@ function SummaryView({
           />
         </div>
       </section>
-
-      <article className={styles.calculation} aria-label="Current-flow heuristic calculation">
-        <section className={styles.conceptSection} aria-labelledby="current-flow-title">
-          <div className={styles.conceptLead}>
-            <h2 id="current-flow-title">What is a current-flow heuristic?</h2>
-            <p>
-              It estimates the remaining route cost by treating the road map like an electrical
-              circuit. A long road resists current more than a short road, while several possible
-              routes act like parallel paths that make the effective resistance smaller.
-            </p>
-            <p>
-              That effective resistance is never greater than the cost of taking one real route,
-              so A* can use it as a safe lower-bound estimate h(n).
-            </p>
-          </div>
-          <ol className={styles.conceptSteps}>
-            <li><strong>Road distance becomes resistance R.</strong><span>Longer road, larger resistance.</span></li>
-            <li><strong>Resistance becomes conductance G = 1/R.</strong><span>Short roads carry more imaginary current.</span></li>
-            <li><strong>Inject 1 A and ground the destination.</strong><span>The required start voltage is the effective resistance.</span></li>
-          </ol>
-        </section>
-
-        <section className={styles.calculationSection} aria-labelledby="build-matrix-title">
-          <div className={styles.sectionHeading}>
-            <div>
-              <h2 id="build-matrix-title">Build the Kirchhoff matrix</h2>
-              <p>
-                Kirchhoff&apos;s current law says that current entering each city must equal current
-                leaving it. The weighted Laplacian records that rule for every city at once.
-              </p>
-            </div>
-            <div className={styles.mainEquation} aria-label="L sub g times V equals I">
-              <span>L<sub>g</sub></span>
-              <span aria-hidden="true">×</span>
-              <span>V</span>
-              <span aria-hidden="true">=</span>
-              <span>I</span>
-            </div>
-          </div>
-
-          <dl className={styles.matrixRules}>
-            <div>
-              <dt>Diagonal</dt>
-              <dd>L<sub>ii</sub> = Σ G<sub>ij</sub></dd>
-            </div>
-            <div>
-              <dt>Direct road</dt>
-              <dd>L<sub>ij</sub> = −G<sub>ij</sub></dd>
-            </div>
-            <div>
-              <dt>No direct road</dt>
-              <dd>L<sub>ij</sub> = 0</dd>
-            </div>
-          </dl>
-
-          {!isTrivialRoute ? (
-            <div className={styles.workedRow}>
-              <h3>Example row: {startName}</h3>
-              <p className={styles.workedEquation}>
-                L<sub>{shortCityName(explanation.start)},{shortCityName(explanation.start)}</sub>
-                {" = "}{matrixExampleTerms}{" = "}
-                {explanation.laplacian[explanation.start][explanation.start].toFixed(5)}
-              </p>
-              <p>
-                Connected cities receive the matching negative conductance; every other entry is zero.
-              </p>
-            </div>
-          ) : (
-            <p className={styles.inlineNote}>
-              The start is already the grounded destination, so no current crosses the network and h(n) = 0.
-            </p>
-          )}
-
-          <div className={styles.matrixHeader}>
-            <div>
-              <h3>Grounded matrix L<sub>g</sub></h3>
-              <p>
-                {goalName} is removed from the rows and columns, fixing V<sub>{shortCityName(explanation.goal)}</sub> = 0.
-              </p>
-            </div>
-            <div className={styles.matrixLegend} aria-label="Matrix color key">
-              <span className={styles.legendDiagonal}>diagonal sum</span>
-              <span className={styles.legendRoad}>direct road</span>
-              <span className={styles.legendZero}>no road</span>
-            </div>
-          </div>
-
-          <div
-            className={styles.matrixScroll}
-            role="region"
-            aria-label="Scrollable grounded Kirchhoff matrix"
-            tabIndex={0}
-          >
-            <table className={styles.matrixTable}>
-              <caption className={styles.srOnly}>
-                Grounded Kirchhoff matrix. Rows and columns are cities, excluding grounded city {goalName}.
-              </caption>
-              <thead>
-                <tr>
-                  <th className={styles.cornerCell} scope="col">row \ col</th>
-                  {system.cityIds.map((cityId, columnIndex) => (
-                    <th
-                      key={cityId}
-                      className={columnIndex === system.startIndex ? styles.sourceHeader : undefined}
-                      scope="col"
-                    >
-                      <abbr title={romaniaGraph.cities[cityId].name} aria-label={romaniaGraph.cities[cityId].name}>
-                        {shortCityName(cityId)}
-                      </abbr>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {system.matrix.map((row, rowIndex) => (
-                  <tr key={system.cityIds[rowIndex]}>
-                    <th
-                      className={rowIndex === system.startIndex ? styles.sourceHeader : undefined}
-                      scope="row"
-                    >
-                      <abbr
-                        title={romaniaGraph.cities[system.cityIds[rowIndex]].name}
-                        aria-label={romaniaGraph.cities[system.cityIds[rowIndex]].name}
-                      >
-                        {shortCityName(system.cityIds[rowIndex])}
-                      </abbr>
-                    </th>
-                    {row.map((value, columnIndex) => {
-                      const classes = [styles.matrixCell];
-                      if (rowIndex === columnIndex) classes.push(styles.diagonalCell);
-                      else if (Math.abs(value) < MATRIX_ZERO_EPSILON) classes.push(styles.zeroCell);
-                      else classes.push(styles.roadCell);
-                      if (rowIndex === system.startIndex || columnIndex === system.startIndex) {
-                        classes.push(styles.sourceAxisCell);
-                      }
-
-                      return (
-                        <td
-                          key={system.cityIds[columnIndex]}
-                          className={classes.join(" ")}
-                          title={`${romaniaGraph.cities[system.cityIds[rowIndex]].name} × ${romaniaGraph.cities[system.cityIds[columnIndex]].name}: ${value.toFixed(6)}`}
-                        >
-                          {formatMatrixValue(value)}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className={styles.scrollHint}>Scroll horizontally to inspect every city column.</p>
-        </section>
-
-        <section className={styles.solveSection} aria-labelledby="solve-system-title">
-          <div>
-            <h2 id="solve-system-title">Solve L<sub>g</sub>V = I</h2>
-            <p>
-              Put 1 A into {startName}, put 0 A into every other ungrounded city, and solve for V.
-              {isTrivialRoute ? " No solve is needed because start and destination are the same." : ""}
-            </p>
-          </div>
-          <dl className={styles.solveSummary}>
-            <div>
-              <dt>Current vector I</dt>
-              <dd>I<sub>{shortCityName(explanation.start)}</sub> = {isTrivialRoute ? "0" : "1"}; all others = 0</dd>
-            </div>
-            <div>
-              <dt>Ground condition</dt>
-              <dd>V<sub>{shortCityName(explanation.goal)}</sub> = 0</dd>
-            </div>
-            <div>
-              <dt>Start voltage</dt>
-              <dd>V<sub>{shortCityName(explanation.start)}</sub> = {explanation.effective_resistance.toFixed(4)}</dd>
-            </div>
-          </dl>
-        </section>
-
-        <section className={styles.resultSection} aria-labelledby="heuristic-result-title">
-          <div>
-            <h2 id="heuristic-result-title">The voltage becomes h(n)</h2>
-            <p>
-              Because the injected current is exactly 1 A, the start voltage equals the effective resistance.
-            </p>
-          </div>
-          <div className={styles.resultFormula}>
-            h({shortCityName(explanation.start)}) = R<sub>eff</sub> ={" "}
-            <strong>{explanation.effective_resistance.toFixed(4)}</strong>
-          </div>
-          <p className={styles.boundCheck}>
-            {explanation.effective_resistance.toFixed(2)} ≤ {search.ucs.cost} km for this route. The project also verifies
-            admissibility and consistency across every city pair.
-          </p>
-        </section>
-      </article>
 
       <section className={styles.walkthrough} aria-labelledby="walkthrough-title">
         <div className={styles.walkthroughHeader}>
@@ -441,7 +220,7 @@ function SummaryView({
             const balances = Math.abs(currentSum - expectedCurrent) < 0.01;
 
             return (
-              <article className={styles.nodeCard} key={`${cityId}-${traceIndex}`}>
+              <article id={`decision-${traceIndex}`} className={styles.nodeCard} key={`${cityId}-${traceIndex}`}>
                 <header className={styles.nodeHeader}>
                   <h3>
                     <span>Expansion {traceIndex + 1}</span> — {cityName}
@@ -462,10 +241,26 @@ function SummaryView({
                         <div className={styles.scoreEquation}>
                           <div><span>g(n)</span><strong>{chosenCandidate.cost.toFixed(1)}</strong><small>travelled</small></div>
                           <b aria-hidden="true">+</b>
-                          <div><span>h(n)</span><strong>{(chosenCandidate.priority - chosenCandidate.cost).toFixed(2)}</strong><small>estimate</small></div>
+                          <div>
+                            <span>h(n)</span>
+                            <Link
+                              className={styles.heuristicLink}
+                              href={`/kirchhoff-matrix?start=${chosenCandidate.city}&goal=${explanation.goal}&routeStart=${explanation.start}&decision=${traceIndex}` }
+                              aria-label={`Show how h(${romaniaGraph.cities[chosenCandidate.city].name}) is calculated`}
+                            >
+                              <strong>{(chosenCandidate.priority - chosenCandidate.cost).toFixed(2)}</strong>
+                            </Link>
+                            <small>estimate</small>
+                          </div>
                           <b aria-hidden="true">=</b>
                           <div className={styles.totalScore}><span>f(n)</span><strong>{chosenCandidate.priority.toFixed(2)}</strong><small>priority</small></div>
                         </div>
+                        <p className={styles.decisionFormula} role="math" aria-label={`Priority formula for ${romaniaGraph.cities[chosenCandidate.city].name}`}>
+                          f({romaniaGraph.cities[chosenCandidate.city].name}) = g + h = {chosenCandidate.cost.toFixed(1)} + {(chosenCandidate.priority - chosenCandidate.cost).toFixed(2)} = {chosenCandidate.priority.toFixed(2)}
+                        </p>
+                        <p className={styles.choiceFormula} role="math" aria-label="Lowest priority formula">
+                          min&#123;{sortedFrontier.map((candidate) => `f(${romaniaGraph.cities[candidate.city].name}) = ${candidate.priority.toFixed(2)}`).join(", ")}&#125; = f({romaniaGraph.cities[chosenCandidate.city].name}) = {chosenCandidate.priority.toFixed(2)}
+                        </p>
                         <p className={styles.choiceText}>
                           <strong>{romaniaGraph.cities[chosenCandidate.city].name}</strong> is expanded next because it has the lowest f(n) in the queue.
                         </p>
@@ -493,7 +288,15 @@ function SummaryView({
                               <tr key={candidate.city} className={isChosen ? styles.chosenRow : undefined}>
                                 <th scope="row">{romaniaGraph.cities[candidate.city].name}</th>
                                 <td>{candidate.cost.toFixed(1)}</td>
-                                <td>{(candidate.priority - candidate.cost).toFixed(2)}</td>
+                                <td>
+                                  <Link
+                                    className={styles.heuristicLink}
+                                    href={`/kirchhoff-matrix?start=${candidate.city}&goal=${explanation.goal}&routeStart=${explanation.start}&decision=${traceIndex}` }
+                                    aria-label={`Show how h(${romaniaGraph.cities[candidate.city].name}) is calculated`}
+                                  >
+                                    {(candidate.priority - candidate.cost).toFixed(2)}
+                                  </Link>
+                                </td>
                                 <td><strong>{candidate.priority.toFixed(2)}</strong></td>
                                 <td>{isChosen ? "picked next" : "waits"}</td>
                               </tr>
@@ -512,6 +315,7 @@ function SummaryView({
                     <p>
                       Add the signed current on every connected road. It should equal {expectedCurrent} A at this city.
                     </p>
+                    <p className={styles.balanceFormula} role="math">Σ<sub>j</sub> c<sub>ij</sub>(V<sub>i</sub> − V<sub>j</sub>) = I<sub>i</sub> = {currentSum.toFixed(3)} A</p>
                   </div>
                   <div className={styles.tableScroll}>
                     <table className={styles.balanceTable}>

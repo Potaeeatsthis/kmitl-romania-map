@@ -211,17 +211,26 @@ describe("RomaniaSearch", () => {
     const mapPanel = container.querySelector("." + mapStyles.mapPanel);
     const displayModeControls = screen.getByRole("group", { name: "Map display mode" });
     const defaultMode = screen.getByRole("button", { name: "Use default map display" });
-    const terrainMode = screen.getByRole("button", { name: "Use terrain map display" });
-    const satelliteMode = screen.getByRole("button", { name: "Use satellite map display" });
+    const expand = screen.getByRole("button", { name: "Show map display options" });
 
     expect(displayModeControls).toHaveClass(mapStyles.displayModeControls);
     expect(mapPanel).toHaveClass(mapStyles.displayDefault);
     expect(defaultMode).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("button", { name: "Use terrain map display" })).not.toBeInTheDocument();
+
+    await user.click(expand);
+    const terrainMode = screen.getByRole("button", { name: "Use terrain map display" });
 
     await user.click(terrainMode);
     expect(mapPanel).toHaveClass(mapStyles.displayTerrain);
     expect(terrainMode).toHaveAttribute("aria-pressed", "true");
 
+    await user.click(screen.getByRole("button", { name: "Hide map display options" }));
+    expect(screen.getByRole("button", { name: "Use terrain map display" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Use default map display" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Show map display options" }));
+    const satelliteMode = screen.getByRole("button", { name: "Use satellite map display" });
     await user.click(satelliteMode);
     expect(mapPanel).toHaveClass(mapStyles.displaySatellite);
     expect(satelliteMode).toHaveAttribute("aria-pressed", "true");

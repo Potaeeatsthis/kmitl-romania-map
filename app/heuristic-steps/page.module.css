@@ -445,6 +445,8 @@
 .operations { padding-left: 24px; }
 .operations li + li { margin-top: 16px; }
 .equation { padding: 18px; background: var(--surface); overflow-wrap: anywhere; color: var(--ink); font-variant-numeric: tabular-nums; }
+.formulaList { max-width: 75ch; margin-block: 18px; display: grid; gap: 8px; }
+.formulaList .equation { margin: 0; }
 .field { display: grid; justify-items: start; gap: 8px; margin-block: 24px; font-size: 14px; }
 .field select, .viewControls button {
   min-height: 44px; max-width: 100%; padding: 10px 14px; border: 1px solid var(--line);
@@ -463,3 +465,23 @@
 .matrixDetails { min-width: 0; }
 .matrixDetails summary { padding-block: 16px; color: var(--green-dark); cursor: pointer; }
 .matrixDetails .scrollHint { margin-top: 12px; }
+
+.selectedResult {
+  max-width: 1480px;
+  margin: 0 auto 24px;
+  padding: 16px 20px;
+  background: var(--green-pale);
+  color: var(--ink);
+  line-height: 1.6;
+}
+.selectedResult p { margin: 0 0 8px; }
+.selectedResult a { color: var(--green-dark); text-underline-offset: 3px; }
+.valueHighlight {
+  padding: 3px 6px;
+  border-radius: 3px;
+  background: var(--action-strong);
+  color: var(--on-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.answerCell .valueHighlight { background: transparent; color: inherit; }

@@ -231,6 +231,7 @@ export default function SearchMap() {
   // needs the actual rendered pixel width, not just the aspect ratio.
   const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const mapExtent = useMemo(() => getEffectiveMapExtent(containerAspect), [containerAspect]);
+  const [displayModesExpanded, setDisplayModesExpanded] = useState(false);
   const mapRef = useRef<SVGSVGElement>(null);
   const mapTouchesRef = useRef(new Map<number, MapTouchPoint>());
   const pinchGestureRef = useRef<PinchGesture | null>(null);
@@ -732,7 +733,7 @@ export default function SearchMap() {
       </svg>
 
       <div className={styles.displayModeControls} role="group" aria-label="Map display mode">
-        {mapDisplayModes.map((mode) => (
+        {mapDisplayModes.filter((mode) => displayModesExpanded || mode.value === displayMode).map((mode) => (
           <button
             key={mode.value}
             className={[
@@ -748,6 +749,16 @@ export default function SearchMap() {
             {mode.label}
           </button>
         ))}
+        <button
+          className={styles.displayModeToggle}
+          type="button"
+          aria-expanded={displayModesExpanded}
+          aria-label={displayModesExpanded ? "Hide map display options" : "Show map display options"}
+          title={displayModesExpanded ? "Hide map display options" : "Show map display options"}
+          onClick={() => setDisplayModesExpanded((expanded) => !expanded)}
+        >
+          {displayModesExpanded ? "<" : ">"}
+        </button>
       </div>
 
       <div className={styles.zoomControls} role="group" aria-label={`Map zoom controls, ${Math.round(mapZoom * 100)}%`}>

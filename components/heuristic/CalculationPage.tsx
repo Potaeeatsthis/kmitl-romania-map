@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState, type ReactNode } from "react";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { HeuristicExplanation } from "../../lib/types";
 import { explainCurrentFlow } from "../../lib/wasm/client";
+import CalculationStepper from "./CalculationStepper";
 import styles from "../../app/heuristic-steps/page.module.css";
 
 function cityParam(value: string | null) {
@@ -17,7 +18,7 @@ function cityParam(value: string | null) {
 type Props = {
   title: string;
   intro: string;
-  current: "kirchhoff-matrix" | "heuristic-steps";
+  current: "circuit" | "kirchhoff-matrix" | "heuristic-steps";
   children: (explanation: HeuristicExplanation) => ReactNode;
 };
 
@@ -43,7 +44,12 @@ function CalculationContent({ title, intro, current, children }: Props) {
   }, [start, goal, key]);
 
   const valid = start !== null && goal !== null;
-  const query = valid ? `?start=${start}&goal=${goal}` : "";
+  const routeStart = cityParam(params.get("routeStart"));
+  const rawDecision = params.get("decision");
+  const decision = rawDecision !== null && /^\d+$/.test(rawDecision) && Number.isSafeInteger(Number(rawDecision)) ? Number(rawDecision) : null;
+  const hasContext = routeStart !== null && decision !== null;
+  const query = valid ? `?start=${start}&goal=${goal}${hasContext ? `&routeStart=${routeStart}&decision=${decision}` : ""}` : "";
+  const summaryHref = valid ? `/heuristic-summary?start=${routeStart ?? start}&goal=${goal}${hasContext ? `#decision-${decision}` : ""}` : "/heuristic-summary";
   const activeResult = result?.key === key ? result : null;
   return (
     <main className={styles.page}>
@@ -52,16 +58,25 @@ function CalculationContent({ title, intro, current, children }: Props) {
           <h1 className={styles.title}>{title}</h1>
           <p className={styles.headerIntro}>{intro}</p>
         </div>
-        <nav className={styles.nav} aria-label="Calculation pages">
-          <Link href="/">← Back to map</Link>
-          <Link href={`/heuristic-summary${query}`}>How it’s calculated</Link>
-          <Link href={`/kirchhoff-matrix${query}`} aria-current={current === "kirchhoff-matrix" ? "page" : undefined}>Kirchhoff matrix</Link>
-          <Link href={`/heuristic-steps${query}`} aria-current={current === "heuristic-steps" ? "page" : undefined}>Matrix elimination</Link>
-        </nav>
+        <CalculationStepper current={current} query={query} />
       </header>
+      {valid && <div className={styles.content}>
+        <p className={styles.routeLine}>
+          <strong>h({romaniaGraph.cities[start].name} → {romaniaGraph.cities[goal].name})</strong>
+          {hasContext && <> · From expansion {decision + 1} of {romaniaGraph.cities[routeStart].name} → {romaniaGraph.cities[goal].name}</>}
+          {" · "}<Link href={summaryHref}>{hasContext ? "Back to this A* decision" : "Back to A* decisions"}</Link>
+        </p>
+      </div>}
       {!valid ? <p className={styles.empty}>Choose a starting point and a destination on the map first, then come back here.</p>
         : activeResult?.error ? <p className={styles.errorText} role="alert">Could not calculate: {activeResult.error}. Reload this page to try again.</p>
-        : activeResult?.explanation ? <div key={key}>{children(activeResult.explanation)}</div>
+        : activeResult?.explanation ? <div key={key}>
+          <section className={styles.selectedResult} aria-label="Selected heuristic value">
+            <p>h({romaniaGraph.cities[start!].name} → {romaniaGraph.cities[goal!].name}) = <mark className={styles.valueHighlight}>{activeResult.explanation.effective_resistance.toFixed(2)}</mark></p>
+            {current !== "heuristic-steps" && <Link href={`/heuristic-steps${query}&view=result`}>See how {activeResult.explanation.effective_resistance.toFixed(2)} is calculated →</Link>}
+            <p>This is the final effective resistance, read from the selected city’s diagonal in the inverse grounded matrix.</p>
+          </section>
+          {children(activeResult.explanation)}
+        </div>
         : <p className={styles.empty} role="status">Preparing calculation…</p>}
     </main>
   );

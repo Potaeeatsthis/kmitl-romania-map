@@ -1,7 +1,8 @@
 // app/heuristic-steps/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import CalculationPage from "../../components/heuristic/CalculationPage";
 
 import { buildGroundedKirchhoffSystem } from "../../lib/kirchhoff";
@@ -18,11 +19,22 @@ export default function HeuristicStepsPage() {
 }
 
 function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
-  const [stepIndex, onStepIndexChange] = useState(0);
+  const params = useSearchParams();
+  const showResult = params.get("view") === "result";
+  const [stepIndex, onStepIndexChange] = useState(() => showResult ? Math.max(0, explanation.steps.length - 1) : 0);
+  const answerRef = useRef<HTMLTableCellElement>(null);
   const [showBefore, setShowBefore] = useState(false);
+  useEffect(() => {
+    if (showResult && !showBefore && stepIndex === explanation.steps.length - 1) {
+      answerRef.current?.scrollIntoView?.({ block: "center", inline: "center" });
+    }
+  }, [showResult, showBefore, stepIndex, explanation.steps.length]);
   const startName = romaniaGraph.cities[explanation.start].name;
   const goalName = romaniaGraph.cities[explanation.goal].name;
   const system = buildGroundedKirchhoffSystem(explanation);
+  if (system.startIndex === null) {
+    return <section className={styles.content}><div className={styles.lesson}><h2>No elimination needed</h2><p>{startName} is already the destination. No current is needed, so h({startName}) = 0.</p></div></section>;
+  }
   const step = explanation.steps[stepIndex];
   const matrixSize = system.cityIds.length;
   const pivotCityId = system.cityIds[step.pivot_column];
@@ -40,6 +52,14 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
   }
   const divisor = before[selectedRow][step.pivot_column];
   const displayedMatrix = showBefore ? before : step.matrix_after;
+  const afterSwap = before.map((row) => [...row]);
+  if (selectedRow !== step.pivot_row) {
+    [afterSwap[selectedRow], afterSwap[step.pivot_row]] = [afterSwap[step.pivot_row], afterSwap[selectedRow]];
+  }
+  const eliminationRow = afterSwap.findIndex((row, rowIndex) =>
+    rowIndex !== step.pivot_row && Math.abs(row[step.pivot_column]) > 1e-12,
+  );
+  const eliminationFactor = eliminationRow >= 0 ? afterSwap[eliminationRow][step.pivot_column] : 0;
 
   return (
     <div className={styles.content}>
@@ -97,6 +117,12 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
           <li><strong>Make the pivot 1.</strong> Divide every entry in row {step.pivot_row + 1}, on both halves, by {divisor.toPrecision(6)}. The pivot becomes {divisor.toPrecision(6)} ÷ {divisor.toPrecision(6)} = 1.</li>
           <li><strong>Clear the rest of the column.</strong> For each other row, subtract its entry in this column × the normalized pivot row. An entry a becomes a − a × 1 = 0. A row already containing 0 needs no change.</li>
         </ol>
+        <div className={styles.formulaList} role="math" aria-label={`Pivot ${stepIndex + 1} formulas`}>
+          <p className={styles.equation}>p = arg max<sub>r ≥ {step.pivot_column + 1}</sub> |A<sub>r,{step.pivot_column + 1}</sub>| = r{selectedRow + 1}</p>
+          {selectedRow !== step.pivot_row && <p className={styles.equation}>R<sub>{step.pivot_row + 1}</sub> ↔ R<sub>{selectedRow + 1}</sub></p>}
+          <p className={styles.equation}>R<sub>{step.pivot_row + 1}</sub> ← R<sub>{step.pivot_row + 1}</sub> ÷ {divisor.toPrecision(6)}</p>
+          {eliminationRow >= 0 && <p className={styles.equation}>R<sub>{eliminationRow + 1}</sub> ← R<sub>{eliminationRow + 1}</sub> − ({eliminationFactor.toPrecision(6)})R<sub>{step.pivot_row + 1}</sub>; {eliminationFactor.toPrecision(6)} − ({eliminationFactor.toPrecision(6)} × 1) = 0</p>}
+        </div>
         <div className={styles.matrixScroll} role="region" aria-label="Pivot column before and after" tabIndex={0}>
           <table className={styles.lessonTable}>
             <caption>{pivotCityName} column · before and after all three operations</caption>
@@ -108,7 +134,7 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
         <div className={styles.viewControls}><button type="button" onClick={() => { onStepIndexChange(explanation.steps.length - 1); setShowBefore(false); }}>Skip to the finished inverse</button></div>
       </section>
 
-      <details className={styles.matrixDetails}>
+      <details className={styles.matrixDetails} open={showResult || undefined}>
       <summary>Inspect the full augmented matrix · {matrixSize} × {matrixSize * 2}</summary>
       <dl className={styles.matrixGuide}>
         <div>
@@ -198,8 +224,8 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
                   if (isAnswer) classes.push(styles.answerCell);
 
                   return (
-                    <td key={columnIndex} className={classes.join(" ")}>
-                      {Math.abs(value) < 0.0005 ? "0" : value.toFixed(3)}
+                    <td key={columnIndex} className={classes.join(" ")} ref={isAnswer ? answerRef : undefined} aria-label={isAnswer ? `Selected h(${startName} → ${goalName}): ${value.toFixed(2)}` : undefined}>
+                      {isAnswer ? <mark className={styles.valueHighlight} title={value.toPrecision(12)}>{value.toFixed(2)}</mark> : Math.abs(value) < 0.0005 ? "0" : value.toFixed(3)}
                     </td>
                   );
                 })}
@@ -215,7 +241,11 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
       <section className={styles.lesson} aria-labelledby="read-answer-title">
         <h2 id="read-answer-title">How does the final matrix become h(n)?</h2>
         {system.startIndex === null ? <p>{startName} is already the destination. No current is needed, so h({startName}) = 0.</p> : <>
-          <p>Once all {matrixSize} pivots are done, multiply the inverse by the current vector: V = L<sub>g</sub><sup>−1</sup>I. That vector contains just one 1, at {startName}; every other entry is 0.</p>
+          <p>Once all {matrixSize} pivots are done, multiply the inverse by the current vector. That vector contains just one 1, at {startName}; every other entry is 0.</p>
+          <div className={styles.formulaList} role="math" aria-label="Effective resistance formulas">
+            <p className={styles.equation}>V = L<sub>g</sub><sup>−1</sup>I<sub>{startName}</sub></p>
+            <p className={styles.equation}>h({startName}) = R<sub>eff</sub>({startName}, {goalName}) = [L<sub>g</sub><sup>−1</sup>]<sub>{startName},{startName}</sub> = {explanation.effective_resistance.toFixed(4)}</p>
+          </div>
           <ol className={styles.operations}>
             <li><strong>Pick the {startName} column in the right half.</strong> Multiplying by I selects this entire column because all the other columns are multiplied by 0. It gives every city’s voltage for 1 A injected at {startName}.</li>
             <li><strong>Find the {startName} row in that column.</strong> Row {system.startIndex + 1}, column {system.startIndex + 1} of the finished inverse gives V({startName}) = {system.voltage[system.startIndex].toFixed(4)} V, measured relative to {goalName} at 0 V.</li>

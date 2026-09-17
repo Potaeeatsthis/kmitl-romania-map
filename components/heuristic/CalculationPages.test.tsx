@@ -1,6 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import CircuitFlowPage from "../../app/circuit-flow/page";
 import KirchhoffMatrixPage from "../../app/kirchhoff-matrix/page";
 import HeuristicStepsPage from "../../app/heuristic-steps/page";
 import { explainCurrentFlow } from "../../lib/wasm/client";
@@ -35,6 +36,7 @@ describe("calculation teaching pages", () => {
     const user = userEvent.setup();
     render(<HeuristicStepsPage />);
     expect(await screen.findByRole("heading", { name: "What happens in pivot 1?" })).toBeInTheDocument();
+    expect(screen.getByRole("math", { name: "Pivot 1 formulas" })).toHaveTextContent("R1 ← R1 ÷ 1.00000");
     expect(screen.getByRole("button", { name: "← Previous pivot" })).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Next pivot →" }));
     expect(screen.getByRole("heading", { name: "What happens in pivot 2?" })).toBeInTheDocument();
@@ -46,15 +48,56 @@ describe("calculation teaching pages", () => {
     expect(screen.getByText(/Other entries in this column are voltages/)).toBeInTheDocument();
   });
 
-  it("explains the selected city's roads and removes the grounded row", async () => {
+  it("focuses conductances and matrix rows on the selected pair", async () => {
     const user = userEvent.setup();
     render(<KirchhoffMatrixPage />);
-    const select = await screen.findByRole("combobox", { name: "Explore a city" });
-    await user.selectOptions(select, "2");
-    expect(screen.getByRole("table", { name: "Roads connected to Oradea" })).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: /Grounded Lg/ }));
-    expect(screen.getByRole("status")).toHaveTextContent("its row and column have been removed");
-    expect(screen.getByRole("link", { name: "Next: matrix elimination →" })).toHaveAttribute("href", "/heuristic-steps?start=0&goal=2");
+    const roads = await screen.findByRole("table", { name: "Roads connected to Arad and Oradea" });
+    expect(within(roads).getAllByRole("row")).toHaveLength(3);
+    expect(screen.getByRole("math", { name: "Conductance formulas" })).toHaveTextContent("cArad,Zerind = 1 ÷ 1 = 1.000000");
+    expect(screen.getByRole("math", { name: "Kirchhoff matrix formulas" })).toHaveTextContent("Lii = Σj cij");
+    expect(within(screen.getByRole("table", { name: "Kirchhoff rows for Arad and Oradea" })).getAllByRole("row")).toHaveLength(3);
+    expect(screen.getByText(/Show the full grounded matrix/).closest("details")).not.toHaveAttribute("open");
+    await user.click(screen.getByText(/Show the full grounded matrix/));
+    expect(screen.getByRole("table", { name: /Full grounded Kirchhoff matrix excluding Oradea/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Matrix elimination/ })).toHaveAttribute("href", "/heuristic-steps?start=0&goal=2");
+  });
+
+  it("preserves the original A* decision through the numbered steps", async () => {
+    navigation.query = "start=0&goal=2&routeStart=1&decision=3";
+    render(<KirchhoffMatrixPage />);
+    await screen.findByRole("heading", {name: "Highlighted Kirchhoff rows"});
+    expect(screen.getByRole("link", {name: "Back to this A* decision"})).toHaveAttribute("href", "/heuristic-summary?start=1&goal=2#decision-3");
+    const active = screen.getByRole("link", {name: "Kirchhoff matrix"});
+    expect(active).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", {name: "Circuit view"})).toHaveAttribute("href", "/circuit-flow?start=0&goal=2&routeStart=1&decision=3");
+    expect(explainCurrentFlow).toHaveBeenCalledWith(0, 2);
+  });
+
+  it("shows a safe zero-current circuit for the destination itself", async () => {
+    navigation.query = "start=2&goal=2";
+    vi.mocked(explainCurrentFlow).mockResolvedValue({ ...circuit, start: 2, effective_resistance: 0, steps: [] });
+    render(<CircuitFlowPage />);
+    expect(await screen.findByText(/No current is injected/)).toBeInTheDocument();
+    expect(screen.getByRole("math", { name: "Road cost, conductance, and current formulas" })).toHaveTextContent("= 1 ÷ R = 1 ÷ 1 = 1.000000");
+    expect(screen.getByRole("link", {name: "Circuit view"})).toHaveAttribute("aria-current", "page");
+  });
+
+  it("links the highlighted heuristic to the highlighted final inverse entry", async () => {
+    const user = userEvent.setup();
+    navigation.query = "start=0&goal=2&routeStart=1&decision=3";
+    const { unmount } = render(<KirchhoffMatrixPage />);
+    const link = await screen.findByRole("link", {name: "See how 2.00 is calculated →"});
+    expect(screen.getByRole("region", {name: "Selected heuristic value"}).querySelector("mark")).toHaveTextContent("2.00");
+    expect(link).toHaveAttribute("href", "/heuristic-steps?start=0&goal=2&routeStart=1&decision=3&view=result");
+    navigation.query = link.getAttribute("href")!.split("?")[1];
+    unmount();
+    render(<HeuristicStepsPage />);
+    const answer = await screen.findByRole("cell", {name: "Selected h(Arad → Oradea): 2.00"});
+    expect(answer.querySelector("mark")).toHaveTextContent("2.00");
+    expect(answer.closest("details")).toHaveAttribute("open");
+    expect(screen.getByRole("button", {name: "Next pivot →"})).toBeDisabled();
+    await user.click(screen.getByRole("button", {name: "← Previous pivot"}));
+    expect(screen.queryByRole("cell", {name: /Selected h/})).not.toBeInTheDocument();
   });
 
   it("handles invalid routes and failed calculations", async () => {

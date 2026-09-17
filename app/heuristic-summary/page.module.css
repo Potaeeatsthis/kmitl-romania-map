@@ -697,6 +697,24 @@
   line-height: 1.55;
 }
 
+.decisionFormula,
+.choiceFormula,
+.balanceFormula {
+  margin: 8px 0;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.choiceFormula {
+  padding: 9px 10px;
+  background: var(--green-pale);
+}
+
+.balanceFormula { max-width: 42ch; }
+
 .queueTable,
 .balanceTable {
   width: 100%;
@@ -971,4 +989,21 @@
   .scoreEquation > div {
     padding-inline: 4px;
   }
+}
+
+.heuristicLink {
+  color: var(--green-dark);
+  font-variant-numeric: tabular-nums;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.heuristicLink:hover {
+  color: var(--action-strong);
+}
+
+.heuristicLink:focus-visible {
+  border-radius: 3px;
+  outline: 3px solid var(--green-bright);
+  outline-offset: 2px;
 }
