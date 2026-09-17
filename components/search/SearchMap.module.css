@@ -7,6 +7,18 @@
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--map-surface);
+  --map-surface: #0e0e0e;
+  --county-fill: #282828;
+  --county-line: #474747;
+  --country-outline: #4a4a4a;
+  --road-casing: #b5b5b5;
+  --road-center: #707070;
+  --road-label: #ffffff;
+  --city-stroke: #ffffff;
+  --map-label-text: #ffffff;
+  --map-label-halo: #000000;
+  --landcover-urban: #202020;
+  --landcover-lake: #161616;
 }
 
 .map {
@@ -45,7 +57,7 @@
   fill: var(--road-label);
   font: 10px var(--font-interface);
   paint-order: stroke;
-  stroke: var(--map-surface);
+  stroke: var(--map-label-halo, var(--map-surface));
   stroke-width: 5px;
   stroke-linejoin: round;
   text-anchor: middle;
@@ -147,7 +159,7 @@
   font: 11px var(--font-interface);
   text-anchor: middle;
   paint-order: stroke;
-  stroke: var(--map-surface);
+  stroke: var(--map-label-halo, var(--map-surface));
   stroke-width: 5px;
   stroke-linejoin: round;
   pointer-events: none;
@@ -205,6 +217,16 @@
 
 .startCity .cityNode { stroke-dasharray: 2 1; }
 .destinationCity .cityNode { rx: 5px; }
+
+.landcoverUrban {
+  fill: var(--landcover-urban);
+  stroke: none;
+}
+
+.landcoverLake {
+  fill: var(--landcover-lake);
+  stroke: none;
+}
 
 .seaArea {
   fill: var(--sea-fill);

@@ -10,6 +10,7 @@ import type {
 } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
 import { neighboringCountries, seaAreas } from "../../lib/neighboringContext";
+import { urbanAreas, lakes } from "../../lib/romaniaLandcover";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import { getRoadPathD, polylineMidpoint, getRoadPoints } from "../../lib/roadPath";
 import { getRouteCountyDots } from "../../lib/routeCountyDots";
@@ -464,6 +465,11 @@ export default function SearchMap() {
         </g>
         <g className={styles.countyLines} aria-hidden="true">
           {countyOutlines.map((path, index) => <path key={index} d={path} />)}
+        </g>
+
+        <g className={styles.landcover} aria-hidden="true">
+          {urbanAreas.map((path, index) => <path key={`urban-${index}`} className={styles.landcoverUrban} d={path} />)}
+          {lakes.map((path, index) => <path key={`lake-${index}`} className={styles.landcoverLake} d={path} />)}
         </g>
 
         <g className={styles.roads} aria-hidden="true">
