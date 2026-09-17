@@ -9,11 +9,9 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from "react";
 import { countyOutlines } from "../../lib/countyOutlines";
-import { mercatorCityPositions, PROJECTION, unprojectToLatLng } from "../../lib/mercatorProjection";
 import { neighboringCountries, seaAreas } from "../../lib/neighboringContext";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import { getRoadPathD, polylineMidpoint, getRoadPoints } from "../../lib/roadPath";
-import type { RoadVariant } from "../../lib/roadPath";
 import { getRouteCountyDots } from "../../lib/routeCountyDots";
 import type { RouteDotDensity } from "../../lib/routeCountyDots";
 import {
@@ -27,68 +25,13 @@ import type { DiscoveredNode } from "../../lib/types";
 import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./SearchMap.module.css";
 
-import { APIProvider, Map as GoogleMap } from "@vis.gl/react-google-maps";
-
-const GOOGLE_MAP_CENTER = { lat: 45.9432, lng: 24.9668 };
-
-// Our own SVG overlay already draws every label we want (Romanian cities, plus
-// neighboring-country context in neighboringContext.ts). The plain "satellite"
-// map type has no place-name layer at all, so it never clutters -- match that
-// on terrain by turning off all of Google's own labels, everywhere.
-//
-// The country border stroke is turned off too, not just its label: Google
-// renders it in true Web Mercator, while our SVG border (countyOutlines.ts) is
-// a deliberately undistorted linear-equirectangular schematic. The two
-// projections agree on longitude but diverge on latitude scaling further from
-// the view's center, so Google's line visibly drifts from ours near the map
-// edges -- see docs/rootcause/terrain-border-mercator-mismatch.json. That's
-// structural (fixable only by re-projecting all SVG geometry, or moving to a
-// projection-controllable renderer like MapLibre), so instead of showing two
-// disagreeing borders, only our own is shown.
-const TERRAIN_MAP_STYLES = [
-  { elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.country", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-  // Neighboring countries' own internal divisions (e.g. Hungarian megye,
-  // Ukrainian oblast borders) render as dashed lines -- unrelated real-world
-  // context, no different in kind from the country border above.
-  { featureType: "administrative.province", elementType: "geometry.stroke", stylers: [{ visibility: "off" }] },
-];
-
-function GoogleBackgroundMap({
-  mapType,
-  center,
-  zoom,
-}: {
-  mapType: "terrain" | "satellite";
-  center: { lat: number; lng: number };
-  zoom: number;
-}) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return null;
-
-  return (
-    <APIProvider apiKey={apiKey}>
-      <GoogleMap
-        center={center}
-        zoom={zoom}
-        mapTypeId={mapType}
-        styles={mapType === "terrain" ? TERRAIN_MAP_STYLES : undefined}
-        disableDefaultUI
-        gestureHandling="none"
-        keyboardShortcuts={false}
-        clickableIcons={false}
-        style={{ width: "100%", height: "100%" }}
-      />
-    </APIProvider>
-  );
-}
-
-// Padded out from Romania's own tight bounds (120,50,900,650) so neighboring
-// countries and the Black Sea have room to render as visual-only context.
-// This is a *reference* shape, not the final one: getEffectiveMapExtent below
-// stretches whichever dimension is needed so it always matches the panel's
-// own rendered aspect ratio -- see the comment there for why.
-const BASE_MAP_EXTENT = { x: -60, y: -60, width: 1200, height: 870 } as const;
+// Romania's own tight framing, the map's historical viewBox (120,50,900,650).
+// Neighboring countries and the Black Sea still render around it as
+// visual-only context, but only where the panel's shape leaves room. This is a
+// *reference* shape, not the final one: getEffectiveMapExtent below stretches
+// whichever dimension is needed so it always matches the panel's own rendered
+// aspect ratio -- see the comment there for why.
+const BASE_MAP_EXTENT = { x: 120, y: 50, width: 900, height: 650 } as const;
 type MapExtent = { x: number; y: number; width: number; height: number };
 
 // The SVG's viewBox is a fixed shape (BASE_MAP_EXTENT's aspect ratio, ~1.38),
@@ -137,7 +80,6 @@ const MAX_WHEEL_ZOOM_EXPONENT = 0.35;
 
 type MapTouchPoint = { x: number; y: number };
 type MapViewport = { zoom: number; centerX: number; centerY: number };
-type MapDisplayMode = "default" | "terrain" | "satellite";
 type PinchGesture = { startDistance: number; startViewport: MapViewport };
 type PanGesture = {
   pointerId: number;
@@ -155,18 +97,6 @@ const INITIAL_MAP_VIEWPORT: MapViewport = {
   zoom: MAP_MIN_ZOOM,
   centerX: BASE_MAP_EXTENT.x + BASE_MAP_EXTENT.width / 2,
   centerY: BASE_MAP_EXTENT.y + BASE_MAP_EXTENT.height / 2,
-};
-
-const mapDisplayModes: { value: MapDisplayMode; label: string }[] = [
-  { value: "default", label: "Default" },
-  { value: "terrain", label: "Terrain" },
-  { value: "satellite", label: "Satellite" },
-];
-
-const mapDisplayModeClass: Record<MapDisplayMode, string> = {
-  default: styles.displayDefault,
-  terrain: styles.displayTerrain,
-  satellite: styles.displaySatellite,
 };
 
 const labelOffsets: Record<number, { x: number; y: number }> = {
@@ -216,22 +146,11 @@ function getTouchDistance([first, second]: MapTouchPoint[]) {
 export default function SearchMap() {
   const [mapViewport, setMapViewport] = useState<MapViewport>(INITIAL_MAP_VIEWPORT);
   const [isMapPanning, setIsMapPanning] = useState(false);
-  const [displayMode, setDisplayMode] = useState<MapDisplayMode>("default");
-  // Roads/cities are drawn from a parallel Mercator-projected coordinate set
-  // whenever a Google background is visible, so they line up with Google's
-  // own (Mercator) rendering instead of our undistorted equirectangular
-  // schematic -- see lib/mercatorProjection.ts. County outlines stay
-  // equirectangular always; see docs/rootcause/terrain-border-mercator-mismatch.json.
-  const roadVariant: RoadVariant = displayMode === "default" ? "default" : "mercator";
   // Null until the panel has actually been measured (and permanently null in
   // tests, where jsdom has no ResizeObserver) -- getEffectiveMapExtent treats
   // that as "use the fixed reference shape, unmodified".
   const [containerAspect, setContainerAspect] = useState<number | null>(null);
-  // Separate from containerAspect: the Google Maps zoom-level calculation below
-  // needs the actual rendered pixel width, not just the aspect ratio.
-  const [containerWidth, setContainerWidth] = useState<number | null>(null);
   const mapExtent = useMemo(() => getEffectiveMapExtent(containerAspect), [containerAspect]);
-  const [displayModesExpanded, setDisplayModesExpanded] = useState(false);
   const mapRef = useRef<SVGSVGElement>(null);
   const mapTouchesRef = useRef(new Map<number, MapTouchPoint>());
   const pinchGestureRef = useRef<PinchGesture | null>(null);
@@ -290,7 +209,6 @@ export default function SearchMap() {
       const { width, height } = entries[0].contentRect;
       if (width <= 0 || height <= 0) return;
       setContainerAspect(width / height);
-      setContainerWidth(width);
     });
     observer.observe(map);
     return () => observer.disconnect();
@@ -324,34 +242,6 @@ export default function SearchMap() {
   const astarComplete = Boolean(data && step >= data.astar.trace.length - 1);
   const finalPath = getFinalPath(data, ucsComplete, astarComplete);
   const mapZoom = mapViewport.zoom;
-
-  // Keeps the Google Maps background (Terrain/Satellite modes) in sync with the
-  // schematic overlay's own pan/zoom -- otherwise the SVG zooms in on Romania
-  // while the imagery underneath just sits at its fixed initial view. Zoom is
-  // derived by matching how many degrees of longitude the current viewBox
-  // spans against how many degrees a Google Maps zoom level spans at the
-  // panel's actual pixel width (Google: 360deg over 256*2^zoom px).
-  // Standard (non-vector) map tiles only render at integer zoom levels, but
-  // MAP_MIN_ZOOM..MAP_MAX_ZOOM only spans a single doubling (one whole Google
-  // zoom level) in total -- rounding to the nearest integer would make nearly
-  // every zoom step land on the same tile zoom, with the one real crossing
-  // landing wherever the container width happens to put it (often right at
-  // the end, which read as "only the last zoom step does anything"). Instead,
-  // tiles are always fetched at the floor -- never sharper than needed, so
-  // `scale` below is always >= 1 and the wrapper never shrinks smaller than
-  // the panel and reveals blank edges -- and `scale` CSS-zooms those tiles
-  // continuously in between, so every step visibly moves the background,
-  // snapping back to a freshly-loaded 1x whenever floor(rawZoom) increments.
-  const googleView = useMemo(() => {
-    const center = unprojectToLatLng(mapViewport.centerX, mapViewport.centerY);
-    if (!containerWidth) return { center: GOOGLE_MAP_CENTER, zoom: 7, scale: 1 };
-    const viewWidthSvgUnits = mapExtent.width / mapViewport.zoom;
-    const lonSpanDegrees = viewWidthSvgUnits / PROJECTION.lonScale;
-    const rawZoom = Math.log2((360 * containerWidth) / (256 * lonSpanDegrees));
-    const zoom = Math.floor(rawZoom);
-    const scale = 2 ** (rawZoom - zoom);
-    return { center, zoom, scale };
-  }, [mapViewport, mapExtent, containerWidth]);
 
   // Deliberately does NOT setPointerCapture here. Capturing at pointerdown -- before
   // we know whether the gesture is a click or a drag -- redirects the click event
@@ -483,22 +373,9 @@ export default function SearchMap() {
     mapZoom > MAP_MIN_ZOOM ? styles.mapPannable : "",
     isMapPanning ? styles.mapPanning : "",
   ].filter(Boolean).join(" ");
-  const mapPanelClassName = [styles.mapPanel, mapDisplayModeClass[displayMode]].join(" ");
 
   return (
-    <div className={mapPanelClassName}>
-      {displayMode !== "default" && (
-        <div
-          className={styles.mapBackgroundImage}
-          style={{ transform: `scale(${googleView.scale})`, transformOrigin: "center center" }}
-        >
-          <GoogleBackgroundMap
-            mapType={displayMode === "satellite" ? "satellite" : "terrain"}
-            center={googleView.center}
-            zoom={googleView.zoom}
-          />
-        </div>
-      )}
+    <div className={styles.mapPanel}>
       <svg
         ref={mapRef}
         className={mapClassName}
@@ -549,48 +426,19 @@ export default function SearchMap() {
           <mask id="neighboring-fade" maskUnits="userSpaceOnUse" x={mapExtent.x} y={mapExtent.y} width={mapExtent.width} height={mapExtent.height}>
             <rect x={mapExtent.x} y={mapExtent.y} width={mapExtent.width} height={mapExtent.height} fill="url(#neighboring-fade-gradient)" />
           </mask>
-          {/* Terrain/Satellite has no separate neighboring-country shapes to fade
-              (it's one continuous Google image) -- same ellipse as the fade above,
-              inverted: transparent over Romania, opaque toward the edges, painted
-              as an overlay directly on top of the Google background instead of a
-              mask on top of vector shapes. */}
-          <radialGradient
-            id="terrain-vignette-gradient"
-            gradientUnits="userSpaceOnUse"
-            cx="0"
-            cy="0"
-            r="1"
-            gradientTransform={`translate(${mapExtent.x + mapExtent.width / 2} ${mapExtent.y + mapExtent.height / 2}) scale(${mapExtent.width * 0.58} ${mapExtent.height * 0.58})`}
-          >
-            <stop offset="45%" stopColor="var(--neighbor-fill)" stopOpacity="0" />
-            <stop offset="100%" stopColor="var(--neighbor-fill)" stopOpacity="0.92" />
-          </radialGradient>
         </defs>
 
-        {displayMode !== "default" && (
+        <g className={styles.neighboringContext} aria-hidden="true">
+          {/* Unmasked and always fully opaque -- the far corners (behind the Route
+              and Map key panels) must stay filled grey, never fade toward the panel
+              background the way the shapes below are allowed to. */}
           <rect
-            className={styles.terrainVignette}
-            aria-hidden="true"
+            className={styles.neighborBackdrop}
             x={mapExtent.x}
             y={mapExtent.y}
             width={mapExtent.width}
             height={mapExtent.height}
-            fill="url(#terrain-vignette-gradient)"
           />
-        )}
-
-        {displayMode === "default" && (
-          <g className={styles.neighboringContext} aria-hidden="true">
-            {/* Unmasked and always fully opaque -- the far corners (behind the Route
-                and Map key panels) must stay filled grey, never fade toward the panel
-                background the way the shapes below are allowed to. */}
-            <rect
-              className={styles.neighborBackdrop}
-              x={mapExtent.x}
-              y={mapExtent.y}
-              width={mapExtent.width}
-              height={mapExtent.height}
-            />
           <g mask="url(#neighboring-fade)">
             {seaAreas.map((path, index) => <path key={index} className={styles.seaArea} d={path} />)}
             {neighboringCountries.map((country) =>
@@ -599,18 +447,17 @@ export default function SearchMap() {
               )),
             )}
           </g>
-            {/* Labels stay outside the fade -- they're already positioned deep inside
-                each shape (see visualCenter in the generator script), and legibility
-                matters more here than matching the vignette. */}
-            {neighboringCountries
-              .filter((country) => country.label !== null)
-              .map((country) => (
-                <text key={country.name} className={styles.neighborLabel} x={country.label!.x} y={country.label!.y}>
-                  {country.name === "Republic of Serbia" ? "Serbia" : country.name}
-                </text>
-              ))}
-          </g>
-        )}
+          {/* Labels stay outside the fade -- they're already positioned deep inside
+              each shape (see visualCenter in the generator script), and legibility
+              matters more here than matching the vignette. */}
+          {neighboringCountries
+            .filter((country) => country.label !== null)
+            .map((country) => (
+              <text key={country.name} className={styles.neighborLabel} x={country.label!.x} y={country.label!.y}>
+                {country.name === "Republic of Serbia" ? "Serbia" : country.name}
+              </text>
+            ))}
+        </g>
 
         <g className={styles.countryOutline} aria-hidden="true">
           {countyOutlines.map((path, index) => <path key={index} d={path} />)}
@@ -623,30 +470,30 @@ export default function SearchMap() {
           {romaniaGraph.roads.map(([from, to]) => {
             return (
               <g key={`${from}-${to}`}>
-                <path className={styles.roadCasing} d={getRoadPathD(from, to, 0, roadVariant)} />
-                <path className={styles.roadCenter} d={getRoadPathD(from, to, 0, roadVariant)} />
+                <path className={styles.roadCasing} d={getRoadPathD(from, to, 0)} />
+                <path className={styles.roadCenter} d={getRoadPathD(from, to, 0)} />
               </g>
             );
           })}
         </g>
 
-        {ucsFrame && <SearchTreeLines discovered={ucsFrame.discovered} className={styles.ucsTree} offset={-2} variant={roadVariant} />}
-        {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} className={styles.astarTree} offset={2} variant={roadVariant} />}
-        {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} className={styles.ucsPath} offset={-3} variant={roadVariant} />}
-        {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} className={styles.astarPath} offset={3} variant={roadVariant} />}
+        {ucsFrame && <SearchTreeLines discovered={ucsFrame.discovered} className={styles.ucsTree} offset={-2} />}
+        {astarFrame && <SearchTreeLines discovered={astarFrame.discovered} className={styles.astarTree} offset={2} />}
+        {ucsFrame && <ExpandedTreeLines discovered={ucsFrame.discovered} expanded={ucsExpanded} className={styles.ucsPath} offset={-3} />}
+        {astarFrame && <ExpandedTreeLines discovered={astarFrame.discovered} expanded={astarExpanded} className={styles.astarPath} offset={3} />}
         {astarDotPath.length > 1 && <PathDots path={astarDotPath} className={styles.astarRouteDots} offset={3} />}
-        {ucsComplete && data && <PathLines path={data.ucs.path} className={styles.ucsPath} offset={-3} variant={roadVariant} />}
-        {astarComplete && data && <PathLines path={data.astar.path} className={styles.astarPath} offset={3} variant={roadVariant} />}
+        {ucsComplete && data && <PathLines path={data.ucs.path} className={styles.ucsPath} offset={-3} />}
+        {astarComplete && data && <PathLines path={data.astar.path} className={styles.astarPath} offset={3} />}
 
         <g className={styles.roadLabels} aria-hidden="true">
           {romaniaGraph.roads.map(([from, to, distance]) => {
-            const position = roadLabelPosition(from, to, roadVariant);
+            const position = roadLabelPosition(from, to);
             return <text key={`${from}-${to}`} x={position.x} y={position.y}>{distance}</text>;
           })}
         </g>
 
         {romaniaGraph.cities.map((city) => {
-          const position = displayMode === "default" ? city : (mercatorCityPositions.get(city.id) ?? city);
+          const position = city;
           const offset = labelOffsets[city.id] ?? { x: 0, y: 22 };
           const labelX = position.x + offset.x;
           const labelY = position.y + offset.y;
@@ -732,35 +579,6 @@ export default function SearchMap() {
         })}
       </svg>
 
-      <div className={styles.displayModeControls} role="group" aria-label="Map display mode">
-        {mapDisplayModes.filter((mode) => displayModesExpanded || mode.value === displayMode).map((mode) => (
-          <button
-            key={mode.value}
-            className={[
-              styles.displayModeButton,
-              displayMode === mode.value ? styles.displayModeButtonActive : "",
-            ].filter(Boolean).join(" ")}
-            type="button"
-            aria-pressed={displayMode === mode.value}
-            aria-label={`Use ${mode.label.toLowerCase()} map display`}
-            title={`${mode.label} map display`}
-            onClick={() => setDisplayMode(mode.value)}
-          >
-            {mode.label}
-          </button>
-        ))}
-        <button
-          className={styles.displayModeToggle}
-          type="button"
-          aria-expanded={displayModesExpanded}
-          aria-label={displayModesExpanded ? "Hide map display options" : "Show map display options"}
-          title={displayModesExpanded ? "Hide map display options" : "Show map display options"}
-          onClick={() => setDisplayModesExpanded((expanded) => !expanded)}
-        >
-          {displayModesExpanded ? "<" : ">"}
-        </button>
-      </div>
-
       <div className={styles.zoomControls} role="group" aria-label={`Map zoom controls, ${Math.round(mapZoom * 100)}%`}>
         <button className={styles.zoomButton} type="button" onClick={() => updateMapZoom(MAP_ZOOM_STEP)} disabled={mapZoom >= MAP_MAX_ZOOM - 0.001} aria-label="Zoom in" title="Zoom in">
           <ZoomInIcon />
@@ -781,8 +599,8 @@ function ZoomOutIcon() {
   return <svg className={styles.zoomIcon} viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10h12" /></svg>;
 }
 
-function roadLabelPosition(from: number, to: number, variant: RoadVariant = "default") {
-  const mid = polylineMidpoint(getRoadPoints(from, to, variant));
+function roadLabelPosition(from: number, to: number) {
+  const mid = polylineMidpoint(getRoadPoints(from, to));
   const offset = 13;
   const round = (value: number) => Number(value.toFixed(2));
   return {
@@ -791,21 +609,21 @@ function roadLabelPosition(from: number, to: number, variant: RoadVariant = "def
   };
 }
 
-function SearchTreeLines({ discovered, className, offset, variant }: { discovered: DiscoveredNode[]; className: string; offset: number; variant: RoadVariant }) {
+function SearchTreeLines({ discovered, className, offset }: { discovered: DiscoveredNode[]; className: string; offset: number }) {
   return (
     <g className={styles.searchTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null ? null : (
-        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} variant={variant} />
+        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} />
       ))}
     </g>
   );
 }
 
-function ExpandedTreeLines({ discovered, expanded, className, offset, variant }: { discovered: DiscoveredNode[]; expanded: Set<number>; className: string; offset: number; variant: RoadVariant }) {
+function ExpandedTreeLines({ discovered, expanded, className, offset }: { discovered: DiscoveredNode[]; expanded: Set<number>; className: string; offset: number }) {
   return (
     <g className={styles.expandedTree} aria-hidden="true">
       {discovered.map((node) => node.parent === null || !expanded.has(node.city) ? null : (
-        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} variant={variant} />
+        <GraphLine key={`${node.parent}-${node.city}`} from={node.parent} to={node.city} className={className} offset={offset} />
       ))}
     </g>
   );
@@ -845,16 +663,16 @@ function PathDots({ path, className, offset }: { path: number[]; className: stri
   );
 }
 
-function PathLines({ path, className, offset, variant }: { path: number[]; className: string; offset: number; variant: RoadVariant }) {
+function PathLines({ path, className, offset }: { path: number[]; className: string; offset: number }) {
   return (
     <g className={styles.finalPath} aria-hidden="true">
       {path.slice(0, -1).map((city, index) => (
-        <GraphLine key={`${city}-${path[index + 1]}`} from={city} to={path[index + 1]} className={className} offset={offset} variant={variant} />
+        <GraphLine key={`${city}-${path[index + 1]}`} from={city} to={path[index + 1]} className={className} offset={offset} />
       ))}
     </g>
   );
 }
 
-function GraphLine({ from, to, className, offset, variant }: { from: number; to: number; className: string; offset: number; variant: RoadVariant }) {
-  return <path className={className} d={getRoadPathD(from, to, offset, variant)} />;
+function GraphLine({ from, to, className, offset }: { from: number; to: number; className: string; offset: number }) {
+  return <path className={className} d={getRoadPathD(from, to, offset)} />;
 }

@@ -3,25 +3,14 @@
 // Pure geometry helpers for rendering curved road paths on the SVG map.
 // No React, no imports from components/ — same discipline as traceSelectors.ts.
 
-import { mercatorCityPositions, mercatorRoadGeometry } from "./mercatorProjection";
 import { roadGeometry } from "./roadGeometry";
 import { romaniaGraph } from "./romaniaGraph";
 
 export type Point = { x: number; y: number };
 
-/**
- * "default" reads the committed equirectangular schematic coordinates
- * (romaniaGraph.ts / roadGeometry.ts) -- used by the "Default" view.
- * "mercator" reads the parallel Mercator-projected copy from
- * mercatorProjection.ts -- used whenever a Google background (Terrain or
- * Satellite) is visible, so roads line up with Google's own rendering.
- */
-export type RoadVariant = "default" | "mercator";
-
 const cityById = new Map(romaniaGraph.cities.map((city) => [city.id, city]));
 
-function cityPosition(id: number, variant: RoadVariant): Point | undefined {
-  if (variant === "mercator") return mercatorCityPositions.get(id);
+function cityPosition(id: number): Point | undefined {
   const city = cityById.get(id);
   return city ? { x: city.x, y: city.y } : undefined;
 }
@@ -31,12 +20,12 @@ function cityPosition(id: number, variant: RoadVariant): Point | undefined {
  * Falls back to the straight chord if the pair has no baked geometry.
  * Returns [] if either id is unknown (renders an empty <path>).
  */
-export function getRoadPoints(from: number, to: number, variant: RoadVariant = "default"): Point[] {
+export function getRoadPoints(from: number, to: number): Point[] {
   const key = `${Math.min(from, to)}-${Math.max(from, to)}`;
-  const raw = variant === "mercator" ? mercatorRoadGeometry[key] : roadGeometry[key];
+  const raw = roadGeometry[key];
 
-  const fromPos = cityPosition(from, variant);
-  const toPos = cityPosition(to, variant);
+  const fromPos = cityPosition(from);
+  const toPos = cityPosition(to);
 
   if (!fromPos || !toPos) return [];
 
@@ -179,17 +168,16 @@ export function polylineMidpoint(points: Point[]): {
 const pathDCache = new Map<string, string>();
 
 /**
- * Memoised `d` string for an edge at a given offset and coordinate variant.
- * Keyed by `${variant}-${from}-${to}-${offset}`. The map is small and
- * bounded: 23 edges times the handful of offsets and the two variants the
- * map uses.
+ * Memoised `d` string for an edge at a given offset.
+ * Keyed by `${from}-${to}-${offset}`. The map is small and bounded:
+ * 23 edges times the handful of offsets the map uses.
  */
-export function getRoadPathD(from: number, to: number, offset: number, variant: RoadVariant = "default"): string {
-  const cacheKey = `${variant}-${from}-${to}-${offset}`;
+export function getRoadPathD(from: number, to: number, offset: number): string {
+  const cacheKey = `${from}-${to}-${offset}`;
   const cached = pathDCache.get(cacheKey);
   if (cached !== undefined) return cached;
 
-  let points = getRoadPoints(from, to, variant);
+  let points = getRoadPoints(from, to);
   if (offset !== 0) {
     points = offsetPolyline(points, offset);
   }

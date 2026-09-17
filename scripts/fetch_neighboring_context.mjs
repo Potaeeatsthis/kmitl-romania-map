@@ -298,10 +298,10 @@ function distanceToNearestEdge(point, ring) {
 // actually used (clipping the shape, not just restricting the search box).
 const LABEL_MARGIN = 20;
 const ALWAYS_VISIBLE_BOUNDS = {
-  minX: -60 + LABEL_MARGIN,
-  minY: -60 + LABEL_MARGIN,
-  maxX: 1140 - LABEL_MARGIN,
-  maxY: 810 - LABEL_MARGIN,
+  minX: 120 + LABEL_MARGIN,
+  minY: 50 + LABEL_MARGIN,
+  maxX: 1020 - LABEL_MARGIN,
+  maxY: 700 - LABEL_MARGIN,
 };
 
 function visualCenter(ring) {
