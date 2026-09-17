@@ -100,7 +100,7 @@ describe("BenchmarkPanel", () => {
     expect(screen.getByText("UCS 8.616 → A* 6.628 µs")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Arad → Bucharest" })).toBeInTheDocument();
     expect(screen.getByText("418 km")).toBeInTheDocument();
-    expect(screen.getByText(/Arad → Sibiu → Rimnicu Vilcea → Pitesti → Bucharest/)).toBeInTheDocument();
+    expect(screen.getByText(/Arad → Sibiu → Rimnicu → Pitesti → Bucharest/)).toBeInTheDocument();
   });
 
   it("updates the route details for the selected starting point and destination", async () => {

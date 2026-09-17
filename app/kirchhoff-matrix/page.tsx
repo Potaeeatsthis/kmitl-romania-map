@@ -70,8 +70,8 @@ function KirchhoffView({ explanation }: { explanation: HeuristicExplanation }) {
         <h2 id="focused-rows-title">Highlighted Kirchhoff rows</h2>
         <p>The diagonal is the sum of the city’s conductances. A connected city gets −G; every other column is 0.</p>
         <div className={styles.formulaList} role="math" aria-label="Kirchhoff matrix formulas">
-          <p className={styles.equation}>L<sub>ii</sub> = Σ<sub>j</sub> c<sub>ij</sub></p>
-          <p className={styles.equation}>L<sub>ij</sub> = −c<sub>ij</sub> when i and j are connected; otherwise L<sub>ij</sub> = 0</p>
+          <p className={styles.equation}>K<sub>ii</sub> = Σ<sub>j</sub> c<sub>ij</sub></p>
+          <p className={styles.equation}>K<sub>ij</sub> = −c<sub>ij</sub> when i and j are connected; otherwise K<sub>ij</sub> = 0</p>
         </div>
         <div className={styles.matrixScroll} role="region" aria-label="Selected Kirchhoff rows" tabIndex={0}>
           <table className={styles.matrixTable}>
@@ -89,13 +89,13 @@ function KirchhoffView({ explanation }: { explanation: HeuristicExplanation }) {
         </div>
         {focusCityIds.map((cityId) => {
           const roads = conductanceRows.filter((row) => row.cityId === cityId);
-          return <p key={cityId} className={styles.equation}>L({name(cityId)}, {name(cityId)}) = {roads.map((road) => `1/${road.distance}`).join(" + ")} = {number(explanation.laplacian[cityId][cityId])}</p>;
+          return <p key={cityId} className={styles.equation}>K({name(cityId)}, {name(cityId)}) = {roads.map((road) => `1/${road.distance}`).join(" + ")} = {number(explanation.laplacian[cityId][cityId])}</p>;
         })}
         <p>{name(explanation.goal)} is then grounded at 0 V, so its row and column are removed before elimination. Its road conductances remain in neighboring diagonal sums.</p>
         <div className={styles.formulaList} role="math" aria-label="Grounded Kirchhoff system formulas">
           <p className={styles.equation}>V<sub>{name(explanation.goal)}</sub> = 0</p>
-          <p className={styles.equation}>L<sub>g</sub> = L without the {name(explanation.goal)} row and column</p>
-          <p className={styles.equation}>L<sub>g</sub>V = I<sub>{name(explanation.start)}</sub></p>
+          <p className={styles.equation}>K<sub>g</sub> = K without the {name(explanation.goal)} row and column</p>
+          <p className={styles.equation}>K<sub>g</sub>V = I<sub>{name(explanation.start)}</sub></p>
         </div>
       </section>
 

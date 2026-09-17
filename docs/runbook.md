@@ -760,3 +760,79 @@ lint (ESLint is blocked upstream). A mechanical "every `var(--font-*)` is define
 check would go red on the 10 pre-existing circuit usages, so it cannot land green
 without a wider fix. The convention is to use the single app font token,
 `--font-interface`, for all text. See the rootcause file's `automation_gap`.
+
+---
+
+## §15 — `heuristic-roundtrip-loses-explained-city`
+
+Rootcause file: [`rootcause/heuristic-roundtrip-loses-explained-city.json`](rootcause/heuristic-roundtrip-loses-explained-city.json)
+
+### Symptom
+
+**There is no error message.** From the A* summary, click one candidate's h
+value (say Sibiu, `133.74`). The Kirchhoff matrix opens at
+`/kirchhoff-matrix?start=3&goal=12&routeStart=0&decision=0` and correctly
+explains Sibiu. Clicking **Back to this A* decision** returns to
+`/heuristic-summary?start=0&goal=12#decision-0`, and the summary's Circuit
+View / Kirchhoff Matrix / Matrix Elimination stepper now explains **Arad**
+(`h = 199.87`) instead of Sibiu. The engine is correct throughout; only the
+return trip forgets which city was being explained. The individual h links
+also rendered as a bare number with no city or route label.
+
+### Diagnose
+
+```bash
+grep -n "summaryHref\|explained" components/heuristic/CalculationPage.tsx app/heuristic-summary/page.tsx
+```
+
+The calculation pages carried the h-source in `start` and the overall route in
+`routeStart`, but the summary's own `start` is the **route** start — it drives
+`runSearch`. The back link reused `routeStart` for it and had nowhere to put
+the explained city, so `/heuristic-summary?start=0&goal=12` reopened the route
+start's h. The summary's stepper then derived `start` from that same route
+start, and there was no distinct value that could be cleared when the route
+changed.
+
+### Fix
+
+The context contract, in `lib/heuristicQuery.ts` (shared by both pages so the
+producer and consumer cannot drift):
+
+| Param | Meaning |
+|---|---|
+| `start` | city whose h is being explained (calculation pages); route start on the summary |
+| `goal` | destination |
+| `routeStart` | optional overall A* route start |
+| `decision` | optional A* expansion index |
+| `explained` | on `/heuristic-summary` only: the h-source to keep selected |
+
+- Calculation pages build their back link as
+  `/heuristic-summary?start=<routeStart>&goal=<goal>&explained=<start>&decision=<n>#decision-<n>`,
+  and fall back to `/heuristic-summary?start=<start>&goal=<goal>` with no route
+  context.
+- The summary validates `explained`/`decision`, falls back to the route start
+  for absent or invalid input, ignores `explained` when it repeats the route
+  start, labels the selection
+  `Selected calculation: h(Sibiu → Bucharest)`, and forwards the explained city
+  plus `routeStart`/`decision` into the three calculation pages. `runSearch`
+  still runs on the original route start.
+- Calculation pages show one shared result card: the selected pair and its value
+  read `h(Sibiu → Bucharest) = 133.74`, with the overall route
+  (`Overall route: Arad → Bucharest · expansion 1`) as secondary context beside
+  a styled back link. Individual h links read
+  `h(Sibiu → Bucharest) = 133.74` instead of a bare number.
+
+### Prevent
+
+The vitest round-trip tests in
+`components/heuristic/CalculationPages.test.tsx` and
+`components/heuristic/HeuristicSummary.test.tsx` assert the back link, the
+summary label, and the stepper hrefs for a non-route-start explained city
+(Sibiu=3, Arad=0, goal=12), plus the default and invalid-context fallbacks and
+the route-switch case. `presents the selected h(n) once with the overall route
+as separate context` pins the shared result card to a single pair heading with
+the route as secondary context, and `omits the recalculation link on the
+elimination page` pins the page-specific action. Their names are pinned in the
+frontend test inventory in `scripts/verify_invariants.sh`, so deleting or
+renaming them fails `npm run verify:invariants` and CI's **Invariants, parity,
+correctness** job.

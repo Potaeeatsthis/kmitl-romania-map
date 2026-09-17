@@ -503,8 +503,7 @@ export default function SearchMap() {
           const offset = labelOffsets[city.id] ?? { x: 0, y: 22 };
           const labelX = position.x + offset.x;
           const labelY = position.y + offset.y;
-          const isTwoLineLabel = city.id === 9;
-          const labelWidth = (isTwoLineLabel ? 7 : city.name.length) * 6.6 + 10;
+          const labelWidth = city.name.length * 6.6 + 10;
           const ucsLabelHighlighted = ucsFrame
             ? ucsComplete
               ? Boolean(data?.ucs.path.includes(city.id))
@@ -565,20 +564,15 @@ export default function SearchMap() {
                 <rect
                   className={`${styles.cityLabelBackground} ${labelHighlightClass}`}
                   x={labelX - labelWidth / 2}
-                  y={labelY - (isTwoLineLabel ? 17 : 13)}
+                  y={labelY - 13}
                   width={labelWidth}
-                  height={isTwoLineLabel ? 28 : 18}
+                  height={18}
                   rx="3"
                 />
               )}
               <rect className={styles.cityNode} x={position.x - 5} y={position.y - 5} width="10" height="10" rx="2" />
               <text className={labelHighlightClass ? styles.highlightedCityLabel : undefined} x={labelX} y={labelY}>
-                {city.id === 9 ? (
-                  <>
-                    <tspan x={labelX} y={labelY - 6}>Rimnicu</tspan>
-                    <tspan x={labelX} y={labelY + 6}>Vilcea</tspan>
-                  </>
-                ) : city.name}
+                {city.name}
               </text>
             </g>
           );

@@ -109,10 +109,17 @@ closes with Escape and returns focus to the results button
 does not capture the pointer until the drag threshold is crossed
 does not select a city when the pointer drags across the map
 expanded cities include cities through the current step
+falls back to the route start for an invalid explained city
 filters city options by the beginning of the name
+ignores a selected city when the decision is malformed
+ignores a selected city when the decision is missing
 keeps the closed drawer out of keyboard navigation
 keeps the expansion ring populated after a start city is chosen on the map
+keeps the selected city in the stepper while searching the original route
+labels the default selection with the route start
 leaves the map viewport untouched when a zoomed-in click triggers a rolling restart
+omits the recalculation link on the elimination page
+presents the selected h(n) once with the overall route as separate context
 rejects malformed discovered nodes
 rejects malformed frontier nodes
 reports invalid JSON clearly
@@ -122,6 +129,7 @@ returns 0 when data is null
 returns only the cities in the current frontier
 rolling-restarts even when the clicked city is already a current endpoint
 rolling-restarts from a third click once a route is complete
+round-trips the explained city through every calculation page
 runs automatically after two cities are chosen on the map
 runs the search only once both cities are chosen
 runs the selected Rust search and starts playback
@@ -131,6 +139,7 @@ shows final paths only for completed algorithms
 shows the all-pairs benchmark and exact selected-route details
 starts with nothing selected and no reset button
 toggles selecting when the same city is clicked again before a route is complete
+treats an explained city that repeats the route start as the default selection
 updates the route details for the selected starting point and destination
 uses one button that switches between play and pause
 uses the multiplication sign for the close control

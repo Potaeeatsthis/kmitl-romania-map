@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import CalculationStepper from "../../components/heuristic/CalculationStepper";
 import RouteMap, { computeViewBox } from "../../components/heuristic/RouteMap";
 import type { RouteMapMarker } from "../../components/heuristic/RouteMap";
+import { parseCityParam, parseDecisionParam } from "../../lib/heuristicQuery";
 import { buildGroundedKirchhoffSystem } from "../../lib/kirchhoff";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { HeuristicExplanation, SearchResponse } from "../../lib/types";
@@ -20,19 +21,20 @@ type Edge = {
   conductance: number;
 };
 
-function parseCityParam(value: string | null): number | null {
-  if (value === null || value.trim() === "") return null;
-  const parsed = Number(value);
-  if (!Number.isInteger(parsed) || parsed < 0 || parsed >= romaniaGraph.cities.length) {
-    return null;
-  }
-  return parsed;
-}
-
 export default function HeuristicSummaryPage() {
   const searchParams = useSearchParams();
   const startCity = parseCityParam(searchParams.get("start"));
   const destinationCity = parseCityParam(searchParams.get("goal"));
+  // The explained city is the h-source the visitor was inspecting. It rides in
+  // its own param because `start` stays the route start that runSearch needs.
+  // It is only usable when its `decision` is valid too: the stepper forwards
+  // routeStart + decision as one context, so a selection missing either half
+  // would make the calculation pages drop the overall route. Absent, malformed
+  // or incomplete input falls back to the route-start default.
+  const explainedParam = parseCityParam(searchParams.get("explained"));
+  const decision = parseDecisionParam(searchParams.get("decision"));
+  const hasSelection = explainedParam !== null && decision !== null && explainedParam !== startCity;
+  const explainedCity = hasSelection ? explainedParam : startCity;
 
   const [explanation, setExplanation] = useState<HeuristicExplanation | null>(null);
   const [search, setSearch] = useState<SearchResponse | null>(null);
@@ -74,7 +76,15 @@ export default function HeuristicSummaryPage() {
     };
   }, [startCity, destinationCity]);
 
-  const query = startCity !== null && destinationCity !== null ? `?start=${startCity}&goal=${destinationCity}` : "";
+  // The stepper must keep explaining the selected city while the search below
+  // stays on the original route. When a city is selected it is forwarded as the
+  // calculation pages' `start`, with the route start and decision as context;
+  // the default selection keeps the original `?start=<routeStart>&goal=<goal>`.
+  const query = startCity !== null && destinationCity !== null
+    ? hasSelection
+      ? `?start=${explainedCity}&goal=${destinationCity}&routeStart=${startCity}${decision !== null ? `&decision=${decision}` : ""}`
+      : `?start=${startCity}&goal=${destinationCity}`
+    : "";
 
   return (
     <main className={styles.page}>
@@ -85,7 +95,14 @@ export default function HeuristicSummaryPage() {
             Follow every A* decision. Select any h(n) value to see its conductance and Kirchhoff calculation.
           </p>
         </div>
-        <CalculationStepper query={query} />
+        <div className={styles.headerAside}>
+          {startCity !== null && destinationCity !== null && explainedCity !== null && (
+            <p className={styles.selectedCalculation}>
+              Selected calculation: <strong>h({romaniaGraph.cities[explainedCity].name} → {romaniaGraph.cities[destinationCity].name})</strong>
+            </p>
+          )}
+          <CalculationStepper query={query} />
+        </div>
       </header>
 
       {startCity === null || destinationCity === null ? (
@@ -242,11 +259,11 @@ function SummaryView({
                           <div><span>g(n)</span><strong>{chosenCandidate.cost.toFixed(1)}</strong><small>travelled</small></div>
                           <b aria-hidden="true">+</b>
                           <div>
-                            <span>h(n)</span>
+                            <span>h({romaniaGraph.cities[chosenCandidate.city].name} → {goalName})</span>
                             <Link
                               className={styles.heuristicLink}
                               href={`/kirchhoff-matrix?start=${chosenCandidate.city}&goal=${explanation.goal}&routeStart=${explanation.start}&decision=${traceIndex}` }
-                              aria-label={`Show how h(${romaniaGraph.cities[chosenCandidate.city].name}) is calculated`}
+                              aria-label={`Show how h(${romaniaGraph.cities[chosenCandidate.city].name} → ${goalName}) = ${(chosenCandidate.priority - chosenCandidate.cost).toFixed(2)} is calculated`}
                             >
                               <strong>{(chosenCandidate.priority - chosenCandidate.cost).toFixed(2)}</strong>
                             </Link>
@@ -292,9 +309,9 @@ function SummaryView({
                                   <Link
                                     className={styles.heuristicLink}
                                     href={`/kirchhoff-matrix?start=${candidate.city}&goal=${explanation.goal}&routeStart=${explanation.start}&decision=${traceIndex}` }
-                                    aria-label={`Show how h(${romaniaGraph.cities[candidate.city].name}) is calculated`}
+                                    aria-label={`Show how h(${romaniaGraph.cities[candidate.city].name} → ${goalName}) = ${(candidate.priority - candidate.cost).toFixed(2)} is calculated`}
                                   >
-                                    {(candidate.priority - candidate.cost).toFixed(2)}
+                                    h({romaniaGraph.cities[candidate.city].name} → {goalName}) = {(candidate.priority - candidate.cost).toFixed(2)}
                                   </Link>
                                 </td>
                                 <td><strong>{candidate.priority.toFixed(2)}</strong></td>

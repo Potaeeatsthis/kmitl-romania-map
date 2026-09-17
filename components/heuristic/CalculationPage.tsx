@@ -3,17 +3,12 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { parseCityParam, parseDecisionParam } from "../../lib/heuristicQuery";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { HeuristicExplanation } from "../../lib/types";
 import { explainCurrentFlow } from "../../lib/wasm/client";
 import CalculationStepper from "./CalculationStepper";
 import styles from "../../app/heuristic-steps/page.module.css";
-
-function cityParam(value: string | null) {
-  if (value === null || value.trim() === "") return null;
-  const city = Number(value);
-  return Number.isInteger(city) && city >= 0 && city < romaniaGraph.cities.length ? city : null;
-}
 
 type Props = {
   title: string;
@@ -28,8 +23,8 @@ export default function CalculationPage(props: Props) {
 
 function CalculationContent({ title, intro, current, children }: Props) {
   const params = useSearchParams();
-  const start = cityParam(params.get("start"));
-  const goal = cityParam(params.get("goal"));
+  const start = parseCityParam(params.get("start"));
+  const goal = parseCityParam(params.get("goal"));
   const key = `${start}:${goal}`;
   const [result, setResult] = useState<{ key: string; explanation?: HeuristicExplanation; error?: string } | null>(null);
 
@@ -44,13 +39,22 @@ function CalculationContent({ title, intro, current, children }: Props) {
   }, [start, goal, key]);
 
   const valid = start !== null && goal !== null;
-  const routeStart = cityParam(params.get("routeStart"));
-  const rawDecision = params.get("decision");
-  const decision = rawDecision !== null && /^\d+$/.test(rawDecision) && Number.isSafeInteger(Number(rawDecision)) ? Number(rawDecision) : null;
+  const routeStart = parseCityParam(params.get("routeStart"));
+  const decision = parseDecisionParam(params.get("decision"));
   const hasContext = routeStart !== null && decision !== null;
   const query = valid ? `?start=${start}&goal=${goal}${hasContext ? `&routeStart=${routeStart}&decision=${decision}` : ""}` : "";
-  const summaryHref = valid ? `/heuristic-summary?start=${routeStart ?? start}&goal=${goal}${hasContext ? `#decision-${decision}` : ""}` : "/heuristic-summary";
+  // The summary's `start` is the overall route start (it drives the search), so
+  // the city being explained travels in its own `explained` param or the return
+  // trip would silently fall back to the route start. With no route context the
+  // two coincide and there is nothing to preserve.
+  const summaryHref = valid
+    ? hasContext
+      ? `/heuristic-summary?start=${routeStart}&goal=${goal}&explained=${start}&decision=${decision}#decision-${decision}`
+      : `/heuristic-summary?start=${start}&goal=${goal}`
+    : "/heuristic-summary";
   const activeResult = result?.key === key ? result : null;
+  const explanation = activeResult?.explanation;
+  const value = explanation?.effective_resistance.toFixed(2);
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -60,23 +64,37 @@ function CalculationContent({ title, intro, current, children }: Props) {
         </div>
         <CalculationStepper current={current} query={query} />
       </header>
-      {valid && <div className={styles.content}>
-        <p className={styles.routeLine}>
-          <strong>h({romaniaGraph.cities[start].name} → {romaniaGraph.cities[goal].name})</strong>
-          {hasContext && <> · From expansion {decision + 1} of {romaniaGraph.cities[routeStart].name} → {romaniaGraph.cities[goal].name}</>}
-          {" · "}<Link href={summaryHref}>{hasContext ? "Back to this A* decision" : "Back to A* decisions"}</Link>
-        </p>
-      </div>}
+      {valid && explanation && (
+        <section className={styles.selectedResult} aria-label="Selected heuristic value">
+          <div className={styles.resultCopy}>
+            <h2 className={styles.resultTitle}>
+              h({romaniaGraph.cities[start].name} → {romaniaGraph.cities[goal].name}) ={" "}
+              <mark className={styles.valueHighlight}>{value}</mark>
+            </h2>
+            <p className={styles.resultNote}>
+              Final effective resistance, from the selected city’s diagonal in the inverse grounded matrix.
+            </p>
+          </div>
+          <div className={styles.resultNav}>
+            {current !== "heuristic-steps" && (
+              <Link className={styles.resultAction} href={`/heuristic-steps${query}&view=result`}>
+                See how {value} is calculated →
+              </Link>
+            )}
+            {hasContext && (
+              <p className={styles.routeContext}>
+                Overall route: {romaniaGraph.cities[routeStart].name} → {romaniaGraph.cities[goal].name} · expansion {decision + 1}
+              </p>
+            )}
+            <Link className={styles.backLink} href={summaryHref}>
+              {hasContext ? "Back to this A* decision" : "Back to A* decisions"}
+            </Link>
+          </div>
+        </section>
+      )}
       {!valid ? <p className={styles.empty}>Choose a starting point and a destination on the map first, then come back here.</p>
         : activeResult?.error ? <p className={styles.errorText} role="alert">Could not calculate: {activeResult.error}. Reload this page to try again.</p>
-        : activeResult?.explanation ? <div key={key}>
-          <section className={styles.selectedResult} aria-label="Selected heuristic value">
-            <p>h({romaniaGraph.cities[start!].name} → {romaniaGraph.cities[goal!].name}) = <mark className={styles.valueHighlight}>{activeResult.explanation.effective_resistance.toFixed(2)}</mark></p>
-            {current !== "heuristic-steps" && <Link href={`/heuristic-steps${query}&view=result`}>See how {activeResult.explanation.effective_resistance.toFixed(2)} is calculated →</Link>}
-            <p>This is the final effective resistance, read from the selected city’s diagonal in the inverse grounded matrix.</p>
-          </section>
-          {children(activeResult.explanation)}
-        </div>
+        : explanation ? <div key={key}>{children(explanation)}</div>
         : <p className={styles.empty} role="status">Preparing calculation…</p>}
     </main>
   );

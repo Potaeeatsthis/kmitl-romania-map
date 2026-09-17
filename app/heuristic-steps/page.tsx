@@ -10,10 +10,6 @@ import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { HeuristicExplanation } from "../../lib/types";
 import styles from "./page.module.css";
 
-function shortCityName(cityId: number): string {
-  return romaniaGraph.cities[cityId].name.slice(0, 3);
-}
-
 export default function HeuristicStepsPage() {
   return <CalculationPage current="heuristic-steps" title="Gauss–Jordan matrix elimination" intro="Separate the city voltages one column at a time, then read the value A* uses as its estimate.">{(explanation) => <StepsView explanation={explanation} />}</CalculationPage>;
 }
@@ -65,10 +61,10 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
     <div className={styles.content}>
       <section className={styles.lesson} aria-labelledby="elimination-purpose">
         <h2 id="elimination-purpose">What are we trying to do?</h2>
-        <p>Each row of L<sub>g</sub>V = I is an equation containing several unknown city voltages. Elimination combines equivalent equations until each row isolates one voltage. A pivot is the entry we turn into 1; the other entries in its column become 0.</p>
-        <p className={styles.equation}>[ L<sub>g</sub> | identity ] → [ identity | L<sub>g</sub><sup>−1</sup> ]</p>
+        <p>Each row of K<sub>g</sub>V = I is an equation containing several unknown city voltages. Elimination combines equivalent equations until each row isolates one voltage. A pivot is the entry we turn into 1; the other entries in its column become 0.</p>
+        <p className={styles.equation}>[ K<sub>g</sub> | identity ] → [ identity | K<sub>g</sub><sup>−1</sup> ]</p>
         <p>The identity matrix has 1 on its diagonal and 0 elsewhere. Apply every row operation to both halves: when the left half becomes identity, the right half is the inverse, which converts injected currents into voltages.</p>
-        <p><strong>Two different meanings:</strong> I in L<sub>g</sub>V = I is the current vector. “Identity” above means a square matrix, not injected current.</p>
+        <p><strong>Two different meanings:</strong> I in K<sub>g</sub>V = I is the current vector. “Identity” above means a square matrix, not injected current.</p>
       </section>
       <section className={styles.stepPanel} aria-labelledby="current-pivot-title">
         <div className={styles.stepCopy}>
@@ -130,7 +126,7 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
             <tbody>{before.map((row, index) => <tr key={index}><th scope="row">r{index + 1}</th><td>{row[step.pivot_column].toFixed(6)}</td><td>{step.matrix_after[index][step.pivot_column].toFixed(6)}</td><td>{index === step.pivot_row ? "Pivot becomes 1" : "Column entry is 0"}</td></tr>)}</tbody>
           </table>
         </div>
-        <p>Rows are equation positions, not permanent city labels: a swap moves an entire equation. Column labels still identify the city voltages.</p>
+        <p>Rows are equation positions, not permanent city labels: a swap moves an entire equation, so the (rN) numbers identify rows in the operations. The city beside a row is the voltage it isolates once elimination finishes; column labels identify the city voltages.</p>
         <div className={styles.viewControls}><button type="button" onClick={() => { onStepIndexChange(explanation.steps.length - 1); setShowBefore(false); }}>Skip to the finished inverse</button></div>
       </section>
 
@@ -139,11 +135,11 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
       <dl className={styles.matrixGuide}>
         <div>
           <dt>Left half</dt>
-          <dd>L<sub>g</sub> is reduced toward identity.</dd>
+          <dd>K<sub>g</sub> is reduced toward identity.</dd>
         </div>
         <div>
           <dt>Right half</dt>
-          <dd>The same row operations build L<sub>g</sub><sup>−1</sup>.</dd>
+          <dd>The same row operations build K<sub>g</sub><sup>−1</sup>.</dd>
         </div>
         <div>
           <dt>Highlighted cross</dt>
@@ -169,9 +165,9 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
           <thead>
             <tr>
               <th className={styles.cornerCell} rowSpan={2} scope="col">row</th>
-              <th colSpan={matrixSize} scope="colgroup">Reducing L<sub>g</sub> → identity</th>
+              <th colSpan={matrixSize} scope="colgroup">Reducing K<sub>g</sub> → identity</th>
               <th className={styles.inverseGroup} colSpan={matrixSize} scope="colgroup">
-                Building L<sub>g</sub><sup>−1</sup>
+                Building K<sub>g</sub><sup>−1</sup>
               </th>
             </tr>
             <tr>
@@ -181,9 +177,7 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
                   className={cityId === pivotCityId ? styles.pivotColumnHeader : undefined}
                   scope="col"
                 >
-                  <abbr title={romaniaGraph.cities[cityId].name} aria-label={romaniaGraph.cities[cityId].name}>
-                    {shortCityName(cityId)}
-                  </abbr>
+                  {romaniaGraph.cities[cityId].name}
                 </th>
               ))}
               {system.cityIds.map((cityId) => (
@@ -192,9 +186,7 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
                   className={cityId === explanation.start && isLastStep && !showBefore ? styles.answerHeader : undefined}
                   scope="col"
                 >
-                  <abbr title={romaniaGraph.cities[cityId].name} aria-label={romaniaGraph.cities[cityId].name}>
-                    {shortCityName(cityId)}
-                  </abbr>
+                  {romaniaGraph.cities[cityId].name}
                 </th>
               ))}
             </tr>
@@ -206,7 +198,8 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
                   className={rowIndex === step.pivot_row ? styles.pivotRowHeader : undefined}
                   scope="row"
                 >
-                  r{rowIndex + 1}
+                  {romaniaGraph.cities[system.cityIds[rowIndex]].name}
+                  <span className={styles.rowNumber}> (r{rowIndex + 1})</span>
                 </th>
                 {row.map((value, columnIndex) => {
                   const isPivotRow = rowIndex === step.pivot_row;
@@ -243,8 +236,8 @@ function StepsView({ explanation }: { explanation: HeuristicExplanation }) {
         {system.startIndex === null ? <p>{startName} is already the destination. No current is needed, so h({startName}) = 0.</p> : <>
           <p>Once all {matrixSize} pivots are done, multiply the inverse by the current vector. That vector contains just one 1, at {startName}; every other entry is 0.</p>
           <div className={styles.formulaList} role="math" aria-label="Effective resistance formulas">
-            <p className={styles.equation}>V = L<sub>g</sub><sup>−1</sup>I<sub>{startName}</sub></p>
-            <p className={styles.equation}>h({startName}) = R<sub>eff</sub>({startName}, {goalName}) = [L<sub>g</sub><sup>−1</sup>]<sub>{startName},{startName}</sub> = {explanation.effective_resistance.toFixed(4)}</p>
+            <p className={styles.equation}>V = K<sub>g</sub><sup>−1</sup>I<sub>{startName}</sub></p>
+            <p className={styles.equation}>h({startName}) = R<sub>eff</sub>({startName}, {goalName}) = [K<sub>g</sub><sup>−1</sup>]<sub>{startName},{startName}</sub> = {explanation.effective_resistance.toFixed(4)}</p>
           </div>
           <ol className={styles.operations}>
             <li><strong>Pick the {startName} column in the right half.</strong> Multiplying by I selects this entire column because all the other columns are multiplied by 0. It gives every city’s voltage for 1 A injected at {startName}.</li>
