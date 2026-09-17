@@ -712,3 +712,51 @@ file's updated `fix`/`notes` for the full reasoning, including why this went
 the *opposite* direction from the border fix (reproject our data vs. hide
 Google's) and why that's not a contradiction — roads have committed source
 coordinates to reproject from; the border doesn't.
+
+---
+
+## §14 — `svg-map-note-font-fallback`
+
+Rootcause file: [`rootcause/svg-map-note-font-fallback.json`](rootcause/svg-map-note-font-fallback.json)
+
+### Symptom
+
+**There is no error message.** On the A* walkthrough map (`RouteMap.tsx`), the
+small `f=` score labels below the "waiting in queue" city markers render in the
+browser's generic monospace, visibly different from the city-name labels on the
+same markers. Both should be Departure Mono.
+
+### Diagnose
+
+```bash
+grep -rn -- "--font-mono" app components
+```
+
+`.markerNote` in `components/heuristic/RouteMap.module.css` used
+`var(--font-mono, monospace)`, but `--font-mono` is defined nowhere — only
+`--font-interface` exists, in `app/globals.css`. A `var()` with an undefined
+property resolves to its fallback, so the notes silently dropped to generic
+`monospace`. `.markerLabel` used `var(--font-interface, sans-serif)`, which is
+why the two layers disagreed.
+
+### Fix
+
+Point the note at the same token the city label already uses:
+
+```css
+/* components/heuristic/RouteMap.module.css */
+.markerNote {
+  font: 600 10.5px var(--font-interface, sans-serif);
+}
+```
+
+The same undefined-token pattern still exists in `components/circuit/CircuitMap.module.css`
+and `app/circuit-flow/page.module.css` (10 rules). Left untouched — out of scope.
+
+### Prevent
+
+No script check: jsdom cannot resolve CSS custom properties, and there is no CSS
+lint (ESLint is blocked upstream). A mechanical "every `var(--font-*)` is defined"
+check would go red on the 10 pre-existing circuit usages, so it cannot land green
+without a wider fix. The convention is to use the single app font token,
+`--font-interface`, for all text. See the rootcause file's `automation_gap`.

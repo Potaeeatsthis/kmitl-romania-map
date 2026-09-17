@@ -223,7 +223,7 @@ function SummaryView({
               <article id={`decision-${traceIndex}`} className={styles.nodeCard} key={`${cityId}-${traceIndex}`}>
                 <header className={styles.nodeHeader}>
                   <h3>
-                    <span>Expansion {traceIndex + 1}</span> — {cityName}
+                    <span>Route step {traceIndex + 1}</span> — {cityName}
                   </h3>
                   {isStart && <strong>1 A current source</strong>}
                 </header>

@@ -30,6 +30,7 @@ instead, because nobody will ever arrive here with a string to search for.
 
 | `useSearchParams() should be wrapped in a suspense boundary` during static export | `calculation-missing-suspense` | §12 |
 | *(no error text)* In Terrain/Satellite view, Google's own black country-border line (or a thin sliver of Google's own real road) visibly drifts from our green SVG border/route, worst near the map edges or on roads spanning more latitude | `terrain-border-mercator-mismatch` | §13 |
+| *(no error text)* The `f=` score labels under a map's "waiting in queue" city markers render in a different font from the city-name labels on the same markers | `svg-map-note-font-fallback` | §14 |
 
 ## Step 2 — Apply the known fix
 
