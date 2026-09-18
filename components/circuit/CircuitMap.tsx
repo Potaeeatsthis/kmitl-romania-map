@@ -67,6 +67,25 @@ function estimateTextWidth(text: string, fontSize: number): number {
   return text.length * fontSize * 0.62;
 }
 
+/**
+ * Short roads (common once a crop zooms in tight, or between neighboring
+ * cities like Arad-Zerind) put the road's midpoint very close to the city
+ * node itself -- pushing the edge label out by a fixed gap isn't enough,
+ * because the node's own name/voltage labels are sitting right there too.
+ * This scales the push further out the shorter the road is on screen.
+ */
+function adaptiveEdgeGap(points: { x: number; y: number }[], baseGap: number): number {
+  if (points.length < 2) return baseGap;
+  let length = 0;
+  for (let i = 1; i < points.length; i++) {
+    length += Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+  }
+  const shortRoadThreshold = 130;
+  if (length >= shortRoadThreshold) return baseGap;
+  const boost = Math.min(3, shortRoadThreshold / Math.max(length, 20));
+  return baseGap * boost;
+}
+
 function LabelPill({
   x,
   y,
@@ -108,7 +127,8 @@ function LabelPill({
  * All label offsets scale with the viewBox width so spacing stays legible
  * whether this renders the full 20-city map or a tight per-node crop. Each
  * offset also carries a floor (via Math.max) so tightly-cropped views don't
- * shrink the gaps enough for neighboring labels to collide.
+ * shrink the gaps enough for neighboring labels to collide, and edge labels
+ * additionally push further out when the road itself is short on screen.
  */
 export default function CircuitMap({
   viewBox,
@@ -126,9 +146,9 @@ export default function CircuitMap({
   consideredEdges?: Set<string>;
 }) {
   const scale = parseViewBoxWidth(viewBox) / REFERENCE_VIEWBOX_WIDTH;
-  const nodeNameGap = Math.max(15 * scale, 13);
-  const nodeVoltageGap = Math.max(30 * scale, 26);
-  const edgeLabelGap = Math.max(46 * scale, 40);
+  const nodeNameGap = Math.max(15 * scale, 22);
+  const nodeVoltageGap = Math.max(30 * scale, 40);
+  const edgeLabelGap = Math.max(46 * scale, 70);
   const resistorLength = 24 * scale;
   const resistorAmplitude = 6 * scale;
   const nodeFontSize = Math.max(11, 14 * scale);
@@ -189,8 +209,9 @@ export default function CircuitMap({
           const tx = mid.ny;
           const ty = -mid.nx;
           resistorD = buildResistorSymbol(mid.x, mid.y, tx, ty, mid.nx, mid.ny, resistorLength, resistorAmplitude);
-          labelX = mid.x + mid.nx * edgeLabelGap;
-          labelY = mid.y + mid.ny * edgeLabelGap;
+          const gap = adaptiveEdgeGap(points, edgeLabelGap);
+          labelX = mid.x + mid.nx * gap;
+          labelY = mid.y + mid.ny * gap;
           labelText = `${edge.distance}Ω · ${edge.current.toFixed(3)}A`;
         }
 

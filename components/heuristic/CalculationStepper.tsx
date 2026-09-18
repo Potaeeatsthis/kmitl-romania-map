@@ -1,3 +1,4 @@
+//components/heuristic/CalculationStepper.tsx
 import Link from "next/link";
 import styles from "./CalculationStepper.module.css";
 

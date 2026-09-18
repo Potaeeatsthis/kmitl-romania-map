@@ -1,3 +1,4 @@
+//lib/kirchhoff.test.ts
 import { describe, expect, it } from "vitest";
 
 import type { HeuristicExplanation } from "./types";

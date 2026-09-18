@@ -28,21 +28,21 @@
 }
 
 :global(html[data-theme="dark"]) .svg {
-  --ink: #d6d7da;
-  --muted: #a9adb5;
+  --ink: #e4ece7;
+  --muted: #8fa79b;
   --green: #00ed64;
   --green-dark: #00ed64;
   --green-bright: #00ed64;
-  --green-mid: #eeeeee;
-  --green-pale: #272525;
-  --line: #393e46;
-  --surface: #242222;
-  --map-surface: #1b1919;
-  --county-fill: #201e1e;
-  --county-line: #32343a;
-  --country-outline: #555c66;
-  --wire-faint: #3c4642;
-  --considered-line: #d6a85f;
+  --green-mid: #3fd98a;
+  --green-pale: #182420;
+  --line: #33453c;
+  --surface: #1b2420;
+  --map-surface: #141a17;
+  --county-fill: #1c2622;
+  --county-line: #2b3a33;
+  --country-outline: #47594f;
+  --wire-faint: #3d4d45;
+  --considered-line: #e8a24d;
   --volt-hot: #e8a24d;
   --volt-cold: #4db6d9;
 }

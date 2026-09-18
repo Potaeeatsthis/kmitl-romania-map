@@ -5,12 +5,12 @@ import CircuitFlowPage from "../../app/circuit-flow/page";
 import KirchhoffMatrixPage from "../../app/kirchhoff-matrix/page";
 import HeuristicStepsPage from "../../app/heuristic-steps/page";
 import { romaniaGraph } from "../../lib/romaniaGraph";
-import { explainCurrentFlow } from "../../lib/wasm/client";
+import { explainCurrentFlow, runSearch } from "../../lib/wasm/client";
 import type { HeuristicExplanation } from "../../lib/types";
 
 const navigation = vi.hoisted(() => ({ query: "start=0&goal=2" }));
 vi.mock("next/navigation", () => ({ useSearchParams: () => new URLSearchParams(navigation.query) }));
-vi.mock("../../lib/wasm/client", () => ({ explainCurrentFlow: vi.fn() }));
+vi.mock("../../lib/wasm/client", () => ({ explainCurrentFlow: vi.fn(),runSearch: vi.fn(), }));
 
 // A small, exactly solvable circuit: 0--1--2, each road has resistance 1.
 const circuit: HeuristicExplanation = {
@@ -77,6 +77,34 @@ function wideExplanation(start: number, goal: number, resistance: number): Heuri
 beforeEach(() => {
   navigation.query = "start=0&goal=2";
   vi.mocked(explainCurrentFlow).mockReset().mockResolvedValue(circuit);
+  // CircuitFlowPage fetches its own A* trace independently of explainCurrentFlow;
+  // give it a generic, always-valid response keyed off whatever start/goal it's
+  // called with, so tests that don't care about per-terminal detail never crash
+  // the whole tree on an unresolved mock (no error boundary catches that).
+  vi.mocked(runSearch).mockReset().mockImplementation(async (start: number, goal: number) => ({
+    ucs: {
+      path: [start, goal],
+      explored_order: [start],
+      trace: [],
+      cost: 0,
+      expanded: 0,
+      generated: 0,
+      peak_frontier: 0,
+      peak_records: 0,
+      peak_payload_bytes: 0,
+    },
+    astar: {
+      path: [start, goal],
+      explored_order: [start],
+      trace: [{ expanded_city: start, expanded_cost: 0, frontier: [], discovered: [] }],
+      cost: 0,
+      expanded: 1,
+      generated: 1,
+      peak_frontier: 1,
+      peak_records: 1,
+      peak_payload_bytes: 0,
+    },
+  }));
 });
 
 describe("calculation teaching pages", () => {

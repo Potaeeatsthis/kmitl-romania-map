@@ -1,3 +1,4 @@
+//lib/kirchhoff.ts
 import type { HeuristicExplanation } from "./types";
 
 export type GroundedKirchhoffSystem = {
