@@ -123,23 +123,23 @@
 
 .brandMark {
   width: 40px;
-  height: 40px;
+  height: 34px;
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  border-radius: 10px;
-  background: var(--action-strong);
-  color: var(--on-accent);
-  font-size: 18px;
-  line-height: 1;
+  color: var(--green-bright);
+}
+
+.brandRoute {
+  display: block;
 }
 
 .title {
   margin: 0;
-  font-size: clamp(17px, 2vw, 21px);
+  font-size: clamp(16px, 1.8vw, 19px);
   font-weight: 400;
   line-height: 1.15;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 .productTag {
@@ -254,14 +254,12 @@
   }
 
   .brandMark {
-    width: 36px;
-    height: 36px;
-    border-radius: 9px;
-    font-size: 16px;
+    width: 40px;
+    height: 32px;
   }
 
   .title {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .productTag {

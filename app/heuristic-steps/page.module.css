@@ -548,7 +548,8 @@
   justify-content: center;
   padding: 8px 14px;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 0;
+  box-shadow: 3px 3px 0 var(--line);
   color: var(--green-dark);
   font-size: 12px;
   text-decoration: none;
@@ -558,6 +559,7 @@
 .backLink:hover {
   border-color: var(--green-dark);
   background: var(--green-pale);
+  box-shadow: 3px 3px 0 var(--green-dark);
 }
 
 .valueHighlight {

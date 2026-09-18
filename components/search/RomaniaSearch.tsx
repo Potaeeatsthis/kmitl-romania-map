@@ -70,10 +70,29 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
     <main className={styles.page}>
       <header className={styles.header}>
         <div className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true">R</span>
+          <span className={styles.brandMark} aria-hidden="true">
+            <svg
+              className={styles.brandRoute}
+              viewBox="0 0 30 24"
+              width="40"
+              height="32"
+              fill="none"
+              focusable="false"
+            >
+              <path
+                d="M4 4H15V20H26"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <rect x="2" y="2" width="4" height="4" fill="currentColor" />
+              <rect x="24" y="18" width="4" height="4" fill="currentColor" />
+            </svg>
+          </span>
           <div>
-            <h1 className={styles.title}>Romania search</h1>
-            <p className={styles.productTag}>RUST / WASM TRACE</p>
+            <h1 className={styles.title}>Romania Search</h1>
+            <p className={styles.productTag}>PATHFINDING VISUALIZER</p>
           </div>
         </div>
         <div className={styles.headerActions}>
