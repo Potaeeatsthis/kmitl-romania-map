@@ -5,7 +5,7 @@
 // /_next/... instead of /kmitl-romania-map/_next/... is a blank screen with a clean
 // build log. Nothing else in the harness looks at the built output at all.
 //
-// Three assertions, in the order they would fail:
+// Five assertions, in the order they would fail:
 //
 //   1. out/index.html exists.
 //   2. the wasm module is in the export. It is produced by wasm-pack into public/wasm/,
@@ -14,14 +14,29 @@
 //   3. every root-relative src/href carries the base path. This is the one that catches
 //      next.config.ts and lib/wasm/client.ts disagreeing about NEXT_PUBLIC_BASE_PATH,
 //      which is the whole reason they were collapsed onto one variable.
+//   4. the theme-boot script resolves under the prefix. next/script does not rewrite
+//      its src with basePath, so app/layout.tsx builds that URL by hand. It appears
+//      both as a preload <link href> and inside the self.__next_s bootstrap array, and
+//      both have to point at out/theme-boot.js.
+//   5. every url() inside the exported CSS resolves to a file that shipped. The
+//      @font-face url lives in CSS, which the src/href scan never sees; a hand-written
+//      /fonts/... would 404 under Pages exactly the same way.
 //
 // Run via: npm run verify:export   (after npm run build)
 
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
+// Mirrors lib/basePath.ts normalizeBasePath. This file is plain Node and cannot import
+// the TS helper, so the decode is repeated here; keep the two in step.
+const rawBasePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const basePath =
+  !rawBasePath || rawBasePath === "/"
+    ? ""
+    : (rawBasePath.startsWith("/") ? rawBasePath : `/${rawBasePath}`).replace(/\/+$/, "");
 
 const GREEN = "\x1b[32m";
 const RED = "\x1b[31m";
@@ -35,11 +50,20 @@ const bad = (msg, detail) => {
   failed = true;
 };
 
-function sizeOf(relative) {
+function sizeOf(relativePath) {
   try {
-    return statSync(new URL(relative, `file://${repo}`)).size;
+    return statSync(new URL(relativePath, `file://${repo}`)).size;
   } catch {
     return null;
+  }
+}
+
+function exists(absolutePath) {
+  try {
+    statSync(absolutePath);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -92,6 +116,87 @@ if (refs.length === 0) {
   } else {
     pass(`all ${refs.length} root-relative references carry ${basePath}`);
   }
+}
+
+// 4 -- the theme script resolves under the prefix
+const themeRefs = [...html.matchAll(/(["'])(\/[^"']*theme-boot\.js)\1/g)].map((m) => m[2]);
+const expectedTheme = `${basePath}/theme-boot.js`;
+const wrongTheme = [...new Set(themeRefs)].filter((r) => r !== expectedTheme);
+if (themeRefs.length === 0) {
+  bad("out/index.html never references theme-boot.js", [
+    "The beforeInteractive theme script was renamed or removed, so the page",
+    "would paint the default theme and flash on load.",
+  ]);
+} else if (wrongTheme.length > 0) {
+  bad(`theme-boot.js is not referenced as ${expectedTheme}`, [
+    "next/script does not rewrite its src with basePath; app/layout.tsx has to.",
+    ...wrongTheme.slice(0, 5),
+  ]);
+} else if (sizeOf("out/theme-boot.js") === null) {
+  bad("out/theme-boot.js is missing from the export");
+} else {
+  pass(`theme-boot.js is referenced as ${expectedTheme} and exported`);
+}
+
+// 5 -- every url() in the exported CSS resolves to a file that shipped
+const cssRoot = join(repo, "out", "_next", "static");
+
+function collectCss(dir) {
+  const files = [];
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) files.push(...collectCss(full));
+    else if (entry.name.endsWith(".css")) files.push(full);
+  }
+  return files;
+}
+
+const cssFiles = exists(cssRoot) ? collectCss(cssRoot) : [];
+const localCssRefs = [];
+const missingCssRefs = [];
+const unprefixedCssRefs = [];
+for (const file of cssFiles) {
+  const css = readFileSync(file, "utf8");
+  const cssUrlPath = `/${relative(repo, file).split(sep).join("/")}`;
+  for (const match of css.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g)) {
+    const ref = match[2].trim();
+    // Fragments are same-document SVG references; data: and http(s): are not files.
+    if (ref.startsWith("#") || ref.startsWith("data:") || /^https?:\/\//.test(ref)) continue;
+    localCssRefs.push(ref);
+    if (ref.startsWith("/")) {
+      if (basePath && !ref.startsWith(`${basePath}/`)) {
+        unprefixedCssRefs.push(`${cssUrlPath}: ${ref}`);
+      } else if (!exists(join(repo, "out", ref.slice(basePath.length)))) {
+        missingCssRefs.push(`${cssUrlPath}: ${ref}`);
+      }
+    } else if (!exists(resolve(dirname(file), ref))) {
+      // Relative urls (what next/font emits) are already base-path agnostic; they only
+      // have to land on a file the build actually wrote.
+      missingCssRefs.push(`${cssUrlPath}: ${ref}`);
+    }
+  }
+}
+
+if (cssFiles.length === 0) {
+  bad("no exported CSS found under out/_next/static", [
+    "The font @font-face lives in the CSS bundle; a missing bundle means no font.",
+  ]);
+} else if (localCssRefs.length === 0) {
+  bad("the exported CSS has no local url() references", [
+    "Expected at least the self-hosted Departure Mono @font-face.",
+  ]);
+} else if (unprefixedCssRefs.length > 0) {
+  bad(`${unprefixedCssRefs.length} CSS url() references are missing the ${basePath} prefix`, [
+    "These 404 on GitHub Pages. Prefer next/font/local over a hand-written url().",
+    ...unprefixedCssRefs.slice(0, 5),
+  ]);
+} else if (missingCssRefs.length > 0) {
+  bad(`${missingCssRefs.length} CSS url() references do not resolve to an exported file`, [
+    "The stylesheet points at an asset the build did not emit.",
+    ...missingCssRefs.slice(0, 5),
+  ]);
+} else {
+  pass(`all ${localCssRefs.length} CSS url() references resolve`);
 }
 
 console.log(failed ? "\nexport: FAIL" : "\nexport: PASS");

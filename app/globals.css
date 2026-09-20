@@ -1,13 +1,4 @@
-@font-face {
-  font-family: "Departure Mono";
-  src: url("/fonts/DepartureMono-Regular.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
 :root {
-  --font-interface: "Departure Mono", "Courier New", monospace;
   --ink: #102a1e;
   --muted: #526d60;
   --green: #137a47;
