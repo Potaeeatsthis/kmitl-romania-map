@@ -115,6 +115,25 @@ jobs:
       - name: Frontend sample freshness
         run: npm run verify:frontend-sample
 
+      # These are the gates `npm run verify` runs last. They were missing from this
+      # job once -- added to the aggregate but not to this hand-written list -- so a green
+      # pull request could ship a stale public/data/all-pairs-search.json. The list is
+      # still written out step by step rather than replaced with `npm run verify` so a
+      # failure points at one named step, and scripts/verify_harness.sh now fails if the
+      # two lists ever disagree again.
+      - name: All-pairs data freshness
+        run: npm run verify:all-pairs
+
+      # Structure and coverage on both the committed file and a fresh --release export,
+      # because the timing values themselves are not reproducible.
+      - name: All-runtimes data coverage
+        run: npm run verify:all-runtimes
+
+      # Byte-for-byte: benchmark-results.json is a deterministic aggregate of
+      # all-pairs-search.json, so a hand-edit or a changed source can be caught exactly.
+      - name: Benchmark results freshness
+        run: npm run verify:benchmark
+
   frontend:
     name: Frontend types
     runs-on: ubuntu-latest
@@ -163,6 +182,9 @@ jobs:
           key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'stores/**') }}
           restore-keys: next-${{ hashFiles('package-lock.json') }}-
 
+      - name: Environment preflight and regression checks
+        run: npm run doctor && bash tests/verify_env.test.sh
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -183,7 +205,7 @@ jobs:
       - name: Verify the export
         run: npm run verify:export
 
-# --- Not yet enabled -------------------------------------------------------------
-#
-# deploy job: remains Step 6 work. The frontend build already produces the Wasm module
-#   and a static export; deployment still needs Pages permissions and upload/deploy actions.
+# Deployment is .github/workflows/deploy.yml, deliberately not a job here: it runs after
+# merge and needs Pages write permissions that these required checks must never hold. It
+# is triggered by this workflow completing, and only publishes the commit whose CI run on
+# master succeeded -- see the guard there.
