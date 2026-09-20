@@ -27,6 +27,10 @@ reasons given in "Measurement warnings" below.
 > `opt-level 2` — and is most likely the two `Vec` allocations `make_step()` performs per
 > expansion, though that has not been isolated by an experiment. The counts below are
 > unaffected, which is the reason invariant I5 reports expansions rather than time.
+>
+> **The machine and source revision behind these numbers were not recorded.** They are a
+> historical measurement, not a reproducible property of the current build; re-measure on
+> the machine you intend to quote before treating them as current.
 
 | Operation | C++ | Rust | Python |
 |---|---|---|---|
@@ -395,9 +399,11 @@ Two caveats recorded here have since been answered:
 
 - `std::time::Instant` panics on `wasm32-unknown-unknown`, so `benchmark()` stays in
   `bin/cli.rs`. That is now invariant I4, enforced by `npm run verify:invariants`.
-- The heuristic is **not** recomputed per visitor. All twenty goal tables are computed
-  at build time and embedded by `wasm/build.rs`, so the browser never runs
-  Gauss-Jordan. This removed the only real advantage a backend had.
+- The heuristic is **not** recomputed per visitor on the search path. All twenty goal tables
+  are computed at build time and embedded by `wasm/build.rs`, so a browser search never runs
+  Gauss-Jordan. (The optional teaching pages call `explainCurrentFlowJson`, which does run
+  Gauss-Jordan on demand to show the elimination — that is not the search path this decision
+  is about.) This removed the only real advantage a backend had.
 
 Still true: the JS↔WASM boundary crossing costs roughly as much as the 1 µs search
 itself, so expect no speedup from running in the browser; and tests must `await`

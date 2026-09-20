@@ -93,7 +93,7 @@ fi
 
 echo
 echo "Frontend test inventory"
-# The same argument as above, for the 22 vitest cases. Deleting one makes `npm test`
+# The same argument as above, for the 25 vitest cases. Deleting one makes `npm test`
 # greener, and until scripts/verify_mutation.sh grew a vitest gate (M13-M15) nothing
 # in this harness could see the frontend suite at all.
 #
@@ -106,22 +106,43 @@ announces an empty search outside the listbox
 clamps an out-of-bounds step to the last frame
 clamps frames and toggles playback safely
 closes with Escape and returns focus to the results button
+does not capture the pointer until the drag threshold is crossed
+does not select a city when the pointer drags across the map
 expanded cities include cities through the current step
+falls back to the route start for an invalid explained city
 filters city options by the beginning of the name
+ignores a selected city when the decision is malformed
+ignores a selected city when the decision is missing
 keeps the closed drawer out of keyboard navigation
+keeps the expansion ring populated after a start city is chosen on the map
+keeps the selected city in the stepper while searching the original route
+labels the default selection with the route start
+leaves the map viewport untouched when a zoomed-in click triggers a rolling restart
+omits the recalculation link on the elimination page
+presents the selected h(n) once with the overall route as separate context
 rejects malformed discovered nodes
 rejects malformed frontier nodes
 reports invalid JSON clearly
+reset returns to a blank state without touching speed
+resets to blank and snaps the map back to its default viewport
 returns 0 when data is null
 returns only the cities in the current frontier
+rolling-restarts even when the clicked city is already a current endpoint
+rolling-restarts from a third click once a route is complete
+round-trips the explained city through every calculation page
 runs automatically after two cities are chosen on the map
+runs the search only once both cities are chosen
 runs the selected Rust search and starts playback
+selects a city by clicking even after zooming in
 shows a useful error when the Wasm search fails
 shows final paths only for completed algorithms
 shows the all-pairs benchmark and exact selected-route details
+starts with nothing selected and no reset button
+toggles selecting when the same city is clicked again before a route is complete
+treats an explained city that repeats the route start as the default selection
 updates the route details for the selected starting point and destination
 uses one button that switches between play and pause
-uses the box-drawing cross for the close control
+uses the multiplication sign for the close control
 uses the longest algorithm trace as the timeline length
 TESTS
 missing=""
@@ -217,7 +238,7 @@ def exists(path):
 # 1. Every backticked path in the section must exist. Only tokens containing a slash are
 #    treated as paths; bare words like `verify:parity` and `Cargo.toml` are prose or are
 #    ambiguous, and a false failure here would be worse than a missed one. Angle brackets
-#    and whitespace rule out JSX (`<SampleGraphDemo />`), which also contains a slash.
+#    and whitespace rule out JSX (`<RomaniaSearch />`), which also contains a slash.
 paths = sorted({
     t for t in re.findall(r"`([^`]+)`", section)
     if "/" in t and "<" not in t and ">" not in t and not re.search(r"\s", t)

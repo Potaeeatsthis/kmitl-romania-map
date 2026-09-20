@@ -2,20 +2,38 @@ name: Deploy
 
 # Build step 6. Publishes the static export to GitHub Pages.
 #
-# This file is inert until it reaches the default branch AND someone with admin sets
-# Settings -> Pages -> Source: GitHub Actions. Neither has happened yet; the Pages API
-# currently returns 404 for this repository. Landing the workflow early is deliberate --
-# it makes step 6 a merge rather than a scramble, and it costs nothing sitting here.
+# Triggered by ci.yml *completing*, not by the push itself. The deploy job below refuses
+# to run unless that CI run was a push to this repository's master that concluded
+# successfully, and it checks out the exact commit CI verified
+# (workflow_run.head_sha) -- not whatever master points at now. That distinction is the
+# point: on a workflow_run event `actions/checkout` defaults to the default branch's
+# current head, so the default checkout would let a newer, unverified commit reach the
+# live site.
+#
+# A run can also start after master has already moved on, because CI runs finish out of
+# order. The `freshness` job resolves master's head and drops the run if it no longer
+# matches the verified commit, before any build; the deploy job repeats that check after
+# the build, immediately before upload. Both run under the same `pages` concurrency as
+# the deploy, so the first check happens once the run holds the lock. This narrows the
+# race to the seconds between the final check and the upload -- it is not atomic, and
+# master advancing in that window can still publish one superseded commit. The next run
+# redeploys then.
+#
+# Pages is enabled (Settings -> Pages -> Source: GitHub Actions), so a successful run of
+# this file publishes to https://<owner>.github.io/<repo>/.
 #
 # Separate from ci.yml on purpose. ci.yml's two jobs are required status checks on every
 # pull request; this one runs after merge and needs write permissions that those jobs
-# must never have.
+# must never have. workflow_run is the only trigger: a manual dispatch could publish a
+# commit no CI run ever gated, so redeploying is done by re-running the CI workflow on
+# master, whose completion re-triggers this one.
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches:
       - master
-  workflow_dispatch:
 
 # Scoped to this job rather than the workflow, and deliberately narrow: `contents: read`
 # because the build only reads the tree, plus the two Pages needs.
@@ -24,16 +42,74 @@ permissions:
   pages: write
   id-token: write
 
-# Pages has one live deployment. Queue rather than cancel: cancelling mid-deploy can
-# leave the site serving a half-uploaded artifact, and a superseded run finishing is
-# harmless because the next one overwrites it.
+# Pages has one live deployment. cancel-in-progress: false means a run that arrives while
+# another is in progress waits instead of cancelling it -- cancelling mid-deploy can leave
+# the site serving a half-uploaded artifact. It is not a strict queue: GitHub keeps only
+# the most recent pending run and cancels any earlier pending one. The freshness checks
+# below make that safe: a superseded run drops out instead of overwriting a newer
+# deployment.
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
+  # Cheap gate in front of the build. It runs under the `pages` concurrency group, so by
+  # the time it resolves master's head the run already holds the lock.
+  freshness:
+    name: Check master has not moved
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    # Same four clauses as the deploy job: only a successful push CI run for this
+    # repository's master is eligible.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+
+    permissions:
+      contents: read
+
+    outputs:
+      current: ${{ steps.check.outputs.current }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      # Fail closed: an unreachable remote or a missing ref is an error, never read as
+      # "still current". Only a definite mismatch is a skip.
+      - name: Check master still points at this commit
+        id: check
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          head="$(git ls-remote origin refs/heads/master | cut -f1)"
+          if [ -z "$head" ]; then
+            echo "::error::could not resolve refs/heads/master; refusing to deploy"
+            exit 1
+          fi
+          if [ "$head" != "$HEAD_SHA" ]; then
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "master now points at $head; $HEAD_SHA is superseded -- skipping deploy"
+          else
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
     name: Build and publish
+    needs: freshness
+    # The event guard is repeated here so this job is self-describing, and the freshness
+    # output is what actually skips a superseded run.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'master' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      needs.freshness.outputs.current == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -42,8 +118,13 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      # Pinned to the verified commit, not the branch: a workflow_run event sets
+      # github.sha to the default branch's head at trigger time, so the default checkout
+      # would deploy a newer commit than CI passed.
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Setup Node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -82,14 +163,38 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
         run: npm run verify:export
 
+      # Final freshness check. The build takes minutes, long enough for master to move;
+      # publishing a superseded commit would undo a newer deployment. Still not atomic --
+      # master can advance between here and the upload -- but it closes the window to
+      # seconds.
+      - name: Re-check master before publishing
+        id: final
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          head="$(git ls-remote origin refs/heads/master | cut -f1)"
+          if [ -z "$head" ]; then
+            echo "::error::could not resolve refs/heads/master; refusing to deploy"
+            exit 1
+          fi
+          if [ "$head" != "$HEAD_SHA" ]; then
+            echo "current=false" >> "$GITHUB_OUTPUT"
+            echo "master now points at $head; $HEAD_SHA is superseded -- skipping publish"
+          else
+            echo "current=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Configure Pages
+        if: steps.final.outputs.current == 'true'
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload artifact
+        if: steps.final.outputs.current == 'true'
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: out
 
       - name: Deploy
+        if: steps.final.outputs.current == 'true'
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0

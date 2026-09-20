@@ -22,7 +22,7 @@ export const romaniaGraph: GraphData = {
   { id: 6, name: "Mehadia", x: 330.1, y: 515.7 },
   { id: 7, name: "Drobeta", x: 357.3, y: 550.6 },
   { id: 8, name: "Craiova", x: 461.6, y: 590.9 },
-  { id: 9, name: "Rimnicu Vilcea", x: 515.0, y: 489.3 },
+  { id: 9, name: "Rimnicu", x: 515.0, y: 489.3 },
   { id: 10, name: "Pitesti", x: 560.4, y: 521.8 },
   { id: 11, name: "Fagaras", x: 569.9, y: 392.6 },
   { id: 12, name: "Bucharest", x: 673.8, y: 578.2 },

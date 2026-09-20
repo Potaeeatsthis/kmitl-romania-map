@@ -1,0 +1,38 @@
+/* components/circuit/CircuitMotion.module.css */
+
+/* A small toolbar, deliberately not a card: one control for the whole page. */
+.control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.button {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border: 1px solid var(--green-mid);
+  border-radius: 8px;
+  background: var(--green-pale);
+  color: var(--green-dark);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: color-mix(in srgb, var(--green-mid) 16%, var(--green-pale));
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--green-mid);
+  outline-offset: 2px;
+}
+
+.status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}

@@ -1,9 +1,13 @@
 // lib/wasm/client.ts
 
+import { basePath } from "../basePath";
 import { romaniaGraph } from "../romaniaGraph";
 import type {
+  ConductanceEdge,
   DiscoveredNode,
+  EliminationStep,
   FrontierNode,
+  HeuristicExplanation,
   SearchResponse,
   SearchResult,
   SearchStep,
@@ -12,12 +16,13 @@ import type {
 type WasmModule = {
   default: (input?: { module_or_path: string | URL }) => Promise<unknown>;
   searchPairJson: (start: number, goal: number) => string;
+  explainCurrentFlowJson: (start: number, goal: number) => string;
 };
 
 let wasmModulePromise: Promise<WasmModule> | null = null;
 
 function publicUrl(path: string) {
-  return (process.env.NEXT_PUBLIC_BASE_PATH ?? "") + path;
+  return basePath + path;
 }
 
 async function loadWasm(): Promise<WasmModule> {
@@ -50,6 +55,18 @@ export async function runSearch(start: number, goal: number): Promise<SearchResp
   return parseSearchResponse(wasm.searchPairJson(start, goal));
 }
 
+export async function explainCurrentFlow(
+  start: number,
+  goal: number,
+): Promise<HeuristicExplanation> {
+  if (!isCityIndex(start) || !isCityIndex(goal)) {
+    throw new Error("Start and destination must be valid city indices.");
+  }
+
+  const wasm = await loadWasm();
+  return parseHeuristicExplanation(wasm.explainCurrentFlowJson(start, goal));
+}
+
 export function parseSearchResponse(json: string): SearchResponse {
   let result: unknown;
 
@@ -63,10 +80,80 @@ export function parseSearchResponse(json: string): SearchResponse {
   return result;
 }
 
+export function parseHeuristicExplanation(json: string): HeuristicExplanation {
+  let result: unknown;
+
+  try {
+    result = JSON.parse(json);
+  } catch {
+    throw new Error("Rust returned invalid JSON.");
+  }
+
+  assertHeuristicExplanation(result);
+  return result;
+}
+
 function assertSearchResponse(value: unknown): asserts value is SearchResponse {
   if (!isRecord(value) || !isSearchResult(value.ucs) || !isSearchResult(value.astar)) {
     throw new Error("Rust returned an unexpected search result format.");
   }
+}
+
+function assertHeuristicExplanation(value: unknown): asserts value is HeuristicExplanation {
+  const cityCount = romaniaGraph.cities.length;
+  // The engine grounds the goal, removing its row and column, so every
+  // elimination step is (cityCount - 1) x 2(cityCount - 1).
+  const groundedSize = cityCount - 1;
+
+  if (
+    !isRecord(value) ||
+    !isCityIndex(value.start) ||
+    !isCityIndex(value.goal) ||
+    !Array.isArray(value.conductances) ||
+    !value.conductances.every(isConductanceEdge) ||
+    !isMatrix(value.laplacian, cityCount, cityCount) ||
+    !Array.isArray(value.steps) ||
+    !value.steps.every((step) => isEliminationStep(step, groundedSize)) ||
+    !isNonNegativeNumber(value.effective_resistance) ||
+    // The engine pivots every grounded column; only a same-city explanation may
+    // legitimately carry no steps, because the view model never walks them.
+    (value.start !== value.goal && value.steps.length !== groundedSize)
+  ) {
+    throw new Error("Rust returned an unexpected heuristic explanation format.");
+  }
+}
+
+function isConductanceEdge(value: unknown): value is ConductanceEdge {
+  return (
+    isRecord(value) &&
+    isCityIndex(value.city_a) &&
+    isCityIndex(value.city_b) &&
+    isPositiveInteger(value.distance) &&
+    isPositiveNumber(value.conductance)
+  );
+}
+
+function isEliminationStep(value: unknown, size: number): value is EliminationStep {
+  return (
+    isRecord(value) &&
+    isPivotIndex(value.pivot_column, size) &&
+    isPivotIndex(value.pivot_row, size) &&
+    isMatrix(value.matrix_after, size, size * 2)
+  );
+}
+
+function isPivotIndex(value: unknown, size: number): value is number {
+  return isNonNegativeInteger(value) && value < size;
+}
+
+function isMatrix(value: unknown, rows: number, columns: number): value is number[][] {
+  return (
+    Array.isArray(value) &&
+    value.length === rows &&
+    value.every(
+      (row) => Array.isArray(row) && row.length === columns && row.every(isFiniteNumber),
+    )
+  );
 }
 
 function isSearchResult(value: unknown): value is SearchResult {
@@ -129,10 +216,22 @@ function isCityIndex(value: unknown): value is number {
   return isNonNegativeInteger(value) && value < romaniaGraph.cities.length;
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
 function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+  return isFiniteNumber(value) && Number.isInteger(value) && value >= 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return isNonNegativeInteger(value) && value > 0;
 }
 
 function isNonNegativeNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  return isFiniteNumber(value) && value >= 0;
+}
+
+function isPositiveNumber(value: unknown): value is number {
+  return isFiniteNumber(value) && value > 0;
 }

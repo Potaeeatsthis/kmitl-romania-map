@@ -1,12 +1,17 @@
 // app/page.tsx
-import SampleGraphDemo from "../components/sample/SampleGraphDemo";
+import RomaniaSearch from "../components/search/RomaniaSearch";
 import BenchmarkPanel from "../components/benchmark/BenchmarkPanel";
+import HeuristicExplainLink from "../components/search/HeuristicExplainLink";
 
 export default function HomePage() {
   return (
-    <>
-      <SampleGraphDemo />
-      <BenchmarkPanel />
-    </>
+    <RomaniaSearch
+      headerAction={
+        <>
+          <HeuristicExplainLink />
+          <BenchmarkPanel />
+        </>
+      }
+    />
   );
 }
