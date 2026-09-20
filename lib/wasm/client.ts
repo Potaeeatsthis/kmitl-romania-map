@@ -1,5 +1,6 @@
 // lib/wasm/client.ts
 
+import { basePath } from "../basePath";
 import { romaniaGraph } from "../romaniaGraph";
 import type {
   ConductanceEdge,
@@ -21,7 +22,7 @@ type WasmModule = {
 let wasmModulePromise: Promise<WasmModule> | null = null;
 
 function publicUrl(path: string) {
-  return (process.env.NEXT_PUBLIC_BASE_PATH ?? "") + path;
+  return basePath + path;
 }
 
 async function loadWasm(): Promise<WasmModule> {
@@ -99,16 +100,24 @@ function assertSearchResponse(value: unknown): asserts value is SearchResponse {
 }
 
 function assertHeuristicExplanation(value: unknown): asserts value is HeuristicExplanation {
+  const cityCount = romaniaGraph.cities.length;
+  // The engine grounds the goal, removing its row and column, so every
+  // elimination step is (cityCount - 1) x 2(cityCount - 1).
+  const groundedSize = cityCount - 1;
+
   if (
     !isRecord(value) ||
     !isCityIndex(value.start) ||
     !isCityIndex(value.goal) ||
     !Array.isArray(value.conductances) ||
     !value.conductances.every(isConductanceEdge) ||
-    !isMatrix(value.laplacian) ||
+    !isMatrix(value.laplacian, cityCount, cityCount) ||
     !Array.isArray(value.steps) ||
-    !value.steps.every(isEliminationStep) ||
-    !isNonNegativeNumber(value.effective_resistance)
+    !value.steps.every((step) => isEliminationStep(step, groundedSize)) ||
+    !isNonNegativeNumber(value.effective_resistance) ||
+    // The engine pivots every grounded column; only a same-city explanation may
+    // legitimately carry no steps, because the view model never walks them.
+    (value.start !== value.goal && value.steps.length !== groundedSize)
   ) {
     throw new Error("Rust returned an unexpected heuristic explanation format.");
   }
@@ -119,24 +128,31 @@ function isConductanceEdge(value: unknown): value is ConductanceEdge {
     isRecord(value) &&
     isCityIndex(value.city_a) &&
     isCityIndex(value.city_b) &&
-    isNonNegativeInteger(value.distance) &&
-    isNonNegativeNumber(value.conductance)
+    isPositiveInteger(value.distance) &&
+    isPositiveNumber(value.conductance)
   );
 }
 
-function isEliminationStep(value: unknown): value is EliminationStep {
+function isEliminationStep(value: unknown, size: number): value is EliminationStep {
   return (
     isRecord(value) &&
-    isNonNegativeInteger(value.pivot_column) &&
-    isNonNegativeInteger(value.pivot_row) &&
-    isMatrix(value.matrix_after)
+    isPivotIndex(value.pivot_column, size) &&
+    isPivotIndex(value.pivot_row, size) &&
+    isMatrix(value.matrix_after, size, size * 2)
   );
 }
 
-function isMatrix(value: unknown): value is number[][] {
+function isPivotIndex(value: unknown, size: number): value is number {
+  return isNonNegativeInteger(value) && value < size;
+}
+
+function isMatrix(value: unknown, rows: number, columns: number): value is number[][] {
   return (
     Array.isArray(value) &&
-    value.every((row) => Array.isArray(row) && row.every((cell) => typeof cell === "number"))
+    value.length === rows &&
+    value.every(
+      (row) => Array.isArray(row) && row.length === columns && row.every(isFiniteNumber),
+    )
   );
 }
 
@@ -200,10 +216,22 @@ function isCityIndex(value: unknown): value is number {
   return isNonNegativeInteger(value) && value < romaniaGraph.cities.length;
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
 function isNonNegativeInteger(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+  return isFiniteNumber(value) && Number.isInteger(value) && value >= 0;
+}
+
+function isPositiveInteger(value: unknown): value is number {
+  return isNonNegativeInteger(value) && value > 0;
 }
 
 function isNonNegativeNumber(value: unknown): value is number {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0;
+  return isFiniteNumber(value) && value >= 0;
+}
+
+function isPositiveNumber(value: unknown): value is number {
+  return isFiniteNumber(value) && value > 0;
 }

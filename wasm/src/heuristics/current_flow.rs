@@ -1,17 +1,16 @@
 // wasm/src/heuristics/current_flow.rs
 use serde::Serialize;
 
-use crate::graph::{Graph, CITY_COUNT};
+use crate::graph::{validate_resistive_graph, Graph, GraphError, CITY_COUNT};
 
 include!(concat!(env!("OUT_DIR"), "/current_flow_table.rs"));
 
 /// I4: engine code never panics. A disconnected graph is a value, not a crash.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum HeuristicError {
+    InvalidStart(usize),
     InvalidGoal(usize),
-    WrongGraphSize { expected: usize, actual: usize },
-    InvalidRoad { city: usize, neighbor: usize },
-    ZeroDistance { city: usize, neighbor: usize },
+    Graph(GraphError),
     DisconnectedGraph,
 }
 
@@ -34,28 +33,11 @@ pub fn current_flow_heuristic(
     if goal >= CITY_COUNT {
         return Err(HeuristicError::InvalidGoal(goal));
     }
-    if graph.len() != CITY_COUNT {
-        return Err(HeuristicError::WrongGraphSize {
-            expected: CITY_COUNT,
-            actual: graph.len(),
-        });
-    }
+    validate_resistive_graph(graph).map_err(HeuristicError::Graph)?;
 
     let mut laplacian = vec![vec![0.0; CITY_COUNT]; CITY_COUNT];
     for (a, roads) in graph.iter().enumerate() {
         for &(b, distance) in roads {
-            if b >= CITY_COUNT {
-                return Err(HeuristicError::InvalidRoad {
-                    city: a,
-                    neighbor: b,
-                });
-            }
-            if distance == 0 {
-                return Err(HeuristicError::ZeroDistance {
-                    city: a,
-                    neighbor: b,
-                });
-            }
             let conductance = 1.0 / distance as f64;
             laplacian[a][a] += conductance;
             laplacian[a][b] -= conductance;
@@ -162,34 +144,17 @@ pub fn explain_current_flow(
     goal: usize,
 ) -> Result<HeuristicExplanation, HeuristicError> {
     if start >= CITY_COUNT {
-        return Err(HeuristicError::InvalidGoal(start));
+        return Err(HeuristicError::InvalidStart(start));
     }
     if goal >= CITY_COUNT {
         return Err(HeuristicError::InvalidGoal(goal));
     }
-    if graph.len() != CITY_COUNT {
-        return Err(HeuristicError::WrongGraphSize {
-            expected: CITY_COUNT,
-            actual: graph.len(),
-        });
-    }
+    validate_resistive_graph(graph).map_err(HeuristicError::Graph)?;
 
     let mut conductances = Vec::new();
     let mut laplacian = vec![vec![0.0; CITY_COUNT]; CITY_COUNT];
     for (a, roads) in graph.iter().enumerate() {
         for &(b, distance) in roads {
-            if b >= CITY_COUNT {
-                return Err(HeuristicError::InvalidRoad {
-                    city: a,
-                    neighbor: b,
-                });
-            }
-            if distance == 0 {
-                return Err(HeuristicError::ZeroDistance {
-                    city: a,
-                    neighbor: b,
-                });
-            }
             let conductance = 1.0 / distance as f64;
             laplacian[a][a] += conductance;
             laplacian[a][b] -= conductance;
