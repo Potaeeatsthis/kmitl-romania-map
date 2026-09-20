@@ -1,0 +1,11 @@
+{
+  "id": "clippy-needless-range-loop",
+  "date": "2026-08-19",
+  "symptom": "cargo clippy --all-targets -- -D warnings failed in the new Rust integration tests with clippy::needless-range-loop because numeric ranges were used mainly to index CITIES, heuristic, or graph.",
+  "rootcause": "The first test implementation copied index-based loops from the reference algorithm. This compiled and passed cargo test, but Clippy correctly required direct iteration with enumerate when the index was only used to access the same collection.",
+  "fix": "Changed the affected loops to CITIES.iter().enumerate(), heuristic.iter().enumerate(), and graph.iter().enumerate(). This keeps each city index while removing needless indexing.",
+  "recurrence_risk": "low",
+  "invariant": null,
+  "tags": ["rust", "clippy", "tests", "quality-gate"],
+  "notes": "The warning reached the branch because the Cargo manifest and tests were created together. scripts/verify_invariants.sh now runs cargo check, cargo test, cargo clippy with warnings denied, and cargo fmt --check whenever the manifest exists."
+}

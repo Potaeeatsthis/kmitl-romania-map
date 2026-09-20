@@ -1,0 +1,516 @@
+.content {
+  max-width: 1480px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.routeLine {
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.sectionDivider {
+  margin: 10px 0 -4px;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--green-dark);
+}
+
+.dividerHint {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.card {
+  padding: 30px 32px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 8px 20px rgba(19, 122, 71, 0.06);
+}
+
+.card h2 {
+  margin: 0 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.nodeTitle {
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.voltageTag {
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--green-pale);
+  border: 1px solid var(--green-mid);
+  color: var(--green-mid);
+  font-size: 11px;
+  font-family: var(--font-interface, monospace);
+  font-weight: 700;
+}
+
+.sourceTag {
+  padding: 3px 10px;
+  border-radius: 100px;
+  background: var(--action-strong);
+  color: var(--on-accent);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.narrative {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.narrative:last-child {
+  margin-bottom: 0;
+}
+
+.narrative strong {
+  color: var(--green-mid);
+}
+
+.hint {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.setupText {
+  margin: 0 0 10px;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink);
+}
+
+.errorText {
+  color: #b23a2a;
+  font-size: 13px;
+}
+
+.kclFormula {
+  margin: 10px 0 12px;
+  padding: 22px 26px;
+  border-radius: 10px;
+  border: 1px dashed var(--green-mid);
+  background: var(--green-pale);
+  font-family: var(--font-interface, monospace);
+  font-size: 20px;
+  text-align: center;
+  color: var(--green-dark);
+}
+
+.kclFormula strong {
+  color: var(--green-mid);
+}
+
+/* ---- tables ---- */
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th,
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.table thead th {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.table tbody tr:nth-child(even) {
+  background: var(--green-pale);
+}
+
+.chosenRow {
+  background: color-mix(in srgb, var(--green-soft) 45%, var(--surface)) !important;
+  font-weight: 600;
+}
+
+/* ---- KCL block ---- */
+
+.kclBlock {
+  padding: 20px 22px;
+  border-radius: 10px;
+  background: var(--green-pale);
+}
+
+.kclTitle {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kclTermBlock {
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dotted var(--line);
+}
+
+.kclTermBlock:last-of-type {
+  border-bottom: none;
+}
+
+.kclTermLine {
+  margin: 0 0 4px;
+  padding-left: 2px;
+  font-family: var(--font-interface, monospace);
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.kclTermIndex {
+  color: var(--muted);
+}
+
+.kclTermNote {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.kclTermSetup {
+  margin: 0 0 6px;
+  padding-left: 2px;
+  font-family: var(--font-interface, monospace);
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+.kclTermSetup strong {
+  color: var(--green-mid);
+}
+
+.kclSumLine {
+  margin: 10px 0 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-interface, monospace);
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.kclSumLine strong {
+  color: var(--green-mid);
+}
+
+.kclCheckOk {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--green-mid);
+  font-weight: 500;
+}
+
+.kclCheckFail {
+  margin: 0;
+  font-size: 12.5px;
+  color: #b23a2a;
+  font-weight: 500;
+}
+
+/* ---- step headings ---- */
+
+.stepHeading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stepBadge {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--green-mid);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ---- worked-arithmetic blocks, one substitution per line ---- */
+
+.derivationLabel {
+  margin: 16px 0 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+.derivationSubLabel {
+  margin: 14px 0 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.derivationBlock {
+  padding: 20px 24px;
+  border-radius: 10px;
+  background: var(--green-pale);
+  border: 1px dashed var(--line);
+}
+
+.derivationLine {
+  margin: 0 0 8px;
+  font-family: var(--font-interface, monospace);
+  font-size: 16px;
+  color: var(--muted);
+}
+
+.derivationResult {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-family: var(--font-interface, monospace);
+  font-size: 17px;
+  color: var(--ink);
+}
+
+.derivationResult strong {
+  color: var(--green-mid);
+}
+
+/* ---- bracket-style matrix ---- */
+
+.matrixBracketOuter {
+  position: relative;
+  margin: 14px 0 18px;
+  padding: 0 16px;
+}
+
+.matrixBracketOuter::before,
+.matrixBracketOuter::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 9px;
+  border-top: 3px solid var(--ink);
+  border-bottom: 3px solid var(--ink);
+}
+
+.matrixBracketOuter::before {
+  left: 0;
+  border-left: 3px solid var(--ink);
+}
+
+.matrixBracketOuter::after {
+  right: 0;
+  border-right: 3px solid var(--ink);
+}
+
+.matrixBracketScroll {
+  overflow-x: auto;
+  padding: 8px 6px;
+}
+
+.bracketTable {
+  border-collapse: collapse;
+  margin: 0 auto;
+  font-family: var(--font-interface, monospace);
+  font-size: 16px;
+  white-space: nowrap;
+}
+
+.bracketTable th,
+.bracketTable td {
+  padding: 10px 16px;
+  text-align: center;
+}
+
+.bracketTable thead th {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--line);
+}
+
+.bracketTable tbody th {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: right;
+  padding-right: 12px;
+}
+
+.diagCell {
+  font-weight: 700;
+  color: var(--green-dark);
+  background: color-mix(in srgb, var(--green-soft) 45%, var(--surface));
+}
+
+.matrixHighlightCol {
+  background: color-mix(in srgb, var(--green-bright) 18%, var(--surface));
+  font-weight: 700;
+  color: var(--green-dark);
+}
+
+.matrixHighlightRow {
+  background: color-mix(in srgb, #f4c569 22%, var(--surface));
+}
+
+.matrixHighlightLabel {
+  color: var(--green-dark) !important;
+  font-weight: 700 !important;
+}
+
+.matrixDividerAfter {
+  border-right: 2px solid var(--ink);
+}
+
+/* ---- collapsible full-size matrices ---- */
+
+.matrixDetails {
+  margin: 12px 0 18px;
+}
+
+.matrixSummary {
+  cursor: pointer;
+  padding: 10px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--green-pale);
+  color: var(--green-dark);
+  font-size: 12.5px;
+  font-weight: 600;
+  list-style: none;
+}
+
+.matrixSummary::-webkit-details-marker {
+  display: none;
+}
+
+.matrixSummary::before {
+  content: "▸ ";
+}
+
+.matrixDetails[open] .matrixSummary::before {
+  content: "▾ ";
+}
+
+.matrixDetails[open] .matrixSummary {
+  border-radius: 8px 8px 0 0;
+  border-bottom: none;
+}
+
+/* ---- small per-terminal local matrix ---- */
+
+.localMatrixBlock {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+}
+
+/* ---- explored-but-not-chosen block ---- */
+
+.exploredBlock {
+  margin: 4px 0 20px;
+  padding: 16px 18px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--green-soft) 35%, var(--surface));
+  border: 1px solid var(--line);
+}
+
+.exploredTitle {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--green-dark);
+}
+
+.exploredIntro {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.exploredNote {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ---- candidate comparison table ---- */
+
+.candidateTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.candidateTable th,
+.candidateTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.candidateTable thead th {
+  color: #7a5a1c;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.candidateTable tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--surface) 40%, transparent);
+}
+
+.formulaList {
+  max-width: 75ch;
+  margin-block: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.formulaList .equation {
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 8px;
+  background: var(--green-pale);
+  color: var(--ink);
+  font-family: var(--font-interface, monospace);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}

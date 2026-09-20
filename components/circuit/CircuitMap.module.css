@@ -1,0 +1,299 @@
+.svg {
+  --ink: #102a1e;
+  --muted: #526d60;
+  --green: #137a47;
+  --green-pale: #edf8f1;
+  --line: #c9dfd2;
+  --surface: #ffffff;
+  --map-surface: #f5f8f6;
+  --county-fill: #e4f0e8;
+  --county-line: #c5dacd;
+  --country-outline: #9ebbaa;
+  --wire-faint: #b9c9c0;
+
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  max-height: 460px;
+  background: var(--map-surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* Shared circuit palette: the map and its legend both read these, so a legend
+   swatch can never drift from the node it explains. */
+.svg,
+.legend {
+  --considered-line: #b7862e;
+  --volt-hot: #d97a1f;
+  --volt-cold: #1f7ea8;
+  /* Circle outline = what A* is doing. Colour is never the only cue: the three
+     roles also differ in dash pattern and width (solid / dashed / dotted). */
+  --focus-ring: #0e7490;
+  --next-ring: #102a1e;
+  --neutral-fill: #dfe6e1;
+  /* Hot-wire edge palette: stroke, resistor, label and legend swatch all read
+     these, so the key's "Final route" swatch cannot inherit a different green
+     from the global theme (dark's --green-mid is #eee). */
+  --green-dark: #0b5631;
+  --green-bright: #00ed64;
+  --green-mid: #00684a;
+}
+
+:global(html[data-theme="dark"]) .svg {
+  --ink: #e4ece7;
+  --muted: #8fa79b;
+  --green: #00ed64;
+  --green-pale: #182420;
+  --line: #33453c;
+  --surface: #1b2420;
+  --map-surface: #141a17;
+  --county-fill: #1c2622;
+  --county-line: #2b3a33;
+  --country-outline: #47594f;
+  --wire-faint: #3d4d45;
+  /* Dark-only: leader lines read as soft off-white; pill outlines slightly
+     dimmer off-white so they separate the pill from the map without glare.
+     Light mode leaves both unset, falling back to --line. */
+  --leader-line: #cdd8d2;
+  --pill-border: #8b9c93;
+}
+
+:global(html[data-theme="dark"]) .svg,
+:global(html[data-theme="dark"]) .legend {
+  --considered-line: #e8a24d;
+  --volt-hot: #e8a24d;
+  --volt-cold: #4db6d9;
+  --focus-ring: #22d3ee;
+  --next-ring: #e4ece7;
+  --neutral-fill: #3a423d;
+  --green-dark: #00ed64;
+  --green-bright: #00ed64;
+  --green-mid: #3fd98a;
+}
+
+.countyLines path {
+  fill: var(--county-fill);
+  stroke: var(--county-line);
+  stroke-width: 0.8;
+}
+
+.countryOutline path {
+  fill: none;
+  stroke: var(--country-outline);
+  stroke-width: 2.2;
+}
+
+/* ---- label pills: sit behind every text label so overlapping wires,
+   county borders, or other labels don't bleed through and make text
+   unreadable when two labels land close together ---- */
+.labelPill {
+  fill: var(--map-surface);
+  opacity: 0.88;
+  stroke: var(--pill-border, var(--line));
+  stroke-width: 0.6;
+}
+
+/* ---- edges ---- */
+
+.wireLine {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.edge_faint .wireLine {
+  stroke: var(--wire-faint);
+  stroke-width: 1.6;
+  opacity: 0.5;
+}
+
+.edge_considered .wireLine {
+  stroke: var(--considered-line);
+  stroke-width: 3;
+  opacity: 0.85;
+}
+
+.edge_hot .wireLine {
+  stroke: var(--green-mid);
+  stroke-width: 4.5;
+  opacity: 0.95;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, var(--green-bright) 40%, transparent));
+}
+
+.resistorSymbol {
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.edge_hot .resistorSymbol { stroke: var(--green-dark); }
+.edge_considered .resistorSymbol { stroke: var(--considered-line); }
+
+/* Labels render in one final layer (see CircuitMap.tsx) so pills are never
+   buried under a later wire or node. Tier colour is carried on the label. */
+.leaderLine {
+  stroke: var(--leader-line, var(--line));
+  stroke-width: 0.8;
+  opacity: 0.9;
+}
+
+.edgeLabel {
+  font-family: var(--font-interface, monospace);
+  font-weight: 600;
+}
+
+.edgeLabel_hot { fill: var(--green-dark); font-weight: 700; }
+.edgeLabel_considered { fill: var(--considered-line); }
+
+.currentDot,
+.flowArrow { fill: var(--green-bright); }
+.edge_hot .currentDot,
+.edge_hot .flowArrow {
+  filter: drop-shadow(0 0 2px color-mix(in srgb, var(--green-bright) 70%, transparent));
+}
+.edge_considered .currentDot,
+.edge_considered .flowArrow { fill: var(--considered-line); }
+.edge_faint .currentDot,
+.edge_faint .flowArrow { fill: var(--wire-faint); opacity: 0.6; }
+
+/* ---- nodes ---- */
+
+.nodeCircle {
+  stroke-width: 2;
+  fill: color-mix(in srgb, var(--volt-hot) calc(var(--v-t) * 100%), var(--volt-cold));
+}
+
+/* Legend-only flat fill: in the outline group the fill is held constant so
+   only the outline reads as the search status. */
+.nodeNeutral .nodeCircle { fill: var(--neutral-fill); }
+
+/* ---- circle outline = what A* is doing ----
+   Each role carries a shape cue as well as a colour, so the meaning survives
+   colour blindness and greyscale: focus is solid and thickest, chosen is
+   dashed, considered is dotted and thinnest. */
+.node_focus .nodeCircle { stroke: var(--focus-ring); stroke-width: 3.6; }
+.node_chosen .nodeCircle {
+  stroke: var(--next-ring);
+  stroke-width: 3.2;
+  stroke-dasharray: 4 3.5;
+}
+.node_considered .nodeCircle {
+  stroke: var(--considered-line);
+  stroke-width: 2;
+  stroke-dasharray: 1 2;
+  stroke-linecap: round;
+}
+.node_path .nodeCircle { stroke: var(--ink); stroke-width: 1.6; opacity: 0.85; }
+.node_goal .nodeCircle { stroke: var(--ink); stroke-width: 3; }
+
+.nodeLabel {
+  font-family: var(--font-interface, sans-serif);
+  font-weight: 600;
+  fill: var(--ink);
+}
+
+.nodeVoltage {
+  font-family: var(--font-interface, monospace);
+  font-weight: 600;
+  fill: var(--muted);
+}
+
+/* ---- legend: two groups, one for outline, one for fill ---- */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 30px;
+  margin: 10px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.legendGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 260px;
+}
+
+.legendTitle {
+  margin: 0;
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.legendList {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.legendGlyph {
+  display: block;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  overflow: visible;
+}
+
+.legendLabel {
+  display: inline-flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.legendNote {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+
+.voltageScale {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-interface, monospace);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.voltageScaleBar {
+  flex: 1 1 140px;
+  min-width: 110px;
+  height: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  /* The same two tokens the node fill mixes. color-mix(in srgb, ...) is a
+     linear sRGB blend, so this gradient is the node fill's own ramp. */
+  background: linear-gradient(90deg, var(--volt-cold), var(--volt-hot));
+}
+
+.legendFillNote {
+  margin: 0;
+  max-width: 52ch;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currentDot,
+  .flowArrow { filter: none; }
+}

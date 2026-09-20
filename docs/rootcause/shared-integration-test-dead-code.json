@@ -1,0 +1,11 @@
+{
+  "id": "shared-integration-test-dead-code",
+  "date": "2026-08-19",
+  "symptom": "Clippy reported that path_cost was never used from tests/common/mod.rs, although the UCS and A* integration tests both call it.",
+  "rootcause": "Cargo compiles every file under tests/ as a separate crate. heuristic_tests.rs also includes common/mod.rs but does not need path_cost, so that one test crate sees the shared helper as dead code.",
+  "fix": "Added a narrow #[allow(dead_code)] to path_cost with a comment explaining the separate integration-test crates. The helper stays shared by the UCS and A* suites.",
+  "recurrence_risk": "low",
+  "invariant": null,
+  "tags": ["rust", "clippy", "integration-tests", "shared-helper"],
+  "notes": "This is not dead engine code. The allowance is limited to one test helper, and scripts/verify_invariants.sh keeps Clippy warnings denied everywhere else."
+}

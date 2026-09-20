@@ -1,0 +1,16 @@
+/bin/
+/node_modules/
+/.next/
+/wasm/target/
+/wasm/pkg/
+/public/wasm/
+*.tsbuildinfo
+next-env.d.ts
+__pycache__/
+*.pyc
+/out/
+.DS_Store
+.env.local
+# graphify local artifacts
+/.claude/settings.json.graphify-bak
+/graphify-out/cache/

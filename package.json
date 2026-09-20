@@ -1,0 +1,51 @@
+{
+  "name": "kmitl-romania-map",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build:wasm": "wasm-pack build wasm --target web --release --out-dir ../public/wasm --out-name romania_search",
+    "dev": "npm run build:wasm && next dev",
+    "build": "npm run build:wasm && next build",
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "rm -f tsconfig.tsbuildinfo && tsc --noEmit",
+    "verify:all-pairs": "node scripts/verify_all_pairs.mjs",
+    "verify:all-runtimes": "node scripts/verify_all_runtimes.mjs",
+    "verify:benchmark": "node scripts/verify_benchmark_results.mjs",
+    "generate:benchmark": "node scripts/generate_benchmark_results.mjs",
+    "verify:frontend-sample": "node scripts/verify_frontend_sample.mjs",
+    "verify:invariants": "bash scripts/verify_invariants.sh",
+    "verify:parity": "bash scripts/verify_parity.sh",
+    "verify:correctness": "python3 scripts/verify_correctness.py",
+    "verify:golden": "bash scripts/verify_golden.sh",
+    "verify:harness": "bash scripts/verify_harness.sh",
+    "verify:mutation": "bash scripts/verify_mutation.sh",
+    "verify:export": "node scripts/verify_export.mjs",
+    "verify": "npm run verify:invariants && npm run verify:parity && npm run verify:correctness && npm run verify:golden && npm run verify:harness && npm run verify:frontend-sample && npm run verify:all-pairs && npm run verify:all-runtimes && npm run verify:benchmark",
+    "verify:frontend": "bash tests/verify_env.test.sh && npm run typecheck && npm run test",
+    "verify:all": "npm run verify && npm run verify:frontend",
+    "doctor": "bash scripts/verify_env.sh"
+  },
+  "dependencies": {
+    "next": "16.3.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.6",
+    "@types/node": "26.2.0",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.4",
+    "jsdom": "29.1.1",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  }
+}

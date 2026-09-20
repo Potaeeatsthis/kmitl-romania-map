@@ -1,0 +1,10 @@
+{
+  "id": "calculation-missing-suspense",
+  "date": "2026-09-13",
+  "symptom": "next build fails: useSearchParams() should be wrapped in a suspense boundary at page /heuristic-summary.",
+  "rootcause": "The summary reads query parameters without a parent Suspense boundary. Development rendering does not exercise the static-export requirement.",
+  "fix": "Add the route loading boundary; new calculation pages use a shared Suspense-wrapped shell.",
+  "recurrence_risk": "New query-dependent routes can omit their boundary.",
+  "automation_gap": null,
+  "prevention": "The existing CI npm run build step fails on missing query Suspense boundaries. Typechecking alone cannot detect this."
+}

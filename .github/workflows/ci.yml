@@ -1,0 +1,211 @@
+name: CI
+
+# Gates the five invariants in CLAUDE.md. Every check here is a script in scripts/,
+# the same ones `/prevent` runs locally — this file holds no check logic of its own,
+# so a green local `npm run verify:all` means a green build. `npm run doctor` reports
+# whether a machine has the toolchain both halves need.
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+  pull_request:
+    branches:
+      - '**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+# Do NOT add paths-ignore or a paths filter to this workflow.
+#
+# Both jobs below are required status checks on master and dev, and they are required
+# by job NAME. A required check that a path filter skips never reports a status at all,
+# and GitHub reads "never reported" as still pending -- the pull request blocks forever
+# and only an admin can override it. The mistake looks obviously correct, which is why
+# this comment is here rather than in a wiki.
+#
+# If a docs-only PR ever needs to be fast, the shape that works is a job that always
+# runs and short-circuits internally, so it still reports a green status.
+
+# Neither job writes anything: they read the tree and run checks. The deploy job added
+# at build step 6 needs `pages: write` and `id-token: write` -- grant those on that job
+# alone rather than widening this default.
+permissions:
+  contents: read
+
+jobs:
+  correctness:
+    name: Invariants, parity, correctness
+    runs-on: ubuntu-latest
+    # Cold cache means a full --release --all-targets build of the crate, then cargo
+    # check, test, clippy and fmt, then g++, then 41 routes through three languages,
+    # then the sample exporter. Comfortable warm, thin cold. A timeout should catch a
+    # hang, not a slow legitimate run.
+    timeout-minutes: 20
+
+    # Each verify script builds Rust into its own mktemp directory, so a full run used
+    # to compile the crate four times and keep nothing between runs. Setting this makes
+    # every script share one directory that the cache step below can restore.
+    # Locally the variable is unset and the scripts keep their throwaway directories.
+    env:
+      CARGO_TARGET_DIR: ${{ github.workspace }}/.cargo-target
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+
+      # rust-toolchain.toml pins the version; rustup installs it on first use so
+      # every machine and this runner produce identical warnings and lints.
+      # Keyed on the lockfile and the pinned toolchain: a dependency or a Rust version
+      # change invalidates it, anything else reuses the previous run's artifacts.
+      - name: Cache cargo
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ github.workspace }}/.cargo-target
+          key: cargo-${{ runner.os }}-${{ hashFiles('wasm/Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: cargo-${{ runner.os }}-
+
+      - name: Resolve pinned Rust toolchain
+        run: rustc --version && cargo --version
+
+      - name: Show compiler versions
+        run: g++ --version && python3 --version
+
+      # I1 (one search function), I4 (engine stays wasm-safe), and clean builds
+      # of all three implementations.
+      - name: Structural invariants
+        run: npm run verify:invariants
+
+      # I2 — Rust, C++ and Python must produce identical explored order and counters.
+      # The most serious failure in this project: drift is silent, and it invalidates
+      # every number in the report.
+      - name: Three-language parity
+        run: npm run verify:parity
+
+      # I3 — 400 pairs against an independent Dijkstra, plus admissibility and
+      # consistency on every goal and edge.
+      - name: Heuristic correctness
+        run: npm run verify:correctness
+
+      # The fixed point parity cannot provide: parity compares the three implementations
+      # to each other, so a change made to all three at once keeps it green. The road
+      # table lives in three encodings, so that is exactly what editing a road looks like.
+      - name: Golden baseline
+        run: npm run verify:golden
+
+      # Checks the harness itself is wired -- the PostToolUse hooks silently stopped
+      # firing once before, and nothing noticed. See docs/runbook.md §2.
+      - name: Harness wiring
+        run: npm run verify:harness
+
+      # The committed sample the browser animates, checked against the engine that
+      # generated it, plus the road table lib/romaniaGraph.ts duplicates. Lives here
+      # rather than in `frontend` because it runs the exporter: this job already has
+      # the pinned toolchain and a warm CARGO_TARGET_DIR, so the crate is built by now.
+      - name: Frontend sample freshness
+        run: npm run verify:frontend-sample
+
+      # These are the gates `npm run verify` runs last. They were missing from this
+      # job once -- added to the aggregate but not to this hand-written list -- so a green
+      # pull request could ship a stale public/data/all-pairs-search.json. The list is
+      # still written out step by step rather than replaced with `npm run verify` so a
+      # failure points at one named step, and scripts/verify_harness.sh now fails if the
+      # two lists ever disagree again.
+      - name: All-pairs data freshness
+        run: npm run verify:all-pairs
+
+      # Structure and coverage on both the committed file and a fresh --release export,
+      # because the timing values themselves are not reproducible.
+      - name: All-runtimes data coverage
+        run: npm run verify:all-runtimes
+
+      # Byte-for-byte: benchmark-results.json is a deterministic aggregate of
+      # all-pairs-search.json, so a hand-edit or a changed source can be caught exactly.
+      - name: Benchmark results freshness
+        run: npm run verify:benchmark
+
+  frontend:
+    name: Frontend types
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve pinned Rust toolchain and Wasm target
+        run: rustc --version && rustup target list --installed
+
+      # The prebuilt binary, not `cargo install wasm-pack`, which compiles from source
+      # and takes minutes. That mattered: it ran inside this job's timeout alongside
+      # npm ci, typecheck, tests and a full next build, and it was guarded by a cache
+      # whose key never varied -- so a week without a run evicted the entry and the
+      # source build came back. A release tarball is a few seconds, so nothing is cached.
+      #
+      # The version comes from .wasm-pack-version rather than being written here, for the
+      # same reason .nvmrc exists: scripts/verify_env.sh reads the same file, so a machine
+      # and this runner cannot end up on different wasm-pack versions. The generic
+      # rustwasm installer script is deliberately NOT used -- it takes whatever is latest,
+      # which would leave wasm-pack the one unpinned tool in a project that pins its Rust
+      # toolchain precisely so builds are reproducible.
+      - name: Install wasm-pack
+        run: |
+          version="$(tr -d '[:space:]' < .wasm-pack-version)"
+          name="wasm-pack-v${version}-x86_64-unknown-linux-musl"
+          curl -sSfL "https://github.com/rustwasm/wasm-pack/releases/download/v${version}/${name}.tar.gz" \
+            | tar -xz -C "$HOME/.cargo/bin" --strip-components=1 "${name}/wasm-pack"
+          wasm-pack --version
+
+      - name: Cache Next build
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .next/cache
+          key: next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('app/**', 'components/**', 'lib/**', 'stores/**') }}
+          restore-keys: next-${{ hashFiles('package-lock.json') }}-
+
+      - name: Environment preflight and regression checks
+        run: npm run doctor && bash tests/verify_env.test.sh
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test
+        run: npm test
+
+      # tsc --noEmit is not the same check as a real build: it does not catch 
+      # "use client" boundary violations, invalid route segment exports, or a 
+      # server-only import pulled into a client component. 
+      - name: Build
+        run: npm run build
+
+      # NEXT_PUBLIC_BASE_PATH is unset here, so this checks the development shape:
+      # index.html and the wasm module are both in out/, and no base path has been
+      # hardcoded into next.config.ts. deploy.yml runs the same script with the
+      # variable set, which checks the prefixed shape. Catching a broken export on
+      # the pull request is the point -- deploy.yml only runs after merge.
+      - name: Verify the export
+        run: npm run verify:export
+
+# Deployment is .github/workflows/deploy.yml, deliberately not a job here: it runs after
+# merge and needs Pages write permissions that these required checks must never hold. It
+# is triggered by this workflow completing, and only publishes the commit whose CI run on
+# master succeeded -- see the guard there.

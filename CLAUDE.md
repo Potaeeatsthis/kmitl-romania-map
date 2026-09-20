@@ -1,0 +1,455 @@
+# CLAUDE.md — KMITL Romania Map
+
+Read automatically at the start of every session. Single source of truth for project
+context, architecture rules, and workflow. Five people have write access, so
+treat everything here as binding rather than advisory.
+
+---
+
+## What this project is
+
+A comparison of two search algorithms on the classic 20-city Romania road map:
+
+- **Uniform-Cost Search** — the blind-search baseline, `f(n) = g(n)`
+- **Current-flow A\*** — `f(n) = g(n) + h(n)`, where `h` is the effective resistance
+  from a city to the goal, treating each road as a resistor whose resistance equals
+  its distance in km
+
+The graph has 20 cities and 23 undirected roads. The finished product is an interactive
+web page that animates both searches side by side and reports their metrics.
+
+---
+
+## What exists, and what does not
+
+**The engine is verified — do not rewrite it.** The web application exists and works:
+`app/page.tsx` renders a live wasm-backed search with animation, a Zustand store, and a
+benchmark panel. The sidebar, the standalone controls/metrics components, and MapLibre
+are not built.
+
+| Part | State |
+|---|---|
+| `reference/romania_search.py` | **Working.** 238 lines, matches Rust exactly |
+| `reference/romania_search.cpp` | **Working.** 304 lines, matches Rust exactly |
+| `data/IMG_3390.JPG` | **The assignment brief.** Do not delete — see the section above. Unreferenced by code, and the only copy of the requirements and the canonical road weights |
+| `docs/` | **Written.** `ideas.md` and `ARCHITECTURE.md` (algorithm maths, architecture analysis), `ARCHITECTURE_DECISION.md` (the benchmark-spread record), `runbook.md` (symptom → fix, cited throughout this file), `sample-trace.md`, and `docs/rootcause/` |
+| `wasm/Cargo.toml`, `wasm/src/bin/cli.rs` | **Working.** Native Cargo library and CLI |
+| `wasm/src/*.rs`, `wasm/src/heuristics/` | **Working.** Shared UCS/A* engine with an animation trace |
+| `wasm/tests/` | **Working.** All-pairs optimality, heuristic, and trace tests |
+| `lib/types.ts`, `lib/romaniaGraph.ts`, `lib/countyOutlines.ts` | **Working.** Trace types, the 20 city positions with all 23 roads, and the county/border paths |
+| `lib/roadGeometry.ts` | **Generated, committed, gated.** Real road polylines in SVG space; written by `scripts/fetch_road_geometry.mjs`, checked by `verify:frontend-sample` |
+| `lib/roadPath.ts` | **Working.** 182 lines. Pure geometry helpers for curved road rendering |
+| `components/search/` | **Working.** Modular Romania search UI: shell/theme, animated SVG map, route planner, legend, and playback controls. Covered by `RomaniaSearch.test.tsx` |
+| `components/benchmark/` | **Working.** `BenchmarkPanel.tsx` (75 lines) and `BenchmarkCharts.tsx` (381 lines) |
+| `lib/traceSelectors.ts` | **Working.** 69 lines. Trace derivation kept outside React so it is testable — see the frontend-test rule below |
+| `public/data/arad-bucharest-search.json`, `public/data/all-pairs-search.json` | **Generated, committed.** Written by `export_sample.rs` and `export_all_pairs.rs`; freshness gates regenerate and compare both files |
+| `stores/useSearchStore.ts`, `lib/wasm/client.ts` | **Working.** 105 lines of Zustand search/playback state; 138 lines of wasm module loader with full JSON validation at the boundary |
+| `vitest.config.mts`, `vitest.setup.ts` | **Working.** jsdom + testing-library; `npm test` runs the suite and `npm run verify:frontend` runs it with typecheck and the env regression check |
+| Sidebar and standalone controls/metrics components | **Not built.** No placeholder files are kept; the working UI lives under `components/search/` and `components/benchmark/` |
+| `app/page.tsx` | Renders `<RomaniaSearch />` and `<BenchmarkPanel />` |
+| `public/data/benchmark-results.json` | **Generated, committed, gated.** A deterministic aggregate written by `npm run generate:benchmark` from `public/data/all-pairs-search.json` and checked byte-for-byte by `verify:benchmark`. It embeds no runtime — native per-pair timings ship separately in `public/data/all-pairs-runtime.json` |
+
+Verified across all 400 start/goal pairs: 0 cost mismatches against an independent
+Dijkstra, 0 admissibility violations, 0 consistency violations, and UCS 4200 → A\* 2436
+expansions (42.0% reduction). All three languages produce byte-identical explored order
+and counters.
+
+---
+
+## The assignment — what is actually being graded
+
+`data/IMG_3390.JPG` is the assignment brief. **Do not delete it.** It is unreferenced by
+any code, which makes it look like a stray photo; it is the only copy of the requirements
+and of the canonical Romania map the 23 road weights came from.
+
+| Requirement | State |
+|---|---|
+| Implement the Romania-Map pathfinding problem as a **web application** | Done |
+| User can select **any arbitrary** start and goal | Done — any of the 20 cities |
+| **One blind search** and **one custom heuristic search** | Done — UCS and current-flow A\* |
+| Compare **execution time, memory usage, and solution quality (path cost)** | Done — `components/benchmark/`. Note I5: runtime numbers are native only |
+| **Put the link to the GitHub repository inside the web app** | **NOT DONE** — no link anywhere in `app/`, `components/` or `lib/` |
+| Submit: web app URL, YouTube presentation (10–15 min), repo link | Outstanding |
+
+**Due 9 AM Tuesday, 13 October 2026.** Graded on creativity (heuristic, UX/UI),
+completeness, and presentation.
+
+The missing repo link is the cheapest outstanding item on this list and the easiest to
+forget, because nothing in the harness can see it — it is a requirement about the rendered
+page, not about the engine.
+
+---
+
+## Architecture — Rust compiled to WebAssembly
+
+**Locked. Do not reopen this. The `wasm/` crate runs in the browser; do not add an HTTP backend.**
+
+The engine stays in Rust and compiles two ways: a native binary for the terminal and
+benchmarks, and a `.wasm` module that runs inside the visitor's browser. Hosting is
+static files on GitHub Pages.
+
+```
+                 wasm/src/lib.rs
+                 (graph · search · heuristic · trace)
+                        /            \
+              cargo build          wasm-pack build
+                    /                    \
+          src/bin/cli.rs            romania_search.wasm
+       terminal UI, benchmarks       runs in the browser
+                    \                    /
+                     next build --export
+                            |
+                      GitHub Pages
+```
+
+**Why not the alternatives**, recorded so they stay closed:
+
+- **Porting the algorithm to TypeScript.** Rejected: the algorithm would exist
+  twice and drift, and drift silently invalidates the comparison the project is about.
+- **A Rust HTTP backend.** Rejected: the requirement is to deploy once when
+  finished and leave it. A server is not deployed once, it is kept running — it needs
+  uptime, a renewed TLS certificate, and ~$6/month, and the project goes offline when
+  funding stops. It is also *slower*: 30–200 ms of network for 0.4 µs of work. Its one
+  real advantage — computing the 20 goal heuristics once instead of per visitor — is
+  taken away by precomputing them at build time, which the wasm build does.
+
+A backend becomes correct only if a live deployed service is itself required, or if the
+graph is ever scaled to the real Romanian road network (the heuristic is `O(V³)` time
+and `O(V²)` memory; browser-side precompute stops being viable well before that).
+
+---
+
+## Build order
+
+Six steps. Each has a check that must pass before the next begins.
+
+1. **Make `wasm/` a real Cargo project.** Fill `Cargo.toml`; move the engine from
+   the native Rust reference into `lib.rs`, `graph.rs`, the single `search.rs`,
+   `heuristics/current_flow.rs`, and `src/bin/cli.rs`; convert
+   `panic!("No route exists…")` to a `Result`; delete unused placeholders.
+   → *check:* `cargo run --bin cli` output byte-identical to today's.
+2. **Record the trace.** A frontier snapshot per expansion, inside `search()`.
+   → *check:* trace length equals `expanded` (13 UCS, 9 A\* on Arad→Bucharest).
+3. **Fill `wasm/tests/`.** Port `scripts/verify_correctness.py` to `cargo test`.
+   → *check:* `cargo test` green.
+4. **Cross to WebAssembly.** `wasm-bindgen` wrapper plus build-time heuristic tables.
+   → *check:* wasm results match the native CLI on all 400 pairs.
+5. **Frontend.** SVG schematic graph first — no dependencies, works everywhere. Then the
+   Zustand store, controls, and charts. MapLibre last, as an enhancement.
+   → *check:* animation reaches the final path; counters match the CLI.
+6. **Deploy.** One GitHub Actions workflow: wasm-pack → `next build` → Pages.
+   → *check:* the live URL works in a fresh browser.
+
+Target layout after step 4:
+
+```
+wasm/
+├── Cargo.toml                    [package] [lib] [[bin]]
+├── Cargo.lock                    committed; it is the CI cargo cache key
+├── build.rs                      validates and embeds data/heuristics.json
+├── data/
+│   └── heuristics.json           precomputed A* tables
+├── src/
+│   ├── lib.rs                    modules + wasm-bindgen boundary
+│   ├── graph.rs                  CITIES, Graph, make_graph
+│   ├── search.rs                 ONE search() — UCS and A* both
+│   ├── metrics.rs                counters and result metrics
+│   ├── heuristics/
+│   │   ├── mod.rs
+│   │   └── current_flow.rs       heuristic lookup and validation
+│   └── bin/
+│       ├── cli.rs                stdin UI, native benchmarks
+│       ├── export_sample.rs      writes public/data/arad-bucharest-search.json
+│       └── export_all_pairs.rs   writes public/data/all-pairs-search.json
+└── tests/
+```
+
+---
+
+## Invariants — violating these is a review failure
+
+| # | Rule | Why |
+|---|---|---|
+| **I1** | `search()` is **one** function. UCS and A\* differ only by the heuristic array passed in | Identical allocations and tie-breaks are *why* the comparison measures the heuristic rather than two different programs. Two implementations drift, and drift silently invalidates every reported number |
+| **I2** | Rust, C++ and Python produce **identical** explored order, expanded, generated, peak queue, peak records and memory | The project's central claim |
+| **I3** | The heuristic stays admissible (`h(v) ≤ h*(v)`) and consistent (`h(u) ≤ w(u,v) + h(v)`) | A\* returns optimal paths only while this holds |
+| **I4** | Engine code uses no `std::io`, `std::time`, `println!`, `eprintln!` or `black_box` — those belong to `bin/cli.rs` | `Instant` panics on `wasm32`, so a leak breaks the browser build at runtime rather than at compile time |
+| **I5** | Runtime numbers come from native runs only, never from a browser | Chrome coarsens `performance.now()` to ~100 µs as a Spectre mitigation, against a ~1 µs search. Report expansion counts — they are exact integers, identical on every machine |
+
+**Do not reintroduce `wasm/src/search/ucs.rs` or `wasm/src/search/astar.rs`.**
+They violate I1. Keep one `wasm/src/search.rs`.
+
+`npm run verify` runs nine gates and checks I1–I4. I5 is a convention.
+
+`npm run verify:mutation` is separate and deliberately not in that chain: it injects **14**
+known bugs and asserts a gate goes red for each, which takes ~10 minutes. It is what tells
+you whether the other gates still work. `.github/workflows/mutation.yml` runs it weekly, on
+demand via `workflow_dispatch`, and on pull requests that touch the harness (`scripts/**`,
+`.github/workflows/**`, `wasm/src/**`). The schedule fires only from the default branch; run
+it locally when in doubt.
+
+Before injecting anything it **preflights every gate on the clean tree**, and refuses to
+run if one is already red. A gate that cannot execute reports its fault as *caught* —
+`gate()` reads any non-zero exit as detection — so a broken gate produces a green suite
+that measured nothing. That is not hypothetical: on this workflow's first ever run
+(2026-08-24) the CI job had no `node_modules`, `npx vitest run` exited 1 because vitest
+was not installed, all three vitest faults reported `CAUGHT`, and **M15 — a fault proven
+undetectable — reported "now caught" and advised closing it.** The suite printed `PASS`.
+The reliable tell is M15's verdict, not the run time: CI finishes the whole suite in under
+three minutes quite legitimately.
+
+One fault is recorded there as a documented blind spot rather than a failure. **M15**: the
+frontend suite has a single fixture, so a selector that ignores the A\* trace passes (see
+the frontend-test rule below). **M9 is retired** — it covered `reference/romania_search.rs`,
+deleted once the team confirmed the crate is the only Rust engine. Fault ids are not
+renumbered, so M9 is simply absent.
+
+M1–M8 and M10–M12 cover the engine and the exported sample. M13–M15 cover the frontend
+suite, which
+until they landed was policed by nothing: the mutation script's `TEST` gate is `cargo test`,
+and `FRONT` diffs a JSON file without rendering a component.
+
+Two checks in `verify:invariants` exist because behaviour cannot see the fault at all: the
+tie-break pin, and a list of test names that must still be present. Deleting a test
+otherwise makes the suite *greener*, which is how coverage disappears unnoticed.
+
+---
+
+## Frontend tests — the rule
+
+**The first PR that adds frontend logic also adds the test runner (vitest + jsdom +
+testing-library) and the CI step. Tests do not land in a follow-up.**
+
+**This rule has been met.** The runner landed with PR #9 alongside the wasm search UI.
+`npm test` runs the suite and `npm run verify:frontend` runs it alongside typecheck and the
+`tests/verify_env.test.sh` environment regression check. The suite covers trace selectors, the
+wasm JSON boundary, Zustand search/playback state, route-selection interactions, the benchmark
+panel, road geometry, and the heuristic/circuit teaching views. Keep those layers covered when
+their contracts change.
+
+"Step N" in this file always means a step in the Build order above. PR numbers are used for
+history, because the runner arrived with frontend work rather than at a step boundary.
+
+Do **not** pre-install the runner ahead of the logic — one sitting there with no tests
+grows a placeholder and stops being noticed. This repository has already produced that
+failure twice. The PostToolUse hook died silently for weeks (`docs/runbook.md` §2). And
+`.github/workflows/mutation.yml` was scheduled but unreachable while the default branch
+carried no `.github/`; it now also runs on pull requests that touch the harness.
+Both times the capability existed and nothing invoked it.
+
+`verify:frontend-sample` is **not** a frontend test. It checks a Rust-generated JSON file
+and the road table; it never renders a component.
+
+`lib/traceSelectors.ts` keeps trace derivation outside React so its tests can use the
+Rust-generated sample as their oracle: at step *i*, the expanded set equals
+`explored_order[0..i]`.
+
+Two gaps in that suite are known and open, both from the fixture rather than the tests.
+`arad-bucharest-search.json` is the only sample, and it has UCS 13 / A\* 9 frames, so
+`Math.max(ucs, astar)` is indistinguishable from `ucs` — a `getTimelineLength()` that
+returns `data.ucs.trace.length` passes everything. That one is pinned as **M15**, so it
+stays visible instead of being rediscovered. The second is unpinned: `getTraceFrame()`'s
+lower clamp is never exercised, since only `step: 100` is tested and never a negative step.
+
+Both close the same way — a second fixture where A\* runs longer — not with more assertions
+on this one. Closing M15 means flipping its expectation in `verify_mutation.sh` from
+`missed` to `caught`; the script reports an unexpectedly-caught fault as an improvement to
+record, not a failure.
+
+**There is no ESLint.** It was attempted and is blocked upstream: `eslint-config-next`
+loads `typescript-eslint`, which hard-`throw`s on TypeScript 7.0 (this project is on 7.0.2)
+— tracked as typescript-eslint#10940. `next lint` was also removed in Next 16, so the old
+recipe would not have worked either. The documented workaround is a side-by-side TypeScript
+6 install used only for linting, which means linting against a different compiler than the
+one that builds — a drift source this project otherwise refuses. Left uninstalled on purpose,
+for the same reason the test runner was not pre-installed: tooling that sits there not
+working stops being noticed. Revisit when typescript-eslint supports TS 7.
+
+---
+
+## Key decisions (locked)
+
+- Architecture: Rust → WebAssembly, static hosting on GitHub Pages
+- Priority-queue tie-break: `(f, g, city)` ascending, **identical in all three languages**.
+  Keep it that way deliberately. No *behavioural* gate can police it: swapping the secondary
+  keys to `(f, city, g)` was measured to produce identical explored order on all 800
+  start/goal/algorithm combinations, so no route sample detects the change. Parity catches
+  drift in *outcomes*; a tie-break edit that yields identical outcomes passes. So the Rust
+  ordering is pinned by source text instead — `verify:invariants` reads the `Ord` impl in
+  `wasm/src/search.rs` and fails if the three keys stop reading `f`, `g`, `city`. The C++
+  and Python tie-breaks remain unpinned and rely on this rule being read
+- The algorithm itself stays dependency-free; `wasm-bindgen` and `serde` are for the
+  browser boundary only, never for the search or the heuristic. **`metrics.rs` counts as
+  that boundary**: its four structs derive `Serialize` so `bin/export_sample.rs` can write
+  the frontend's JSON. `search.rs`, `graph.rs` and `heuristics/` stay clean — that is the
+  line. Note serde is currently an unconditional dependency, so the native CLI links it
+  too; feature-gate it if that ever costs anything
+- Heuristic tables are precomputed at build time and shipped as JSON; the browser never
+  runs Gauss-Jordan
+- **The Pages base path has exactly one source: `NEXT_PUBLIC_BASE_PATH`.** `next.config.ts`
+  derives `basePath` and `assetPrefix` from it; `lib/wasm/client.ts` builds the wasm module
+  URL from it, because Next does not rewrite runtime strings and that file has to add the
+  prefix itself. Only `.github/workflows/deploy.yml` sets it, derived from the repository
+  name. Never hardcode the path in either file — that recreates the two-encodings drift
+  this project refuses everywhere else, and `next build` still exits 0 while every asset
+  404s. `npm run verify:export` is what catches it
+- Benchmarks are produced natively, never in a browser (I5). `wasm/src/bin/cli.rs` prints
+  them to the terminal. `public/data/benchmark-results.json` is a deterministic aggregate of
+  `public/data/all-pairs-search.json`, written by `npm run generate:benchmark` and checked
+  byte-for-byte by `verify:benchmark`; it carries no runtime, so it regenerates exactly. Native
+  per-pair timings ship separately in `public/data/all-pairs-runtime.json`, which
+  `verify:all-runtimes` checks for structure and coverage only — the values themselves are
+  non-reproducible, so an exact diff would be a false alarm on every run. `peak_payload_bytes`
+  is the search-state payload: it excludes trace, container, and allocator overhead, and is
+  neither total process memory nor RSS
+- The SVG schematic graph is the primary view; MapLibre is an optional enhancement layered
+  on a project that already works
+- `search()` returns `Result`, never `panic!` — a panic in wasm would take down the
+  whole page
+
+---
+
+## Bug loop protocol — mandatory, in order, every time
+
+When a bug is found, complete all four steps before reporting it fixed:
+
+1. **Rootcause** — run `/diagnose` first to match against known patterns. Only if there is
+   no match, write `docs/rootcause/<slug>.json` *before* applying the fix.
+2. **Runbook** — add or update the section in `docs/runbook.md`: symptom → diagnose → fix
+   → prevent.
+3. **Command** — add a row to the signature table in `.claude/commands/diagnose.md`. If the
+   prevention is new, add a check to `.claude/commands/prevent.md`.
+4. **Harness** — decide whether the bug can be caught automatically. If yes, add it to
+   `scripts/verify_*.sh` so both `/prevent` and CI pick it up. If no, fill
+   `automation_gap` in the rootcause JSON explaining why.
+
+> **The harness does not update itself.** Steps 1–3 are Claude's responsibility. Step 4 is
+> a code change Claude makes. CI only ever runs what is already configured.
+
+---
+
+## Definition of done
+
+1. `npm run verify:all` exits 0. That is the nine engine gates plus the env regression
+   check, `typecheck`, and `npm test` — the same set CI requires, which is the point of it
+   being one command: `npm run verify` alone cannot fail on the checks most likely to fail
+2. No invariant I1–I5 broken
+3. For a bug fix: the loop above is closed, all four steps
+4. No pre-existing check newly broken
+---
+
+## Common commands
+
+```bash
+npm run verify:all          # everything CI requires — run this before pushing
+npm run doctor              # is this machine able to run the checks and the build?
+
+npm run verify              # the nine engine gates only
+npm run verify:invariants   # I1, I4, clean builds
+npm run verify:parity       # I2 — three languages agree
+npm run verify:correctness  # I3 — 400 pairs, admissibility, consistency
+npm run verify:golden       # full CLI output against tests/golden/
+npm run verify:harness      # the PostToolUse hook is wired and reacts
+npm run verify:frontend-sample  # the committed sample still matches the engine
+npm run verify:frontend     # env regression + typecheck + tests, the other half of verify:all
+npm run typecheck           # tsc --noEmit
+npm test                    # vitest run — the frontend suite
+
+npm run verify:export       # after npm run build — is the static export servable?
+npm run verify:mutation     # ~10 min — do the gates above actually catch anything?
+bash scripts/verify_mutation.sh M3   # just one fault, while iterating
+
+# Run the three implementations (they prompt for two city names)
+cargo run --release --manifest-path wasm/Cargo.toml --bin cli
+mkdir -p bin
+g++ -std=c++17 -O2 reference/romania_search.cpp -o bin/romania_search_cpp && ./bin/romania_search_cpp
+python3 reference/romania_search.py
+```
+
+
+---
+
+## Known gotchas
+
+- **`heuristics.json` is compiled by `wasm/build.rs`.** Cargo validates and embeds the
+  table; malformed data fails the build before the engine runs.
+- **`python3 reference/romania_search.py` fails if the working directory has moved.** Shell
+  state can persist between commands; use an absolute path or `cd` to the repo root first.
+- **`bin/` must exist** before `rustc -o bin/…` or `g++ -o bin/…` — it is gitignored, so a
+  fresh clone does not have it. `mkdir -p bin` first.
+- **`wasm32-unknown-unknown` is declared in `rust-toolchain.toml`**, but rustup installs a
+  declared target lazily, so a fresh machine hits it mid-build rather than up front.
+  `wasm-pack` is needed too, and neither is checked by `npm run verify`. Run `npm run doctor`
+  — it reports the verify toolchain and the build toolchain separately and prints the install
+  command for whatever is missing. **`wasm-pack` is pinned in `.wasm-pack-version`**, read by
+  `verify_env.sh`, `ci.yml`, and `deploy.yml`, so install that exact version from the releases
+  page — `doctor` fails on a version mismatch, not just on absence. Avoid `cargo install
+  wasm-pack` (compiles from source, minutes) and the generic `init.sh` installer (takes latest,
+  defeats the pin).
+- **`npm run doctor` enforces the Node floor from `package.json`'s `engines` field** (`>=24`),
+  read through a JSON parser (python3, or node when python3 is absent) rather than a regex, so
+  an older Node fails the preflight instead of reporting `ok`. `tests/verify_env.test.sh` is the
+  regression check for that gate: `npm run verify:frontend` runs it before typecheck and tests,
+  and CI runs `npm run doctor && bash tests/verify_env.test.sh` as an explicit Environment
+  preflight step.
+- **`std::time::Instant` panics on `wasm32`.** This is what I4 exists to prevent. Keeping
+  `benchmark()` in `bin/cli.rs` solves it automatically.
+- **`reference/romania_search.cpp` has one pre-existing `-Wall -Wextra` warning** — an unused
+  `INF` constant at line 19. Reported by `verify:invariants`, deliberately non-fatal; do not
+  "fix" it as a drive-by change.
+- **Benchmark output varies run to run.** `docs/ARCHITECTURE_DECISION.md` records 1.5×
+  from CPU frequency ramp-up; a spot check on 2026-08-20 saw A\* swing 2.534 → 5.323 µs
+  across three consecutive runs, so treat 2× as the realistic spread. Never quote a
+  single run; expansion counts are the reliable comparison. The committed runtime sample
+  records neither the machine nor the source revision it was measured at, so treat its
+  numbers as historical, not as a property of the current build.
+
+---
+
+## Git and PR workflow
+
+- Remote is `Potaeeatsthis/kmitl-romania-map`; default branch `master`, work happens on `dev`
+  and feature branches
+- Branch names: `feat/step<N>-<name>`, e.g. `feat/step1-wasm-crate`
+- Conventional commits: `feat:`, `fix:`, `test:`, `chore:`, `docs:`
+- One PR per build step; CI must be green before merge
+- **Claude does not commit or push unless explicitly told to**
+- The step-1 restructure (engine moved into `wasm/`) is **done and merged**, and the native
+  Rust reference it came from has since been deleted — `wasm/src/` is the only Rust engine. The rule it established still holds: Rust work and frontend work touch
+  disjoint files and can run in parallel; two people inside `wasm/src/` at the same time cannot
+- Repository settings need admin, which only `Potaeeatsthis` has.
+  - **Enabled.** Both `master` and `dev` are protected: PR required, plus the two status
+    checks. Note they are required by *job name* — `Invariants, parity, correctness` and
+    `Frontend types` — not by the job ids `correctness` and `frontend`. `master` also
+    requires one approving review and an up-to-date branch; `dev` requires neither, so
+    feature work merges as soon as CI is green
+  - **Enabled 2026-08-24.** Settings → Pages → Source: GitHub Actions. The API reports
+    `build_type: workflow` and `html_url: https://potaeeatsthis.github.io/kmitl-romania-map/`,
+    so `.github/workflows/deploy.yml` is what publishes, and `/kmitl-romania-map` is the
+    base path it derives from the repository name. `deploy.yml` triggers on the `CI`
+    workflow completing for a push to `master`, not on the push itself; it checks out the
+    exact `workflow_run.head_sha` CI verified, and both its pre-build `freshness` job and a
+    pre-publish re-check drop the run if `master` has moved on. There is no
+    `workflow_dispatch` or push bypass — redeploy by re-running CI on `master`
+  - **Optional.** Turn on "Require review from Code Owners" to make `.github/CODEOWNERS`
+    take effect; it is inert until then, and inert regardless until the file reaches `master`
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

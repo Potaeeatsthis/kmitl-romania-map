@@ -1,0 +1,357 @@
+#!/usr/bin/env bash
+# Measures whether the gates actually catch anything.
+#
+# Every other verify_*.sh asserts something about the code. This one asserts something
+# about the other scripts: that when a realistic bug is introduced, at least one of them
+# goes red. A check nobody has ever seen fail is a check nobody knows works -- which is
+# exactly how the PostToolUse hook died silently for weeks (docs/runbook.md section 2).
+#
+# Each mutation carries an expectation. A mutation marked `caught` that is missed fails
+# this script: a gate has stopped working, or was never wired up. A mutation marked
+# `missed` that is now caught is reported as an improvement, not a failure -- someone
+# closed a known gap and should update the expectation here.
+#
+# One `missed` entry is a documented blind spot, not a bug to fix by accident:
+#   M15 the frontend suite has one fixture, Arad->Bucharest, with UCS 13 and A* 9
+#       frames. Math.max(ucs, astar) is therefore always ucs, so a selector that
+#       ignores the A* trace entirely passes. Needs a second fixture where A* runs
+#       longer; more assertions on this one cannot help.
+#
+# M3 and M8 were blind spots until the tie-break pin and the test inventory landed in
+# verify_invariants.sh. Neither is detectable by behaviour -- the first produces identical
+# output, the second removes the thing that would have complained -- so both are policed
+# by reading the source instead.
+#
+# Runs against HEAD in a throwaway worktree, so uncommitted work in your tree is NOT
+# what gets measured, and nothing here can touch your checkout. Takes ~10 minutes,
+# which is why it is a weekly scheduled job rather than part of `npm run verify`.
+#
+# Run via: npm run verify:mutation          all 14
+#          bash scripts/verify_mutation.sh M3   just one, while iterating
+#
+# M1-M12 cover the engine and the exported sample. M13-M15 cover the frontend suite.
+# M9 is retired: it covered reference/romania_search.rs, which was deleted once the team
+# decided the crate is the only Rust engine. Ids are not renumbered -- a stable id is what
+# lets `bash scripts/verify_mutation.sh M13` and the docs keep meaning the same thing.
+set -uo pipefail
+
+cd "$(dirname "$0")/.."
+ROOT="$(pwd)"
+ONLY="${1:-}"
+
+LAB="$(mktemp -d)"
+CARGO_LAB="$(mktemp -d)"
+cleanup() {
+  git -C "$ROOT" worktree remove --force "$LAB/tree" >/dev/null 2>&1
+  rm -rf "$LAB" "$CARGO_LAB"
+}
+trap cleanup EXIT
+
+pass() { printf '  \033[32mok\033[0m   %s\n' "$1"; }
+bad()  { printf '  \033[31mFAIL\033[0m %s\n' "$1"; }
+note() { printf '  \033[33mnote\033[0m %s\n' "$1"; }
+
+git worktree add --detach "$LAB/tree" HEAD >/dev/null 2>&1 || {
+  echo "could not create a worktree -- is this a git repository with a commit?" >&2
+  exit 1
+}
+cd "$LAB/tree"
+
+# vitest cannot run in a fresh worktree, which has no node_modules. `npm ci` per fault
+# would cost ~20s x 14. Symlinking the real one is instant, and the faults below only
+# ever edit tracked source, never a dependency.
+#
+# `git clean -fdq` would delete the symlink before the first fault runs, so it is
+# excluded explicitly. Getting this wrong is silent: the vitest gate would report
+# "missed" for every fault and read as a coverage hole rather than a broken harness.
+if [ -d "$ROOT/node_modules" ]; then
+  ln -s "$ROOT/node_modules" "$LAB/tree/node_modules"
+else
+  # Fatal, not a warning. gate() reads any non-zero exit as "the fault was caught", and
+  # `npx vitest run` with no node_modules exits 1 because vitest is not installed -- so
+  # every vitest fault would report CAUGHT without running a single test, and the suite
+  # would print PASS. Observed in CI on 2026-08-24: M15, a fault proven undetectable,
+  # reported "now caught" and advised changing its expectation.
+  echo "node_modules not found at $ROOT. Run npm ci first -- without it the vitest" >&2
+  echo "gates report CAUGHT for every fault and this suite reports a meaningless PASS." >&2
+  exit 1
+fi
+
+fail=0
+improved=0
+reset_tree() { git checkout -- . >/dev/null 2>&1; git clean -fdq -e node_modules >/dev/null 2>&1; }
+
+# Runs one gate, printing which. Returns 0 if the gate CAUGHT the fault.
+gate() {
+  local label="$1"; shift
+  if "$@" >/dev/null 2>&1; then
+    printf '%s=missed ' "$label"; return 1
+  else
+    printf '%s=CAUGHT ' "$label"; return 0
+  fi
+}
+
+# Only the --structural form is used. The full form ran compilers, and M9 -- retired with
+# reference/romania_search.rs -- was its only caller.
+INV_S=(bash scripts/verify_invariants.sh --structural)
+PAR=(bash scripts/verify_parity.sh)
+GOLD=(bash scripts/verify_golden.sh)
+CORR=(python3 scripts/verify_correctness.py)
+TEST=(cargo test --quiet --manifest-path wasm/Cargo.toml --target-dir "$CARGO_LAB")
+FRONT=(env CARGO_TARGET_DIR="$CARGO_LAB" node scripts/verify_frontend_sample.mjs)
+# The 22 frontend tests were policed by nothing: TEST is cargo only, and FRONT diffs a
+# JSON file without rendering a component. The whole vitest suite could have been
+# deleted or hollowed out with every gate, this script included, still green -- the
+# same "deleting a test makes the suite greener" failure the Rust side has a test
+# inventory for, one layer up in the tooling meant to catch it.
+VITEST=(npx vitest run)
+
+# Every gate must PASS on the unmutated tree before it can be trusted to detect anything.
+# A gate that is already red -- a missing interpreter, an uninstalled tool, a bad path --
+# reports CAUGHT for every fault it is handed, and the suite then reports PASS having
+# measured nothing. That is the failure this whole script exists to catch, so it is worth
+# catching in the script itself.
+echo "Preflight -- every gate must be green before any fault is injected"
+preflight_failed=0
+preflight() {
+  local label="$1"; shift
+  if "$@" >/dev/null 2>&1; then
+    pass "$label is green on the clean tree"
+  else
+    bad "$label is ALREADY FAILING before any mutation -- it cannot detect anything"
+    echo "         $*"
+    preflight_failed=1
+  fi
+}
+preflight invariants "${INV_S[@]}"
+preflight parity "${PAR[@]}"
+preflight golden "${GOLD[@]}"
+preflight correctness "${CORR[@]}"
+preflight tests "${TEST[@]}"
+preflight frontend "${FRONT[@]}"
+preflight vitest "${VITEST[@]}"
+if [ "$preflight_failed" -ne 0 ]; then
+  echo
+  echo "mutation: FAIL -- the harness is broken, so no fault result below would mean anything"
+  exit 1
+fi
+echo
+
+# mutate <id> <expectation> <description>; body follows, then `verdict`
+CAUGHT_ANY=0
+begin() {
+  ID="$1"; EXPECT="$2"; DESC="$3"; CAUGHT_ANY=0
+  reset_tree
+  printf '%-4s %s\n       ' "$ID" "$DESC"
+}
+check() { gate "$@" && CAUGHT_ANY=1; }
+verdict() {
+  echo
+  if [ "$CAUGHT_ANY" -eq 1 ] && [ "$EXPECT" = "caught" ]; then
+    pass "$ID caught, as expected"
+  elif [ "$CAUGHT_ANY" -eq 0 ] && [ "$EXPECT" = "missed" ]; then
+    note "$ID missed -- documented blind spot"
+  elif [ "$CAUGHT_ANY" -eq 1 ] && [ "$EXPECT" = "missed" ]; then
+    pass "$ID is now caught -- a gap was closed; change its expectation to 'caught'"
+    improved=$((improved + 1))
+  else
+    bad "$ID went undetected but should be caught -- a gate has stopped working"
+    fail=1
+  fi
+  echo
+}
+skip() { [ -n "$ONLY" ] && [ "$ONLY" != "$1" ]; }
+
+echo "Fault injection against HEAD"
+echo
+
+# --------------------------------------------------------------- I1: one search()
+if ! skip M1; then
+  begin M1 caught "split search() into a second file (I1)"
+  mkdir -p wasm/src/search && echo 'pub fn search() {}' > wasm/src/search/ucs.rs
+  check invariants "${INV_S[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- I4: wasm-safe engine
+if ! skip M2; then
+  begin M2 caught "leak std::time::Instant into the engine (I4)"
+  printf 'use std::time::Instant;\n%s' "$(cat wasm/src/metrics.rs)" > wasm/src/metrics.rs
+  check invariants "${INV_S[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- the tie-break
+if ! skip M3; then
+  begin M3 caught "swap the queue tie-break from (f,g,city) to (f,city,g)"
+  python3 - <<'PY'
+p = 'wasm/src/search.rs'
+s = open(p).read()
+old = """            .then_with(|| other.g.cmp(&self.g))
+            .then_with(|| other.city.cmp(&self.city))"""
+new = """            .then_with(|| other.city.cmp(&self.city))
+            .then_with(|| other.g.cmp(&self.g))"""
+assert s.count(old) == 1, 'tie-break anchor moved -- update verify_mutation.sh'
+open(p, 'w').write(s.replace(old, new))
+PY
+  check invariants "${INV_S[@]}"; check tests "${TEST[@]}"
+  check parity "${PAR[@]}"; check golden "${GOLD[@]}"; check correctness "${CORR[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- I2: one language drifts
+if ! skip M4; then
+  begin M4 caught "change one road weight in C++ only"
+  sed -i.bak 's/{0, 1, 75}/{0, 1, 76}/' reference/romania_search.cpp && rm -f reference/*.bak
+  check parity "${PAR[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- all three at once
+if ! skip M5; then
+  begin M5 caught "change the same road weight in all three implementations"
+  sed -i.bak 's/{0, 1, 75}/{0, 1, 76}/' reference/romania_search.cpp
+  sed -i.bak 's/("Arad", "Zerind", 75)/("Arad", "Zerind", 76)/' reference/romania_search.py
+  sed -i.bak 's/(0, 1, 75)/(0, 1, 76)/' wasm/src/graph.rs
+  rm -f reference/*.bak wasm/src/*.bak
+  check parity "${PAR[@]}"; check golden "${GOLD[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- I3: admissibility
+if ! skip M6; then
+  begin M6 caught "inflate the heuristic so it stops being admissible"
+  python3 - <<'PY'
+p = 'reference/romania_search.py'
+s = open(p).read()
+old = 'heuristic[city] = max(0.0, augmented[reduced_index][reduced_size + reduced_index])'
+assert s.count(old) == 1, 'heuristic anchor moved -- update verify_mutation.sh'
+open(p, 'w').write(s.replace(old, old + ' * 1.5'))
+PY
+  check correctness "${CORR[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- the committed table
+if ! skip M7; then
+  begin M7 caught "corrupt one value in the committed heuristic table"
+  python3 - <<'PY'
+import re
+p = 'wasm/data/heuristics.json'
+s = open(p).read()
+m = re.search(r'(\d+\.\d{4,})', s)
+assert m, 'no float found in heuristics.json'
+open(p, 'w').write(s[:m.start()] + str(float(m.group(1)) * 3.0) + s[m.end():])
+PY
+  check tests "${TEST[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- deleting coverage
+if ! skip M8; then
+  begin M8 caught "delete a test outright"
+  python3 - <<'PY'
+p = 'wasm/tests/ucs_tests.rs'
+s = open(p).read()
+marker = '#[test]\nfn trace_records_one_complete_frame_per_expansion'
+i = s.index(marker)
+j = s.index('#[test]', i + len(marker))
+open(p, 'w').write(s[:i] + s[j:])
+PY
+  check tests "${TEST[@]}"; check invariants "${INV_S[@]}"
+  verdict
+fi
+
+# --------------------------------------------------------------- the trace contents
+if ! skip M10; then
+  begin M10 caught "reverse the frontier ordering inside make_step()"
+  python3 - <<'PY'
+p = 'wasm/src/search.rs'
+s = open(p).read()
+old = """    visible_frontier.sort_by(|left, right| {
+        left.f
+            .total_cmp(&right.f)"""
+new = """    visible_frontier.sort_by(|left, right| {
+        right.f
+            .total_cmp(&left.f)"""
+assert s.count(old) == 1, 'make_step sort anchor moved -- update verify_mutation.sh'
+open(p, 'w').write(s.replace(old, new))
+PY
+  check tests "${TEST[@]}"; check golden "${GOLD[@]}"; check parity "${PAR[@]}"
+  verdict
+fi
+
+# --------------------------------------------------- the sample the browser animates
+if ! skip M11; then
+  begin M11 caught "change an on-path road without regenerating the frontend sample"
+  # Sibiu -> Rimnicu Vilcea is ON the Arad->Bucharest route, so the committed sample
+  # genuinely goes stale. Do not swap this for (0, 1, 75) as M4 and M5 use: Arad->Zerind
+  # is off the sampled route, the JSON stays correct, and the fault reads as a false miss.
+  sed -i.bak 's/(3, 9, 80)/(3, 9, 81)/' wasm/src/graph.rs && rm -f wasm/src/*.bak
+  check frontend "${FRONT[@]}"
+  verdict
+fi
+
+# ----------------------------------------------------- the map's copy of the roads
+if ! skip M12; then
+  begin M12 caught "drift lib/romaniaGraph.ts away from the engine's road table"
+  # A fourth encoding of the table I2 pins across Rust, C++ and Python. Nothing else
+  # reads this file, so without this gate the map labels a road the search never uses.
+  sed -i.bak 's/\[0, 1, 75\]/[0, 1, 76]/' lib/romaniaGraph.ts && rm -f lib/*.bak
+  check frontend "${FRONT[@]}"
+  verdict
+fi
+
+# ------------------------------------------------- the trace selectors and the store
+if ! skip M13; then
+  begin M13 caught "off-by-one in the expanded-set selector"
+  # getExpandedCities is the one derivation with an independent oracle: at step i the
+  # expanded set must equal explored_order[0..i]. If this fault survives, that oracle
+  # is not wired to anything.
+  sed -i.bak 's/slice(0, index + 1)/slice(0, index)/' lib/traceSelectors.ts && rm -f lib/*.bak
+  check vitest "${VITEST[@]}"
+  verdict
+fi
+
+if ! skip M14; then
+  begin M14 caught "drop the clamp in setStep"
+  # An unclamped step scrubs past the end of the trace and renders an undefined frame.
+  sed -i.bak 's/Math.min(lastStep, Math.max(0, Math.trunc(step)))/Math.trunc(step)/' \
+    stores/useSearchStore.ts && rm -f stores/*.bak
+  check vitest "${VITEST[@]}"
+  verdict
+fi
+
+# --------------------------------------------- gaps the single fixture cannot see
+if ! skip M15; then
+  begin M15 missed "getTimelineLength ignores the A* trace"
+  # arad-bucharest-search.json is the only fixture and has UCS 13 / A* 9 frames, so
+  # Math.max(ucs, astar) is always ucs and this fault is invisible. Closing it needs a
+  # second fixture where A* runs longer -- not more assertions on this one.
+  # Applied in Python because the target spans lines. The assert matters: an edit that
+  # silently fails to apply would leave the file correct, the gate would report "missed",
+  # and that is exactly this fault's expected value -- so a broken mutation would read as
+  # a confirmed blind spot. Every other fault here is a one-line sed that fails loudly.
+  python3 - <<'MUT' || { bad "M15 could not be applied -- lib/traceSelectors.ts changed shape"; fail=1; }
+import io, sys
+p = "lib/traceSelectors.ts"
+s = io.open(p, encoding="utf-8").read()
+target = """  return Math.max(
+    data.ucs.trace.length,
+    data.astar.trace.length,
+  );"""
+if target not in s:
+    sys.exit("getTimelineLength no longer matches the expected shape")
+io.open(p, "w", encoding="utf-8").write(s.replace(target, "  return data.ucs.trace.length;"))
+MUT
+  check vitest "${VITEST[@]}"
+  verdict
+fi
+
+reset_tree
+if [ "$improved" -gt 0 ]; then
+  echo "$improved documented gap(s) are now covered -- update their expectations in this file."
+  echo
+fi
+[ "$fail" -eq 0 ] && echo "mutation: PASS" || echo "mutation: FAIL"
+exit "$fail"

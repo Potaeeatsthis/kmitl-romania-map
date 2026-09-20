@@ -1,0 +1,11 @@
+{
+  "id": "empty-cargo-manifest",
+  "date": "2026-08-16",
+  "symptom": "Every cargo command in wasm/ fails immediately with: error: failed to parse manifest at `wasm/Cargo.toml` — Caused by: manifest is missing either a `[package]` or a `[workspace]`",
+  "rootcause": "wasm/Cargo.toml is tracked in git but is 0 bytes. The directory layout advertises a Cargo project — src/lib-style modules and a tests/ folder — but no manifest was ever written, so cargo has nothing to parse. The Rust source and test placeholders under wasm/ are also empty.",
+  "fix": "Resolved by build step 1: wasm/Cargo.toml now defines the library and native CLI, and scripts/verify_invariants.sh runs Cargo check, tests, Clippy, and formatting on every full verification.",
+  "recurrence_risk": "low",
+  "invariant": null,
+  "automation_gap": "Historical. The Cargo crate now exists, and scripts/verify_invariants.sh runs Cargo check, tests, Clippy, and formatting on every full verification.",
+  "tags": ["cargo", "build", "scaffolding", "step-1"]
+}
