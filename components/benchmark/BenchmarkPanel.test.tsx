@@ -103,6 +103,37 @@ describe("BenchmarkPanel", () => {
     expect(screen.getByText(/Arad → Sibiu → Rimnicu → Pitesti → Bucharest/)).toBeInTheDocument();
   });
 
+  // The metric is peak_payload_bytes, a modelled search-state payload. Calling it
+  // "Logical memory" read as process memory; the label and its note now say what it is
+  // and what it excludes.
+  it("labels the payload metric as search-state payload, not total memory", async () => {
+    const user = userEvent.setup();
+    render(<BenchmarkPanel />);
+
+    await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
+
+    expect(screen.getByText("Search-state payload")).toBeInTheDocument();
+    expect(screen.queryByText("Logical memory")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/excludes trace, container, and allocator overhead/),
+    ).toBeInTheDocument();
+  });
+
+  // all-pairs-runtime.json records no revision, date, or machine, and engine validation
+  // has changed since it was generated. The ring must not read as current engine speed.
+  it("labels native timing as a historical sample with unrecorded provenance", async () => {
+    const user = userEvent.setup();
+    render(<BenchmarkPanel />);
+
+    await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
+
+    expect(screen.getByText("HISTORICAL NATIVE SAMPLE")).toBeInTheDocument();
+    expect(
+      screen.getByText(/source revision and machine are unrecorded/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Not current validated-engine performance/)).toBeInTheDocument();
+  });
+
   it("updates the route details for the selected starting point and destination", async () => {
     const user = userEvent.setup();
     const path = [4, 5, 6, 7, 8, 10, 12, 14, 17, 18, 19];

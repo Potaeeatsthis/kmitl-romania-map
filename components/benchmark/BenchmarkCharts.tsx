@@ -24,17 +24,16 @@ type RouteMetricKey =
 type SampleAlgorithmResult = {
   algorithm: "ucs" | "astar";
   label: string;
-  median_runtime_us: number;
   expanded: number;
   generated: number;
   peak_frontier: number;
   peak_records: number;
-  logical_memory_bytes: number;
+  peak_payload_bytes: number;
 };
 
 type BenchmarkResults = {
   schema_version: number;
-  recorded_at: string;
+  source: string;
   all_pairs: {
     city_count: number;
     route_count: number;
@@ -44,8 +43,6 @@ type BenchmarkResults = {
       expanded_reduction: number;
       expanded_reduction_percent: number;
       optimal_cost_mismatches: number;
-      admissibility_violations: number;
-      consistency_violations: number;
     };
   };
   sample_route: {
@@ -55,21 +52,13 @@ type BenchmarkResults = {
     results: SampleAlgorithmResult[];
     comparison: {
       expanded_reduction_percent: number;
-      runtime_reduction_percent: number;
-      logical_memory_reduction_percent: number;
+      peak_payload_reduction_percent: number;
     };
   };
-  runtime_method: {
-    source: string;
-    build_profile: string;
-    process_launches: number;
-    searches_per_algorithm_per_launch: number;
-    statistic: string;
-    heuristic_build_excluded: boolean;
-    trace_recording_enabled: boolean;
-    unit: string;
+  method: {
+    runtime: string;
+    memory: string;
   };
-  memory_method: Record<string, unknown>;
 };
 
 type PairRuntime = {
@@ -94,7 +83,7 @@ const ROUTE_METRICS: { key: RouteMetricKey; label: string }[] = [
   { key: "generated", label: "Generated nodes" },
   { key: "peak_frontier", label: "Peak queue size" },
   { key: "peak_records", label: "Peak records" },
-  { key: "peak_payload_bytes", label: "Logical memory" },
+  { key: "peak_payload_bytes", label: "Search-state payload" },
 ];
 
 export default function BenchmarkCharts() {
@@ -189,7 +178,7 @@ export default function BenchmarkCharts() {
 
           {selectedRuntime && (
             <div className={styles.ringMetric}>
-              <span className={styles.ringKicker}>NATIVE SPEED SAMPLE</span>
+              <span className={styles.ringKicker}>HISTORICAL NATIVE SAMPLE</span>
               <div className={styles.heroRingWrap}>
                 <HeroRing
                   percent={Math.min(Math.abs(selectedRuntimeReductionPercent ?? 0), 100)}
@@ -205,7 +194,8 @@ export default function BenchmarkCharts() {
                     " UCS on " +
                     startName +
                     " to " +
-                    destinationName
+                    destinationName +
+                    ". Historical native sample; source revision and machine unrecorded."
                   }
                   isWorse={(selectedRuntimeReductionPercent ?? 0) < 0}
                 />
@@ -218,6 +208,10 @@ export default function BenchmarkCharts() {
               </p>
               <p className={styles.speedRoute}>
                 {startName} → {destinationName}
+              </p>
+              <p className={styles.heroMethod}>
+                Historical native sample; the run&apos;s source revision and machine are
+                unrecorded. Not current validated-engine performance.
               </p>
             </div>
           )}
@@ -269,6 +263,11 @@ export default function BenchmarkCharts() {
             />
           ))}
 
+          <p className={styles.heroMethod}>
+            Search-state payload is the bytes a search keeps in its own state. It
+            excludes trace, container, and allocator overhead and is not total process
+            memory or RSS.
+          </p>
         </>
       )}
     </div>
