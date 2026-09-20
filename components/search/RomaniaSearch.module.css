@@ -1,0 +1,212 @@
+.page {
+  --ink: #d6d7da;
+  --muted: #a9adb5;
+  --green: #00ed64;
+  --green-dark: #00ed64;
+  --green-bright: #00ed64;
+  --green-mid: #eeeeee;
+  --action: #137a47;
+  --action-strong: #00684a;
+  --green-soft: #2d3a2a;
+  --green-pale: #272525;
+  --line: #393e46;
+  --surface: #242222;
+  --canvas: #1b1919;
+  --map-surface: #1b1919;
+  --on-accent: #ffffff;
+  --run-surface: #00ed64;
+  --run-surface-hover: #62c98d;
+  --run-text: #1b1919;
+  --road-casing: #2c2a2a;
+  --road-center: #555c66;
+  --road-label: #a9adb5;
+  --city-stroke: #8a919b;
+  --label-astar: #00ed64;
+  --label-ucs: #eeeeee;
+  --label-highlight-text: #000000;
+  --expanded-stroke: #626a74;
+  --active-fill: #137a47;
+  --path-fill: #0a3d2a;
+  --county-fill: #201e1e;
+  --county-line: #32343a;
+  --country-outline: #555c66;
+  --neighbor-fill: #242424;
+  --neighbor-line: #4a4a4e;
+  --sea-fill: #16232b;
+  --panel-surface: rgba(36, 34, 34, 0.97);
+  --input-placeholder: #a9adb5;
+  --input-hover: #137a47;
+  --focus-shadow: rgba(0, 237, 100, 0.22);
+  --error-border: #b9826f;
+  --error-surface: #35251f;
+  --error-text: #f0c7b7;
+  --warning: #d6a85f;
+  --shadow-raised: 0 14px 34px rgba(0, 0, 0, 0.38);
+  --panel-shadow: 0 12px 28px rgba(0, 0, 0, 0.32);
+  --popover-shadow: 0 14px 30px rgba(0, 0, 0, 0.42);
+  --thumb-shadow: 0 2px 7px rgba(0, 0, 0, 0.46);
+
+  width: 100%;
+  height: 100dvh;
+  padding: clamp(12px, 2vw, 24px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: var(--ink);
+  background: var(--canvas);
+  color-scheme: dark;
+  font-family: var(--font-interface);
+}
+
+/* The global selection rule is keyed off the root theme, which the homepage
+   deliberately leaves alone; scope the dark selection to this surface. */
+.page ::selection {
+  color: #1b1919;
+  background: #00ed64;
+}
+
+.header {
+  width: 100%;
+  max-width: 1680px;
+  min-height: 52px;
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandMark {
+  width: 40px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  color: var(--green-bright);
+}
+
+.brandRoute {
+  display: block;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(16px, 1.8vw, 19px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.productTag {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
+}
+
+.headerActions {
+  min-width: 0;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.content {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  max-width: 1680px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.resetButton {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  z-index: 20;
+  transform: translateX(-50%);
+  height: 44px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: var(--green-pale);
+  color: var(--green-dark);
+  cursor: pointer;
+  white-space: nowrap;
+  font: 400 13px / 1 var(--font-interface);
+  box-shadow: var(--shadow-raised);
+  transition: background 150ms ease, transform 150ms ease;
+  animation: resetReveal 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.resetButton:hover { background: var(--green-soft); }
+.resetButton:active { transform: translateX(-50%) scale(0.96); }
+
+.resetButton:focus-visible {
+  outline: 3px solid var(--green-bright);
+  outline-offset: 3px;
+}
+
+@keyframes resetReveal {
+  from { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+@media (max-width: 800px) {
+  .page {
+    padding: 10px;
+  }
+
+  .header {
+    min-height: 48px;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+
+  .brand {
+    gap: 9px;
+  }
+
+  .brandMark {
+    width: 40px;
+    height: 32px;
+  }
+
+  .title {
+    font-size: 14px;
+  }
+
+  .productTag {
+    font-size: 8px;
+  }
+
+  .headerActions {
+    gap: 6px;
+  }
+
+  .resetButton {
+    bottom: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resetButton {
+    animation: none;
+  }
+}

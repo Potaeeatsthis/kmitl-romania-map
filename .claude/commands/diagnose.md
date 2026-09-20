@@ -22,6 +22,16 @@ instead, because nobody will ever arrive here with a string to search for.
 | `function … is never used` in `tests/common/mod.rs` | `shared-integration-test-dead-code` | §5 |
 | `typescript-eslint does not support TS 7.0` when adding ESLint | not a bug — blocked upstream, see CLAUDE.md's frontend-test rule | — |
 | A `missed` fault reports "is now caught -- a gap was closed", or the Preflight block is absent from the output | `mutation-false-pass-broken-gate` | §6 |
+| *(no error text)* The benchmark panel's "NATIVE SPEED SAMPLE" runtime figure never changes when a different route is selected | `benchmark-panel-static-runtime` | §7 |
+| *(no error text)* The benchmark panel's "SELECTED ROUTE" ring shows `—` after a city is chosen, while the runtime ring beside it updates | `benchmark-ring-null-after-city-change` | §8 |
+| *(no error text)* Clicking a third city after a route is already complete overwrites one endpoint instead of starting a new route | `search-ui-third-click-no-rolling-restart` | §9 |
+| *(no error text)* App loads pre-populated with Arad → Bucharest instead of a blank slate; a single city click searches against a stale/default city; no way to clear a selection | `search-ui-no-clean-slate-reset` | §10 |
+| *(no error text)* Clicking a city on the map does nothing once the map is zoomed in; works fine at default zoom | `search-map-zoom-blocks-city-clicks` | §11 |
+
+| `useSearchParams() should be wrapped in a suspense boundary` during static export | `calculation-missing-suspense` | §12 |
+| *(no error text)* In Terrain/Satellite view, Google's own black country-border line (or a thin sliver of Google's own real road) visibly drifts from our green SVG border/route, worst near the map edges or on roads spanning more latitude | `terrain-border-mercator-mismatch` | §13 |
+| *(no error text)* The `f=` score labels under a map's "waiting in queue" city markers render in a different font from the city-name labels on the same markers | `svg-map-note-font-fallback` | §14 |
+| *(no error text)* Returning from a calculation page to the A* summary loses the city being explained — the summary stepper then shows the route start's h instead | `heuristic-roundtrip-loses-explained-city` | §15 |
 
 ## Step 2 — Apply the known fix
 

@@ -1,26 +1,72 @@
 // components/benchmark/BenchmarkPanel.test.tsx
-import { render, screen, waitFor } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { SearchResponse } from "../../lib/types";
 import sampleData from "../../public/data/arad-bucharest-search.json";
+import { runSearch } from "../../lib/wasm/client";
 import { useSearchStore } from "../../stores/useSearchStore";
+import RomaniaSearch from "../search/RomaniaSearch";
 import BenchmarkPanel from "./BenchmarkPanel";
+import styles from "./BenchmarkPanel.module.css";
+
+vi.mock("../../lib/wasm/client", () => ({
+  runSearch: vi.fn(),
+}));
 
 const sample = sampleData as SearchResponse;
+const mockedRunSearch = vi.mocked(runSearch);
 
 beforeEach(() => {
+  mockedRunSearch.mockReset();
   useSearchStore.setState({
     data: sample,
     startCity: 0,
     destinationCity: 12,
+    selecting: "start",
+    step: Math.max(sample.ucs.trace.length, sample.astar.trace.length) - 1,
+    isPlaying: false,
+    speed: 1,
     isLoading: false,
     error: null,
   });
 });
 
 describe("BenchmarkPanel", () => {
+  it("shows clear idle, processing, paused, and complete button states", () => {
+    useSearchStore.setState({ data: null, step: 0, isPlaying: false, isLoading: false });
+    const view = render(<BenchmarkPanel />);
+    const resultsButton = screen.getByRole("button", { name: "Open benchmark results" });
+
+    expect(screen.getByText("Results")).toBeInTheDocument();
+    expect(resultsButton).not.toHaveClass(styles.tabProcessing, styles.tabPaused, styles.tabComplete);
+
+    useSearchStore.setState({ isLoading: true });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("Processing…")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabProcessing);
+
+    useSearchStore.setState({ data: sample, step: 0, isPlaying: false, isLoading: false });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("Paused")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabPaused);
+
+    useSearchStore.setState({ isPlaying: true });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("Processing…")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabProcessing);
+
+    useSearchStore.setState({
+      step: Math.max(sample.ucs.trace.length, sample.astar.trace.length) - 1,
+      isPlaying: false,
+    });
+    view.rerender(<BenchmarkPanel />);
+    expect(screen.getByText("View results")).toBeInTheDocument();
+    expect(resultsButton).toHaveClass(styles.tabComplete);
+  });
+
   it("keeps the closed drawer out of keyboard navigation", async () => {
     const user = userEvent.setup();
     render(<BenchmarkPanel />);
@@ -49,12 +95,43 @@ describe("BenchmarkPanel", () => {
       "4,200 → 2,436 expansions (42% fewer).",
     );
     expect(
-      screen.getByRole("img", { name: /A\* median runtime 1\.474 microseconds/ }),
+      screen.getByRole("img", { name: /A\* median runtime 6\.628 microseconds/ }),
     ).toBeInTheDocument();
-    expect(screen.getByText("UCS 2.226 → A* 1.474 µs")).toBeInTheDocument();
+    expect(screen.getByText("UCS 8.616 → A* 6.628 µs")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Arad → Bucharest" })).toBeInTheDocument();
     expect(screen.getByText("418 km")).toBeInTheDocument();
-    expect(screen.getByText(/Arad → Sibiu → Rimnicu Vilcea → Pitesti → Bucharest/)).toBeInTheDocument();
+    expect(screen.getByText(/Arad → Sibiu → Rimnicu → Pitesti → Bucharest/)).toBeInTheDocument();
+  });
+
+  // The metric is peak_payload_bytes, a modelled search-state payload. Calling it
+  // "Logical memory" read as process memory; the label and its note now say what it is
+  // and what it excludes.
+  it("labels the payload metric as search-state payload, not total memory", async () => {
+    const user = userEvent.setup();
+    render(<BenchmarkPanel />);
+
+    await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
+
+    expect(screen.getByText("Search-state payload")).toBeInTheDocument();
+    expect(screen.queryByText("Logical memory")).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/excludes trace, container, and allocator overhead/),
+    ).toBeInTheDocument();
+  });
+
+  // all-pairs-runtime.json records no revision, date, or machine, and engine validation
+  // has changed since it was generated. The ring must not read as current engine speed.
+  it("labels native timing as a historical sample with unrecorded provenance", async () => {
+    const user = userEvent.setup();
+    render(<BenchmarkPanel />);
+
+    await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
+
+    expect(screen.getByText("HISTORICAL NATIVE SAMPLE")).toBeInTheDocument();
+    expect(
+      screen.getByText(/source revision and machine are unrecorded/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Not current validated-engine performance/)).toBeInTheDocument();
   });
 
   it("updates the route details for the selected starting point and destination", async () => {
@@ -81,6 +158,37 @@ describe("BenchmarkPanel", () => {
     expect(screen.getByText(/Timisoara → Lugoj → Mehadia → Drobeta/)).toBeInTheDocument();
   });
 
+  // Regression: choosing a start city on the map nulls the store's `data`. Until the
+  // store re-ran on every city change, the expansion ring fell back to "—" and stayed
+  // there, while the runtime ring beside it updated normally. docs/runbook.md §8.
+  it("keeps the expansion ring populated after a start city is chosen on the map", async () => {
+    const user = userEvent.setup();
+    mockedRunSearch.mockResolvedValue(sample);
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
+
+    render(
+      <>
+        <RomaniaSearch />
+        <BenchmarkPanel />
+      </>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
+    await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
+    await user.click(screen.getByRole("button", { name: "Choose Bucharest as destination" }));
+
+    await waitFor(() => expect(mockedRunSearch).toHaveBeenCalledWith(4, 12));
+    await waitFor(() => {
+      expect(screen.queryByText("Run a route to compare expansions")).not.toBeInTheDocument();
+    });
+    expect(screen.getByText("31% fewer expansions")).toBeInTheDocument();
+  });
+
   it("closes with Escape and returns focus to the results button", async () => {
     const user = userEvent.setup();
     render(<BenchmarkPanel />);
@@ -93,12 +201,12 @@ describe("BenchmarkPanel", () => {
     });
   });
 
-  it("uses the box-drawing cross for the close control", async () => {
+  it("uses the multiplication sign for the close control", async () => {
     const user = userEvent.setup();
     render(<BenchmarkPanel />);
 
     await user.click(screen.getByRole("button", { name: "Open benchmark results" }));
 
-    expect(screen.getByText("╳")).toBeInTheDocument();
+    expect(screen.getByText("×")).toBeInTheDocument();
   });
 });

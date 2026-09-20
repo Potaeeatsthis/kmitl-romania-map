@@ -1,20 +1,14 @@
 .wrapper {
 
-  --line: #c9dfd2;
+  --ucs: var(--green-mid, #00684a);
 
-  --ink: #102a1e;
-
-  --muted: #526d60;
-
-  --ucs: hsl(163, 100%, 20%);
-
-  --astar: #00ed64;
+  --astar: var(--green-bright, #00ed64);
 
   box-sizing: border-box;
 
   padding: 30px;
 
-  background: #ffffff;
+  background: var(--surface, #ffffff);
 
   color: var(--ink);
 
@@ -32,7 +26,7 @@
 
   margin: 0 0 7.5px;
 
-  color: #137a47;
+  color: var(--green, #137a47);
 
   font-size: 12.5px;
 
@@ -141,7 +135,7 @@
 
 .heroRingTrack {
 
-  stroke: #eef2ee;
+  stroke: var(--green-pale, #eef2ee);
 
 }
 
@@ -152,7 +146,7 @@
 }
 
 .heroRingWorse {
-  stroke: #a06a1a;
+  stroke: var(--warning, #a06a1a);
 }
 
 .heroRingLabel {
@@ -218,7 +212,7 @@
 
   height: 1px;
 
-  background: #eef2ee;
+  background: var(--green-pale, #eef2ee);
 
   margin: 5px 0 20px;
 
@@ -337,7 +331,7 @@
 
   font-size: 12.5px;
 
-  color: #a06a1a;
+  color: var(--warning, #a06a1a);
 
   margin-top: 5px;
 
@@ -416,7 +410,7 @@
 
 .routeCost {
   flex: 0 0 auto;
-  color: #137a47;
+  color: var(--green, #137a47);
   font-size: 14px;
   font-weight: 400;
   font-variant-numeric: tabular-nums;
@@ -431,7 +425,7 @@
 }
 
 .routePath span {
-  color: #137a47;
+  color: var(--green, #137a47);
   letter-spacing: 0.08em;
 }
 
@@ -451,8 +445,8 @@
 }
 
 .errorState {
-  border-color: #b64b3b;
-  color: #8b2e23;
+  border-color: var(--error-border, #b64b3b);
+  color: var(--error-text, #8b2e23);
 }
 
 @media (max-width: 400px) {

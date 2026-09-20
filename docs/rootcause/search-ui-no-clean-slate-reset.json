@@ -1,0 +1,12 @@
+{
+  "id": "search-ui-no-clean-slate-reset",
+  "date": "2026-08-26",
+  "symptom": "Clicking a single city on the map immediately runs a search against whatever the other city currently is (defaulting to Arad/Bucharest) instead of waiting for both a start and destination to be picked, and there is no way to return to a blank 'nothing selected' state.",
+  "rootcause": "stores/useSearchStore.ts's setCity calls get().run() on every single city change, and startCity/destinationCity are initialized to concrete defaults (0/12) rather than an unset state. The field type itself (plain number) has no way to represent 'nothing selected', so the store was designed around always holding a valid pair rather than gating on two explicit picks. No reset action was ever added because there was nothing meaningful to reset back to under that design -- 'reset' would just mean 'back to Arad/Bucharest', not empty.",
+  "fix": "Phase 1: widen startCity/destinationCity to number | null in stores/useSearchStore.ts (and lib/types.ts if shared there), seed initial state to startCity: null, destinationCity: null, data: null, change setCity to only set the city and toggle selecting (never call run() itself), gate the search to fire only when both cities are non-null, and add a reset action plus a null-guard inside run() as a safety net. Phase 2: guard every consumer that dereferences startCity/destinationCity for null (RoutePlanner's CitySearch, BenchmarkCharts.tsx's name lookup and the all-pairs-runtime.json lookup, SearchMap's highlight logic) so a blank selection renders a clean placeholder, never a crash or a bogus lookup. Phase 3: add a Reset button to components/search/PlaybackControls.tsx matching the existing Replay button's style and disabled idiom. Phase 4: reset SearchMap's local pan/zoom viewport (not store-backed) alongside the store reset. Phase 5: update tests for the new blank-start behavior and add coverage for the two-pick-then-search gate and the reset flow.",
+  "recurrence_risk": "medium",
+  "invariant": null,
+  "automation_gap": null,
+  "tags": ["frontend", "store", "types", "ux", "reset", "search-ui"],
+  "notes": "Multi-phase change, executed in order with a review stop after Phase 1 (store/types only) before touching consumers in Phase 2. TypeScript itself is the first check here: widening startCity/destinationCity to number | null makes every unguarded consumer a compile error, which is the mechanism used to find them exhaustively rather than relying on manual grep."
+}

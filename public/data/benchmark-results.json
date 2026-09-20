@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "recorded_at": "2026-08-22",
+  "schema_version": 2,
+  "source": "public/data/all-pairs-search.json",
   "all_pairs": {
     "city_count": 20,
     "route_count": 400,
@@ -19,10 +19,8 @@
     ],
     "comparison": {
       "expanded_reduction": 1764,
-      "expanded_reduction_percent": 42.0,
-      "optimal_cost_mismatches": 0,
-      "admissibility_violations": 0,
-      "consistency_violations": 0
+      "expanded_reduction_percent": 42,
+      "optimal_cost_mismatches": 0
     }
   },
   "sample_route": {
@@ -39,42 +37,29 @@
       {
         "algorithm": "ucs",
         "label": "UCS",
-        "median_runtime_us": 2.226,
         "expanded": 13,
         "generated": 14,
         "peak_frontier": 4,
         "peak_records": 40,
-        "logical_memory_bytes": 286
+        "peak_payload_bytes": 286
       },
       {
         "algorithm": "astar",
         "label": "Current-flow A*",
-        "median_runtime_us": 1.474,
         "expanded": 9,
         "generated": 13,
         "peak_frontier": 6,
         "peak_records": 33,
-        "logical_memory_bytes": 272
+        "peak_payload_bytes": 272
       }
     ],
     "comparison": {
       "expanded_reduction_percent": 30.8,
-      "runtime_reduction_percent": 33.8,
-      "logical_memory_reduction_percent": 4.9
+      "peak_payload_reduction_percent": 4.9
     }
   },
-  "runtime_method": {
-    "source": "native Rust CLI",
-    "build_profile": "release",
-    "process_launches": 9,
-    "searches_per_algorithm_per_launch": 5000,
-    "statistic": "median of per-launch mean runtimes",
-    "heuristic_build_excluded": true,
-    "trace_recording_enabled": true,
-    "unit": "microseconds"
-  },
-  "memory_method": {
-    "unit": "bytes",
-    "description": "Language-neutral logical search payload; allocator and container overhead are excluded."
+  "method": {
+    "runtime": "native per-pair timings are not embedded here; they ship separately in public/data/all-pairs-runtime.json. That file is a historical sample exported by wasm/src/bin/export_all_runtimes.rs (native release build); the run's source revision and machine are unrecorded, so it is not current validated-engine performance.",
+    "memory": "peak_payload_bytes is the search-state payload in bytes. It excludes trace, container, and allocator overhead and is not total process memory or RSS."
   }
 }

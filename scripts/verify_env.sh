@@ -34,8 +34,68 @@ have() {
   fi
 }
 
+# Node is the one tool with a version floor, and `have` only asks whether it exists --
+# which reported `ok` on a Node 22 machine while package.json required >=24. Read the
+# floor from package.json's engines field rather than restating a major here, so a bump
+# cannot leave this check stale. .nvmrc pins the exact version CI installs, and
+# `nvm install`/`nvm use` with no argument read that file, so the hint needs no number.
+#
+# engines.node is read through a real JSON parser (python3, which this doctor requires,
+# or node when it exists) rather than a regex over the file, so an unrelated nested
+# "node" key cannot be mistaken for the requirement. The pattern itself is matched
+# whole -- anchored both ends -- so only the fixed `>=N` (optionally `>=N.M`) contract
+# is accepted; `>=N.M.P`, ranges like `>=24 <25`, carets and the like are reported as
+# undecidable instead of being silently narrowed to their leading major.
+check_node() {
+  local raw="" req_major req_minor
+  if command -v python3 >/dev/null 2>&1; then
+    raw="$(python3 -c 'import json; print(json.load(open("package.json")).get("engines", {}).get("node", ""))' 2>/dev/null || true)"
+  fi
+  if [ -z "$raw" ] && command -v node >/dev/null 2>&1; then
+    raw="$(node -p 'require("./package.json").engines.node' 2>/dev/null || true)"
+  fi
+  if [ -z "$raw" ]; then
+    bad node "cannot read engines.node from package.json (need python3 or node)"
+    missing_verify=1
+    return
+  fi
+  if ! [[ "$raw" =~ ^\>=([0-9]+)(\.([0-9]+))?$ ]]; then
+    bad node "package.json engines.node is '$raw', expected '>=N' -- cannot decide support"
+    missing_verify=1
+    return
+  fi
+  req_major="${BASH_REMATCH[1]}"
+  req_minor="${BASH_REMATCH[3]}"
+
+  if ! command -v node >/dev/null 2>&1; then
+    bad node "not found, requires >=${req_major}${req_minor:+.$req_minor} -- nvm install && nvm use"
+    missing_verify=1
+    return
+  fi
+
+  local ver major minor
+  ver="$(node --version 2>&1 | head -1)"
+  ver="${ver#v}"
+  major="${ver%%.*}"
+  minor="${ver#*.}"; minor="${minor%%.*}"
+  if ! [[ "$major" =~ ^[0-9]+$ ]] || ! [[ "$minor" =~ ^[0-9]+$ ]]; then
+    bad node "unreadable version '$ver' -- nvm install && nvm use"
+    missing_verify=1
+    return
+  fi
+
+  if (( 10#$major > 10#$req_major )) \
+    || { (( 10#$major == 10#$req_major )) \
+         && { [ -z "$req_minor" ] || (( 10#$minor >= 10#$req_minor )); }; }; then
+    pass node "node $ver (requires >=${req_major}${req_minor:+.$req_minor})"
+  else
+    bad node "node $ver installed, requires >=${req_major}${req_minor:+.$req_minor} -- nvm install && nvm use"
+    missing_verify=1
+  fi
+}
+
 echo "Needed for npm run verify"
-have node    node    "https://nodejs.org -- see .nvmrc for the version"        verify
+check_node
 have cargo   cargo   "https://rustup.rs"                                      verify
 have rustc   rustc   "https://rustup.rs"                                      verify
 have g++     g++     "xcode-select --install (macOS) / apt install g++"       verify

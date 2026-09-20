@@ -4,6 +4,7 @@
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { SearchResult } from "../../lib/types";
 import benchmarkData from "../../public/data/benchmark-results.json";
+import allPairsRuntimeData from "../../public/data/all-pairs-runtime.json";
 import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./BenchmarkCharts.module.css";
 
@@ -23,17 +24,16 @@ type RouteMetricKey =
 type SampleAlgorithmResult = {
   algorithm: "ucs" | "astar";
   label: string;
-  median_runtime_us: number;
   expanded: number;
   generated: number;
   peak_frontier: number;
   peak_records: number;
-  logical_memory_bytes: number;
+  peak_payload_bytes: number;
 };
 
 type BenchmarkResults = {
   schema_version: number;
-  recorded_at: string;
+  source: string;
   all_pairs: {
     city_count: number;
     route_count: number;
@@ -43,8 +43,6 @@ type BenchmarkResults = {
       expanded_reduction: number;
       expanded_reduction_percent: number;
       optimal_cost_mismatches: number;
-      admissibility_violations: number;
-      consistency_violations: number;
     };
   };
   sample_route: {
@@ -54,31 +52,38 @@ type BenchmarkResults = {
     results: SampleAlgorithmResult[];
     comparison: {
       expanded_reduction_percent: number;
-      runtime_reduction_percent: number;
-      logical_memory_reduction_percent: number;
+      peak_payload_reduction_percent: number;
     };
   };
-  runtime_method: {
-    source: string;
-    build_profile: string;
-    process_launches: number;
-    searches_per_algorithm_per_launch: number;
-    statistic: string;
-    heuristic_build_excluded: boolean;
-    trace_recording_enabled: boolean;
-    unit: string;
+  method: {
+    runtime: string;
+    memory: string;
   };
-  memory_method: Record<string, unknown>;
+};
+
+type PairRuntime = {
+  start: number;
+  goal: number;
+  ucs_runtime_us: number;
+  astar_runtime_us: number;
+};
+
+type AllPairsRuntime = {
+  schema_version: number;
+  city_count: number;
+  pair_count: number;
+  pairs: PairRuntime[];
 };
 
 const benchmark = benchmarkData as BenchmarkResults;
+const allPairsRuntime = allPairsRuntimeData as AllPairsRuntime;
 
 const ROUTE_METRICS: { key: RouteMetricKey; label: string }[] = [
   { key: "expanded", label: "Expanded nodes" },
   { key: "generated", label: "Generated nodes" },
   { key: "peak_frontier", label: "Peak queue size" },
   { key: "peak_records", label: "Peak records" },
-  { key: "peak_payload_bytes", label: "Logical memory" },
+  { key: "peak_payload_bytes", label: "Search-state payload" },
 ];
 
 export default function BenchmarkCharts() {
@@ -90,14 +95,41 @@ export default function BenchmarkCharts() {
 
   const allUcs = benchmark.all_pairs.results.find((result) => result.algorithm === "ucs");
   const allAstar = benchmark.all_pairs.results.find((result) => result.algorithm === "astar");
-  const sampleUcs = benchmark.sample_route.results.find((result) => result.algorithm === "ucs");
-  const sampleAstar = benchmark.sample_route.results.find((result) => result.algorithm === "astar");
-  const startName = romaniaGraph.cities[startCity]?.name ?? "Unknown city";
-  const destinationName = romaniaGraph.cities[destinationCity]?.name ?? "Unknown city";
 
   if (!allUcs || !allAstar) {
     return <p role="status">Benchmark data is incomplete.</p>;
   }
+
+  if (startCity === null || destinationCity === null) {
+    return (
+      <div className={styles.wrapper + " " + styles.stack}>
+        <div className={styles.header}>
+          <p className={styles.kicker}>BENCHMARK</p>
+          <h2 className={styles.title}>UCS vs Current-flow A*</h2>
+        </div>
+        <p className={styles.pending} role="status">
+          Choose a starting point and a destination to see route details.
+        </p>
+        <p className={styles.heroMethod}>
+          All {benchmark.all_pairs.route_count.toLocaleString("en-US")} pairs:{" "}
+          {allUcs.expanded.toLocaleString("en-US")} → {allAstar.expanded.toLocaleString("en-US")} expansions
+          ({benchmark.all_pairs.comparison.expanded_reduction_percent}% fewer).
+        </p>
+      </div>
+    );
+  }
+
+  const startName = romaniaGraph.cities[startCity]?.name ?? "Unknown city";
+  const destinationName = romaniaGraph.cities[destinationCity]?.name ?? "Unknown city";
+
+  // Native, precomputed per-pair timing (I5: never measured live in the browser).
+  const selectedRuntime: PairRuntime | undefined =
+    allPairsRuntime.pairs[startCity * allPairsRuntime.city_count + destinationCity];
+  const selectedRuntimeReductionPercent = selectedRuntime
+    ? ((selectedRuntime.ucs_runtime_us - selectedRuntime.astar_runtime_us) /
+        selectedRuntime.ucs_runtime_us) *
+      100
+    : null;
 
   const selectedExpansionPercent =
     routeData && routeData.ucs.expanded > 0
@@ -144,38 +176,42 @@ export default function BenchmarkCharts() {
             )}
           </div>
 
-          {sampleUcs && sampleAstar && (
+          {selectedRuntime && (
             <div className={styles.ringMetric}>
-              <span className={styles.ringKicker}>NATIVE SPEED SAMPLE</span>
+              <span className={styles.ringKicker}>HISTORICAL NATIVE SAMPLE</span>
               <div className={styles.heroRingWrap}>
                 <HeroRing
-                  percent={Math.min(
-                    Math.abs(benchmark.sample_route.comparison.runtime_reduction_percent),
-                    100,
-                  )}
-                  value={sampleAstar.median_runtime_us.toFixed(3)}
+                  percent={Math.min(Math.abs(selectedRuntimeReductionPercent ?? 0), 100)}
+                  value={selectedRuntime.astar_runtime_us.toFixed(3)}
                   unit="µs"
                   label={
                     "A* median runtime " +
-                    sampleAstar.median_runtime_us.toFixed(3) +
+                    selectedRuntime.astar_runtime_us.toFixed(3) +
                     " microseconds; " +
-                    benchmark.sample_route.comparison.runtime_reduction_percent +
-                    "% faster than UCS on " +
-                    benchmark.sample_route.start.name +
+                    Math.abs(selectedRuntimeReductionPercent ?? 0).toFixed(1) +
+                    "% " +
+                    ((selectedRuntimeReductionPercent ?? 0) < 0 ? "slower than" : "faster than") +
+                    " UCS on " +
+                    startName +
                     " to " +
-                    benchmark.sample_route.goal.name
+                    destinationName +
+                    ". Historical native sample; source revision and machine unrecorded."
                   }
-                  isWorse={benchmark.sample_route.comparison.runtime_reduction_percent < 0}
+                  isWorse={(selectedRuntimeReductionPercent ?? 0) < 0}
                 />
               </div>
 
               <p className={styles.heroDelta}>A* median runtime</p>
               <p className={styles.heroComparison}>
-                UCS {sampleUcs.median_runtime_us.toFixed(3)} → A*{" "}
-                {sampleAstar.median_runtime_us.toFixed(3)} µs
+                UCS {selectedRuntime.ucs_runtime_us.toFixed(3)} → A*{" "}
+                {selectedRuntime.astar_runtime_us.toFixed(3)} µs
               </p>
               <p className={styles.speedRoute}>
-                {benchmark.sample_route.start.name} → {benchmark.sample_route.goal.name}
+                {startName} → {destinationName}
+              </p>
+              <p className={styles.heroMethod}>
+                Historical native sample; the run&apos;s source revision and machine are
+                unrecorded. Not current validated-engine performance.
               </p>
             </div>
           )}
@@ -227,6 +263,11 @@ export default function BenchmarkCharts() {
             />
           ))}
 
+          <p className={styles.heroMethod}>
+            Search-state payload is the bytes a search keeps in its own state. It
+            excludes trace, container, and allocator overhead and is not total process
+            memory or RSS.
+          </p>
         </>
       )}
     </div>

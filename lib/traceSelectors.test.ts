@@ -5,6 +5,7 @@ import sampleData from "../public/data/arad-bucharest-search.json";
 import type { SearchResponse } from "./types";
 import {
   getExpandedCities,
+  getExpandedPathPrefix,
   getFinalPath,
   getFrontierCities,
   getTimelineLength,
@@ -32,6 +33,11 @@ describe("traceSelectors", () => {
     expect(getExpandedCities(sample, "ucs", 1)).toEqual(
       new Set(sample.ucs.explored_order.slice(0, 2)),
     );
+  });
+
+  it("returns only the continuous expanded prefix of a route", () => {
+    expect(getExpandedPathPrefix([0, 1, 2, 3], new Set([0, 1, 3]))).toEqual([0, 1]);
+    expect(getExpandedPathPrefix([0, 1], new Set([0, 1]))).toEqual([0, 1]);
   });
 
   it("returns only the cities in the current frontier", () => {

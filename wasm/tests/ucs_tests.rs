@@ -1,6 +1,6 @@
 mod common;
 
-use romania_search::graph::{make_graph, Graph, CITIES, CITY_COUNT};
+use romania_search::graph::{make_graph, Graph, GraphError, CITIES, CITY_COUNT};
 use romania_search::metrics::SearchResult;
 use romania_search::search::{search, SearchError};
 
@@ -123,19 +123,19 @@ fn invalid_inputs_return_errors_instead_of_panicking() {
     let short_graph = vec![Vec::new(); CITY_COUNT - 1];
     assert!(matches!(
         search(&short_graph, 0, 1, &zeroes),
-        Err(SearchError::InvalidGraphSize {
+        Err(SearchError::Graph(GraphError::InvalidGraphSize {
             expected: CITY_COUNT,
             actual
-        }) if actual == CITY_COUNT - 1
+        })) if actual == CITY_COUNT - 1
     ));
 
     let mut invalid_graph = make_graph();
     invalid_graph[0].push((CITY_COUNT, 1));
     assert!(matches!(
         search(&invalid_graph, 0, 12, &zeroes),
-        Err(SearchError::InvalidNeighbor {
+        Err(SearchError::Graph(GraphError::InvalidNeighbor {
             city: 0,
             neighbor: CITY_COUNT
-        })
+        }))
     ));
 }

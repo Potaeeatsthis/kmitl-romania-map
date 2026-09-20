@@ -1,0 +1,2407 @@
+{
+  "schema_version": 1,
+  "city_count": 20,
+  "pair_count": 400,
+  "pairs": [
+    {
+      "start": 0,
+      "goal": 0,
+      "ucs_runtime_us": 0.816,
+      "astar_runtime_us": 0.817
+    },
+    {
+      "start": 0,
+      "goal": 1,
+      "ucs_runtime_us": 1.7269999999999999,
+      "astar_runtime_us": 1.7255
+    },
+    {
+      "start": 0,
+      "goal": 2,
+      "ucs_runtime_us": 4.0135000000000005,
+      "astar_runtime_us": 2.362
+    },
+    {
+      "start": 0,
+      "goal": 3,
+      "ucs_runtime_us": 2.8619999999999997,
+      "astar_runtime_us": 1.6380000000000001
+    },
+    {
+      "start": 0,
+      "goal": 4,
+      "ucs_runtime_us": 2.2680000000000002,
+      "astar_runtime_us": 1.508
+    },
+    {
+      "start": 0,
+      "goal": 5,
+      "ucs_runtime_us": 4.6125,
+      "astar_runtime_us": 2.033
+    },
+    {
+      "start": 0,
+      "goal": 6,
+      "ucs_runtime_us": 5.840999999999999,
+      "astar_runtime_us": 3.0860000000000003
+    },
+    {
+      "start": 0,
+      "goal": 7,
+      "ucs_runtime_us": 7.791999999999999,
+      "astar_runtime_us": 5.51
+    },
+    {
+      "start": 0,
+      "goal": 8,
+      "ucs_runtime_us": 7.241,
+      "astar_runtime_us": 4.814
+    },
+    {
+      "start": 0,
+      "goal": 9,
+      "ucs_runtime_us": 3.54,
+      "astar_runtime_us": 2.024
+    },
+    {
+      "start": 0,
+      "goal": 10,
+      "ucs_runtime_us": 6.348,
+      "astar_runtime_us": 3.7474999999999996
+    },
+    {
+      "start": 0,
+      "goal": 11,
+      "ucs_runtime_us": 4.96,
+      "astar_runtime_us": 2.249
+    },
+    {
+      "start": 0,
+      "goal": 12,
+      "ucs_runtime_us": 8.616,
+      "astar_runtime_us": 6.628
+    },
+    {
+      "start": 0,
+      "goal": 13,
+      "ucs_runtime_us": 8.678,
+      "astar_runtime_us": 6.9565
+    },
+    {
+      "start": 0,
+      "goal": 14,
+      "ucs_runtime_us": 8.025,
+      "astar_runtime_us": 6.460999999999999
+    },
+    {
+      "start": 0,
+      "goal": 15,
+      "ucs_runtime_us": 9.31,
+      "astar_runtime_us": 7.094
+    },
+    {
+      "start": 0,
+      "goal": 16,
+      "ucs_runtime_us": 11.26,
+      "astar_runtime_us": 7.787
+    },
+    {
+      "start": 0,
+      "goal": 17,
+      "ucs_runtime_us": 10.5155,
+      "astar_runtime_us": 7.111
+    },
+    {
+      "start": 0,
+      "goal": 18,
+      "ucs_runtime_us": 11.787,
+      "astar_runtime_us": 7.798000000000001
+    },
+    {
+      "start": 0,
+      "goal": 19,
+      "ucs_runtime_us": 12.486999999999998,
+      "astar_runtime_us": 8.68
+    },
+    {
+      "start": 1,
+      "goal": 0,
+      "ucs_runtime_us": 1.407,
+      "astar_runtime_us": 1.1124999999999998
+    },
+    {
+      "start": 1,
+      "goal": 1,
+      "ucs_runtime_us": 0.643,
+      "astar_runtime_us": 0.6419999999999999
+    },
+    {
+      "start": 1,
+      "goal": 2,
+      "ucs_runtime_us": 1.1119999999999999,
+      "astar_runtime_us": 1.115
+    },
+    {
+      "start": 1,
+      "goal": 3,
+      "ucs_runtime_us": 2.5100000000000002,
+      "astar_runtime_us": 1.903
+    },
+    {
+      "start": 1,
+      "goal": 4,
+      "ucs_runtime_us": 1.832,
+      "astar_runtime_us": 1.527
+    },
+    {
+      "start": 1,
+      "goal": 5,
+      "ucs_runtime_us": 3.513,
+      "astar_runtime_us": 2.6060000000000003
+    },
+    {
+      "start": 1,
+      "goal": 6,
+      "ucs_runtime_us": 4.758,
+      "astar_runtime_us": 3.173
+    },
+    {
+      "start": 1,
+      "goal": 7,
+      "ucs_runtime_us": 6.698,
+      "astar_runtime_us": 4.9479999999999995
+    },
+    {
+      "start": 1,
+      "goal": 8,
+      "ucs_runtime_us": 6.029,
+      "astar_runtime_us": 3.8489999999999998
+    },
+    {
+      "start": 1,
+      "goal": 9,
+      "ucs_runtime_us": 2.987,
+      "astar_runtime_us": 2.624
+    },
+    {
+      "start": 1,
+      "goal": 10,
+      "ucs_runtime_us": 5.4639999999999995,
+      "astar_runtime_us": 3.382
+    },
+    {
+      "start": 1,
+      "goal": 11,
+      "ucs_runtime_us": 4.007,
+      "astar_runtime_us": 2.624
+    },
+    {
+      "start": 1,
+      "goal": 12,
+      "ucs_runtime_us": 7.0040000000000004,
+      "astar_runtime_us": 4.9239999999999995
+    },
+    {
+      "start": 1,
+      "goal": 13,
+      "ucs_runtime_us": 8.104999999999999,
+      "astar_runtime_us": 5.7755
+    },
+    {
+      "start": 1,
+      "goal": 14,
+      "ucs_runtime_us": 7.291,
+      "astar_runtime_us": 5.772
+    },
+    {
+      "start": 1,
+      "goal": 15,
+      "ucs_runtime_us": 8.678,
+      "astar_runtime_us": 6.395
+    },
+    {
+      "start": 1,
+      "goal": 16,
+      "ucs_runtime_us": 10.745,
+      "astar_runtime_us": 7.21
+    },
+    {
+      "start": 1,
+      "goal": 17,
+      "ucs_runtime_us": 9.893,
+      "astar_runtime_us": 6.53
+    },
+    {
+      "start": 1,
+      "goal": 18,
+      "ucs_runtime_us": 11.099499999999999,
+      "astar_runtime_us": 7.212
+    },
+    {
+      "start": 1,
+      "goal": 19,
+      "ucs_runtime_us": 11.7195,
+      "astar_runtime_us": 8.149
+    },
+    {
+      "start": 2,
+      "goal": 0,
+      "ucs_runtime_us": 1.31,
+      "astar_runtime_us": 1.31
+    },
+    {
+      "start": 2,
+      "goal": 1,
+      "ucs_runtime_us": 1.042,
+      "astar_runtime_us": 1.125
+    },
+    {
+      "start": 2,
+      "goal": 2,
+      "ucs_runtime_us": 0.596,
+      "astar_runtime_us": 0.596
+    },
+    {
+      "start": 2,
+      "goal": 3,
+      "ucs_runtime_us": 1.905,
+      "astar_runtime_us": 1.1260000000000001
+    },
+    {
+      "start": 2,
+      "goal": 4,
+      "ucs_runtime_us": 3.666,
+      "astar_runtime_us": 1.902
+    },
+    {
+      "start": 2,
+      "goal": 5,
+      "ucs_runtime_us": 4.919,
+      "astar_runtime_us": 3.141
+    },
+    {
+      "start": 2,
+      "goal": 6,
+      "ucs_runtime_us": 7.037,
+      "astar_runtime_us": 4.2015
+    },
+    {
+      "start": 2,
+      "goal": 7,
+      "ucs_runtime_us": 7.241,
+      "astar_runtime_us": 5.8835
+    },
+    {
+      "start": 2,
+      "goal": 8,
+      "ucs_runtime_us": 5.3,
+      "astar_runtime_us": 3.065
+    },
+    {
+      "start": 2,
+      "goal": 9,
+      "ucs_runtime_us": 2.481,
+      "astar_runtime_us": 1.9190000000000003
+    },
+    {
+      "start": 2,
+      "goal": 10,
+      "ucs_runtime_us": 4.002,
+      "astar_runtime_us": 3.252
+    },
+    {
+      "start": 2,
+      "goal": 11,
+      "ucs_runtime_us": 3.0690000000000004,
+      "astar_runtime_us": 1.52
+    },
+    {
+      "start": 2,
+      "goal": 12,
+      "ucs_runtime_us": 5.817,
+      "astar_runtime_us": 4.52
+    },
+    {
+      "start": 2,
+      "goal": 13,
+      "ucs_runtime_us": 8.535499999999999,
+      "astar_runtime_us": 5.219
+    },
+    {
+      "start": 2,
+      "goal": 14,
+      "ucs_runtime_us": 7.704,
+      "astar_runtime_us": 5.2829999999999995
+    },
+    {
+      "start": 2,
+      "goal": 15,
+      "ucs_runtime_us": 9.27,
+      "astar_runtime_us": 6.1965
+    },
+    {
+      "start": 2,
+      "goal": 16,
+      "ucs_runtime_us": 10.9375,
+      "astar_runtime_us": 6.715999999999999
+    },
+    {
+      "start": 2,
+      "goal": 17,
+      "ucs_runtime_us": 10.241999999999999,
+      "astar_runtime_us": 5.859
+    },
+    {
+      "start": 2,
+      "goal": 18,
+      "ucs_runtime_us": 11.189499999999999,
+      "astar_runtime_us": 6.5645
+    },
+    {
+      "start": 2,
+      "goal": 19,
+      "ucs_runtime_us": 11.872499999999999,
+      "astar_runtime_us": 7.1675
+    },
+    {
+      "start": 3,
+      "goal": 0,
+      "ucs_runtime_us": 2.453,
+      "astar_runtime_us": 1.296
+    },
+    {
+      "start": 3,
+      "goal": 1,
+      "ucs_runtime_us": 4.743,
+      "astar_runtime_us": 2.435
+    },
+    {
+      "start": 3,
+      "goal": 2,
+      "ucs_runtime_us": 3.6430000000000002,
+      "astar_runtime_us": 1.32
+    },
+    {
+      "start": 3,
+      "goal": 3,
+      "ucs_runtime_us": 0.5589999999999999,
+      "astar_runtime_us": 0.544
+    },
+    {
+      "start": 3,
+      "goal": 4,
+      "ucs_runtime_us": 5.329,
+      "astar_runtime_us": 2.655
+    },
+    {
+      "start": 3,
+      "goal": 5,
+      "ucs_runtime_us": 8.539000000000001,
+      "astar_runtime_us": 4.13
+    },
+    {
+      "start": 3,
+      "goal": 6,
+      "ucs_runtime_us": 9.211,
+      "astar_runtime_us": 6.3389999999999995
+    },
+    {
+      "start": 3,
+      "goal": 7,
+      "ucs_runtime_us": 6.648,
+      "astar_runtime_us": 4.4815
+    },
+    {
+      "start": 3,
+      "goal": 8,
+      "ucs_runtime_us": 4.7219999999999995,
+      "astar_runtime_us": 1.873
+    },
+    {
+      "start": 3,
+      "goal": 9,
+      "ucs_runtime_us": 1.292,
+      "astar_runtime_us": 1.291
+    },
+    {
+      "start": 3,
+      "goal": 10,
+      "ucs_runtime_us": 3.9670000000000005,
+      "astar_runtime_us": 1.847
+    },
+    {
+      "start": 3,
+      "goal": 11,
+      "ucs_runtime_us": 1.841,
+      "astar_runtime_us": 1.293
+    },
+    {
+      "start": 3,
+      "goal": 12,
+      "ucs_runtime_us": 6.08,
+      "astar_runtime_us": 3.0545
+    },
+    {
+      "start": 3,
+      "goal": 13,
+      "ucs_runtime_us": 8.223500000000001,
+      "astar_runtime_us": 3.963
+    },
+    {
+      "start": 3,
+      "goal": 14,
+      "ucs_runtime_us": 7.532,
+      "astar_runtime_us": 3.9615
+    },
+    {
+      "start": 3,
+      "goal": 15,
+      "ucs_runtime_us": 10.078000000000001,
+      "astar_runtime_us": 4.499
+    },
+    {
+      "start": 3,
+      "goal": 16,
+      "ucs_runtime_us": 11.744,
+      "astar_runtime_us": 5.047
+    },
+    {
+      "start": 3,
+      "goal": 17,
+      "ucs_runtime_us": 11.375499999999999,
+      "astar_runtime_us": 5.127
+    },
+    {
+      "start": 3,
+      "goal": 18,
+      "ucs_runtime_us": 13.611999999999998,
+      "astar_runtime_us": 4.926
+    },
+    {
+      "start": 3,
+      "goal": 19,
+      "ucs_runtime_us": 12.5975,
+      "astar_runtime_us": 5.765
+    },
+    {
+      "start": 4,
+      "goal": 0,
+      "ucs_runtime_us": 1.305,
+      "astar_runtime_us": 1.0364999999999998
+    },
+    {
+      "start": 4,
+      "goal": 1,
+      "ucs_runtime_us": 2.4755000000000003,
+      "astar_runtime_us": 1.49
+    },
+    {
+      "start": 4,
+      "goal": 2,
+      "ucs_runtime_us": 3.876,
+      "astar_runtime_us": 2.1679999999999997
+    },
+    {
+      "start": 4,
+      "goal": 3,
+      "ucs_runtime_us": 3.9330000000000003,
+      "astar_runtime_us": 1.6360000000000001
+    },
+    {
+      "start": 4,
+      "goal": 4,
+      "ucs_runtime_us": 0.565,
+      "astar_runtime_us": 0.5449999999999999
+    },
+    {
+      "start": 4,
+      "goal": 5,
+      "ucs_runtime_us": 1.044,
+      "astar_runtime_us": 1.2215
+    },
+    {
+      "start": 4,
+      "goal": 6,
+      "ucs_runtime_us": 1.901,
+      "astar_runtime_us": 1.429
+    },
+    {
+      "start": 4,
+      "goal": 7,
+      "ucs_runtime_us": 3.187,
+      "astar_runtime_us": 2.0164999999999997
+    },
+    {
+      "start": 4,
+      "goal": 8,
+      "ucs_runtime_us": 5.8865,
+      "astar_runtime_us": 4.101
+    },
+    {
+      "start": 4,
+      "goal": 9,
+      "ucs_runtime_us": 4.802,
+      "astar_runtime_us": 3.157
+    },
+    {
+      "start": 4,
+      "goal": 10,
+      "ucs_runtime_us": 6.899,
+      "astar_runtime_us": 5.7425
+    },
+    {
+      "start": 4,
+      "goal": 11,
+      "ucs_runtime_us": 5.558,
+      "astar_runtime_us": 3.2849999999999997
+    },
+    {
+      "start": 4,
+      "goal": 12,
+      "ucs_runtime_us": 7.257000000000001,
+      "astar_runtime_us": 7.937999999999999
+    },
+    {
+      "start": 4,
+      "goal": 13,
+      "ucs_runtime_us": 8.546999999999999,
+      "astar_runtime_us": 8.709000000000001
+    },
+    {
+      "start": 4,
+      "goal": 14,
+      "ucs_runtime_us": 7.652000000000001,
+      "astar_runtime_us": 8.6435
+    },
+    {
+      "start": 4,
+      "goal": 15,
+      "ucs_runtime_us": 9.148,
+      "astar_runtime_us": 9.079
+    },
+    {
+      "start": 4,
+      "goal": 16,
+      "ucs_runtime_us": 10.778,
+      "astar_runtime_us": 9.876
+    },
+    {
+      "start": 4,
+      "goal": 17,
+      "ucs_runtime_us": 9.793,
+      "astar_runtime_us": 9.018
+    },
+    {
+      "start": 4,
+      "goal": 18,
+      "ucs_runtime_us": 11.181000000000001,
+      "astar_runtime_us": 9.8125
+    },
+    {
+      "start": 4,
+      "goal": 19,
+      "ucs_runtime_us": 11.649,
+      "astar_runtime_us": 10.907499999999999
+    },
+    {
+      "start": 5,
+      "goal": 0,
+      "ucs_runtime_us": 2.493,
+      "astar_runtime_us": 1.339
+    },
+    {
+      "start": 5,
+      "goal": 1,
+      "ucs_runtime_us": 3.465,
+      "astar_runtime_us": 2.5265000000000004
+    },
+    {
+      "start": 5,
+      "goal": 2,
+      "ucs_runtime_us": 4.718,
+      "astar_runtime_us": 3.078
+    },
+    {
+      "start": 5,
+      "goal": 3,
+      "ucs_runtime_us": 3.985,
+      "astar_runtime_us": 2.944
+    },
+    {
+      "start": 5,
+      "goal": 4,
+      "ucs_runtime_us": 1.34,
+      "astar_runtime_us": 1.064
+    },
+    {
+      "start": 5,
+      "goal": 5,
+      "ucs_runtime_us": 0.616,
+      "astar_runtime_us": 0.615
+    },
+    {
+      "start": 5,
+      "goal": 6,
+      "ucs_runtime_us": 1.064,
+      "astar_runtime_us": 1.074
+    },
+    {
+      "start": 5,
+      "goal": 7,
+      "ucs_runtime_us": 1.818,
+      "astar_runtime_us": 1.3439999999999999
+    },
+    {
+      "start": 5,
+      "goal": 8,
+      "ucs_runtime_us": 2.9170000000000003,
+      "astar_runtime_us": 1.838
+    },
+    {
+      "start": 5,
+      "goal": 9,
+      "ucs_runtime_us": 5.616,
+      "astar_runtime_us": 3.617
+    },
+    {
+      "start": 5,
+      "goal": 10,
+      "ucs_runtime_us": 5.4295,
+      "astar_runtime_us": 3.6229999999999998
+    },
+    {
+      "start": 5,
+      "goal": 11,
+      "ucs_runtime_us": 6.8645,
+      "astar_runtime_us": 4.52
+    },
+    {
+      "start": 5,
+      "goal": 12,
+      "ucs_runtime_us": 6.907,
+      "astar_runtime_us": 5.103
+    },
+    {
+      "start": 5,
+      "goal": 13,
+      "ucs_runtime_us": 8.392,
+      "astar_runtime_us": 6.253
+    },
+    {
+      "start": 5,
+      "goal": 14,
+      "ucs_runtime_us": 7.565,
+      "astar_runtime_us": 6.2589999999999995
+    },
+    {
+      "start": 5,
+      "goal": 15,
+      "ucs_runtime_us": 8.997,
+      "astar_runtime_us": 7.185
+    },
+    {
+      "start": 5,
+      "goal": 16,
+      "ucs_runtime_us": 10.9835,
+      "astar_runtime_us": 8.193999999999999
+    },
+    {
+      "start": 5,
+      "goal": 17,
+      "ucs_runtime_us": 9.834,
+      "astar_runtime_us": 6.983
+    },
+    {
+      "start": 5,
+      "goal": 18,
+      "ucs_runtime_us": 11.211500000000001,
+      "astar_runtime_us": 8.402000000000001
+    },
+    {
+      "start": 5,
+      "goal": 19,
+      "ucs_runtime_us": 12.177,
+      "astar_runtime_us": 9.313
+    },
+    {
+      "start": 6,
+      "goal": 0,
+      "ucs_runtime_us": 3.055,
+      "astar_runtime_us": 2.7984999999999998
+    },
+    {
+      "start": 6,
+      "goal": 1,
+      "ucs_runtime_us": 4.921,
+      "astar_runtime_us": 3.2030000000000003
+    },
+    {
+      "start": 6,
+      "goal": 2,
+      "ucs_runtime_us": 7.18,
+      "astar_runtime_us": 4.298
+    },
+    {
+      "start": 6,
+      "goal": 3,
+      "ucs_runtime_us": 5.6579999999999995,
+      "astar_runtime_us": 4.2989999999999995
+    },
+    {
+      "start": 6,
+      "goal": 4,
+      "ucs_runtime_us": 1.9209999999999998,
+      "astar_runtime_us": 1.413
+    },
+    {
+      "start": 6,
+      "goal": 5,
+      "ucs_runtime_us": 1.119,
+      "astar_runtime_us": 1.1305
+    },
+    {
+      "start": 6,
+      "goal": 6,
+      "ucs_runtime_us": 0.6419999999999999,
+      "astar_runtime_us": 0.641
+    },
+    {
+      "start": 6,
+      "goal": 7,
+      "ucs_runtime_us": 1.504,
+      "astar_runtime_us": 1.212
+    },
+    {
+      "start": 6,
+      "goal": 8,
+      "ucs_runtime_us": 2.685,
+      "astar_runtime_us": 1.5245
+    },
+    {
+      "start": 6,
+      "goal": 9,
+      "ucs_runtime_us": 4.324,
+      "astar_runtime_us": 2.713
+    },
+    {
+      "start": 6,
+      "goal": 10,
+      "ucs_runtime_us": 3.8120000000000003,
+      "astar_runtime_us": 2.738
+    },
+    {
+      "start": 6,
+      "goal": 11,
+      "ucs_runtime_us": 8.485999999999999,
+      "astar_runtime_us": 5.833
+    },
+    {
+      "start": 6,
+      "goal": 12,
+      "ucs_runtime_us": 5.933,
+      "astar_runtime_us": 3.778
+    },
+    {
+      "start": 6,
+      "goal": 13,
+      "ucs_runtime_us": 8.943000000000001,
+      "astar_runtime_us": 4.543
+    },
+    {
+      "start": 6,
+      "goal": 14,
+      "ucs_runtime_us": 7.782,
+      "astar_runtime_us": 4.728000000000001
+    },
+    {
+      "start": 6,
+      "goal": 15,
+      "ucs_runtime_us": 9.9245,
+      "astar_runtime_us": 6.018
+    },
+    {
+      "start": 6,
+      "goal": 16,
+      "ucs_runtime_us": 11.942499999999999,
+      "astar_runtime_us": 7.1049999999999995
+    },
+    {
+      "start": 6,
+      "goal": 17,
+      "ucs_runtime_us": 10.526,
+      "astar_runtime_us": 5.8815
+    },
+    {
+      "start": 6,
+      "goal": 18,
+      "ucs_runtime_us": 11.855,
+      "astar_runtime_us": 6.591
+    },
+    {
+      "start": 6,
+      "goal": 19,
+      "ucs_runtime_us": 12.436,
+      "astar_runtime_us": 7.468
+    },
+    {
+      "start": 7,
+      "goal": 0,
+      "ucs_runtime_us": 5.695,
+      "astar_runtime_us": 3.2550000000000003
+    },
+    {
+      "start": 7,
+      "goal": 1,
+      "ucs_runtime_us": 8.513,
+      "astar_runtime_us": 5.685499999999999
+    },
+    {
+      "start": 7,
+      "goal": 2,
+      "ucs_runtime_us": 9.8025,
+      "astar_runtime_us": 5.7015
+    },
+    {
+      "start": 7,
+      "goal": 3,
+      "ucs_runtime_us": 4.116,
+      "astar_runtime_us": 3.2239999999999998
+    },
+    {
+      "start": 7,
+      "goal": 4,
+      "ucs_runtime_us": 2.67,
+      "astar_runtime_us": 1.905
+    },
+    {
+      "start": 7,
+      "goal": 5,
+      "ucs_runtime_us": 1.938,
+      "astar_runtime_us": 1.407
+    },
+    {
+      "start": 7,
+      "goal": 6,
+      "ucs_runtime_us": 1.12,
+      "astar_runtime_us": 1.121
+    },
+    {
+      "start": 7,
+      "goal": 7,
+      "ucs_runtime_us": 0.645,
+      "astar_runtime_us": 0.645
+    },
+    {
+      "start": 7,
+      "goal": 8,
+      "ucs_runtime_us": 1.409,
+      "astar_runtime_us": 1.119
+    },
+    {
+      "start": 7,
+      "goal": 9,
+      "ucs_runtime_us": 3.622,
+      "astar_runtime_us": 2.0260000000000002
+    },
+    {
+      "start": 7,
+      "goal": 10,
+      "ucs_runtime_us": 3.085,
+      "astar_runtime_us": 1.607
+    },
+    {
+      "start": 7,
+      "goal": 11,
+      "ucs_runtime_us": 7.852999999999999,
+      "astar_runtime_us": 4.92
+    },
+    {
+      "start": 7,
+      "goal": 12,
+      "ucs_runtime_us": 4.824,
+      "astar_runtime_us": 2.765
+    },
+    {
+      "start": 7,
+      "goal": 13,
+      "ucs_runtime_us": 8.793000000000001,
+      "astar_runtime_us": 3.7230000000000003
+    },
+    {
+      "start": 7,
+      "goal": 14,
+      "ucs_runtime_us": 6.452,
+      "astar_runtime_us": 3.742
+    },
+    {
+      "start": 7,
+      "goal": 15,
+      "ucs_runtime_us": 10.137,
+      "astar_runtime_us": 4.559
+    },
+    {
+      "start": 7,
+      "goal": 16,
+      "ucs_runtime_us": 11.735,
+      "astar_runtime_us": 5.156000000000001
+    },
+    {
+      "start": 7,
+      "goal": 17,
+      "ucs_runtime_us": 11.418,
+      "astar_runtime_us": 4.551
+    },
+    {
+      "start": 7,
+      "goal": 18,
+      "ucs_runtime_us": 12.217,
+      "astar_runtime_us": 5.1499999999999995
+    },
+    {
+      "start": 7,
+      "goal": 19,
+      "ucs_runtime_us": 12.817,
+      "astar_runtime_us": 6.0885
+    },
+    {
+      "start": 8,
+      "goal": 0,
+      "ucs_runtime_us": 7.5809999999999995,
+      "astar_runtime_us": 3.571
+    },
+    {
+      "start": 8,
+      "goal": 1,
+      "ucs_runtime_us": 10.533000000000001,
+      "astar_runtime_us": 5.9719999999999995
+    },
+    {
+      "start": 8,
+      "goal": 2,
+      "ucs_runtime_us": 9.148499999999999,
+      "astar_runtime_us": 4.114
+    },
+    {
+      "start": 8,
+      "goal": 3,
+      "ucs_runtime_us": 3.3129999999999997,
+      "astar_runtime_us": 1.803
+    },
+    {
+      "start": 8,
+      "goal": 4,
+      "ucs_runtime_us": 8.946,
+      "astar_runtime_us": 3.9040000000000004
+    },
+    {
+      "start": 8,
+      "goal": 5,
+      "ucs_runtime_us": 4.7825,
+      "astar_runtime_us": 2.05
+    },
+    {
+      "start": 8,
+      "goal": 6,
+      "ucs_runtime_us": 2.757,
+      "astar_runtime_us": 1.618
+    },
+    {
+      "start": 8,
+      "goal": 7,
+      "ucs_runtime_us": 1.153,
+      "astar_runtime_us": 1.157
+    },
+    {
+      "start": 8,
+      "goal": 8,
+      "ucs_runtime_us": 0.645,
+      "astar_runtime_us": 0.645
+    },
+    {
+      "start": 8,
+      "goal": 9,
+      "ucs_runtime_us": 2.052,
+      "astar_runtime_us": 1.1540000000000001
+    },
+    {
+      "start": 8,
+      "goal": 10,
+      "ucs_runtime_us": 1.6139999999999999,
+      "astar_runtime_us": 1.1560000000000001
+    },
+    {
+      "start": 8,
+      "goal": 11,
+      "ucs_runtime_us": 6.474,
+      "astar_runtime_us": 3.1635
+    },
+    {
+      "start": 8,
+      "goal": 12,
+      "ucs_runtime_us": 3.8959999999999995,
+      "astar_runtime_us": 1.7955
+    },
+    {
+      "start": 8,
+      "goal": 13,
+      "ucs_runtime_us": 7.2170000000000005,
+      "astar_runtime_us": 2.2409999999999997
+    },
+    {
+      "start": 8,
+      "goal": 14,
+      "ucs_runtime_us": 5.7540000000000004,
+      "astar_runtime_us": 2.2664999999999997
+    },
+    {
+      "start": 8,
+      "goal": 15,
+      "ucs_runtime_us": 10.3985,
+      "astar_runtime_us": 3.7110000000000003
+    },
+    {
+      "start": 8,
+      "goal": 16,
+      "ucs_runtime_us": 12.017,
+      "astar_runtime_us": 4.339
+    },
+    {
+      "start": 8,
+      "goal": 17,
+      "ucs_runtime_us": 11.779,
+      "astar_runtime_us": 3.7065
+    },
+    {
+      "start": 8,
+      "goal": 18,
+      "ucs_runtime_us": 12.7165,
+      "astar_runtime_us": 4.329000000000001
+    },
+    {
+      "start": 8,
+      "goal": 19,
+      "ucs_runtime_us": 13.42,
+      "astar_runtime_us": 4.876
+    },
+    {
+      "start": 9,
+      "goal": 0,
+      "ucs_runtime_us": 4.473,
+      "astar_runtime_us": 1.8920000000000001
+    },
+    {
+      "start": 9,
+      "goal": 1,
+      "ucs_runtime_us": 7.880999999999999,
+      "astar_runtime_us": 4.161
+    },
+    {
+      "start": 9,
+      "goal": 2,
+      "ucs_runtime_us": 5.236000000000001,
+      "astar_runtime_us": 1.8339999999999999
+    },
+    {
+      "start": 9,
+      "goal": 3,
+      "ucs_runtime_us": 1.1540000000000001,
+      "astar_runtime_us": 1.1540000000000001
+    },
+    {
+      "start": 9,
+      "goal": 4,
+      "ucs_runtime_us": 8.372,
+      "astar_runtime_us": 4.2315000000000005
+    },
+    {
+      "start": 9,
+      "goal": 5,
+      "ucs_runtime_us": 10.678,
+      "astar_runtime_us": 5.764
+    },
+    {
+      "start": 9,
+      "goal": 6,
+      "ucs_runtime_us": 9.244,
+      "astar_runtime_us": 4.081
+    },
+    {
+      "start": 9,
+      "goal": 7,
+      "ucs_runtime_us": 5.849,
+      "astar_runtime_us": 3.287
+    },
+    {
+      "start": 9,
+      "goal": 8,
+      "ucs_runtime_us": 2.387,
+      "astar_runtime_us": 1.152
+    },
+    {
+      "start": 9,
+      "goal": 9,
+      "ucs_runtime_us": 0.647,
+      "astar_runtime_us": 0.647
+    },
+    {
+      "start": 9,
+      "goal": 10,
+      "ucs_runtime_us": 1.8399999999999999,
+      "astar_runtime_us": 1.152
+    },
+    {
+      "start": 9,
+      "goal": 11,
+      "ucs_runtime_us": 3.405,
+      "astar_runtime_us": 1.7570000000000001
+    },
+    {
+      "start": 9,
+      "goal": 12,
+      "ucs_runtime_us": 3.8720000000000003,
+      "astar_runtime_us": 1.64
+    },
+    {
+      "start": 9,
+      "goal": 13,
+      "ucs_runtime_us": 7.181,
+      "astar_runtime_us": 2.132
+    },
+    {
+      "start": 9,
+      "goal": 14,
+      "ucs_runtime_us": 6.226999999999999,
+      "astar_runtime_us": 2.25
+    },
+    {
+      "start": 9,
+      "goal": 15,
+      "ucs_runtime_us": 9.511,
+      "astar_runtime_us": 3.5285
+    },
+    {
+      "start": 9,
+      "goal": 16,
+      "ucs_runtime_us": 11.8925,
+      "astar_runtime_us": 4.127
+    },
+    {
+      "start": 9,
+      "goal": 17,
+      "ucs_runtime_us": 11.2025,
+      "astar_runtime_us": 3.531
+    },
+    {
+      "start": 9,
+      "goal": 18,
+      "ucs_runtime_us": 12.373,
+      "astar_runtime_us": 4.131500000000001
+    },
+    {
+      "start": 9,
+      "goal": 19,
+      "ucs_runtime_us": 12.836,
+      "astar_runtime_us": 4.547
+    },
+    {
+      "start": 10,
+      "goal": 0,
+      "ucs_runtime_us": 6.955,
+      "astar_runtime_us": 3.8385000000000002
+    },
+    {
+      "start": 10,
+      "goal": 1,
+      "ucs_runtime_us": 10.7715,
+      "astar_runtime_us": 5.091
+    },
+    {
+      "start": 10,
+      "goal": 2,
+      "ucs_runtime_us": 8.739,
+      "astar_runtime_us": 3.336
+    },
+    {
+      "start": 10,
+      "goal": 3,
+      "ucs_runtime_us": 3.1895,
+      "astar_runtime_us": 1.598
+    },
+    {
+      "start": 10,
+      "goal": 4,
+      "ucs_runtime_us": 15.302999999999999,
+      "astar_runtime_us": 5.084
+    },
+    {
+      "start": 10,
+      "goal": 5,
+      "ucs_runtime_us": 12.688500000000001,
+      "astar_runtime_us": 5.3085
+    },
+    {
+      "start": 10,
+      "goal": 6,
+      "ucs_runtime_us": 10.1725,
+      "astar_runtime_us": 2.7675
+    },
+    {
+      "start": 10,
+      "goal": 7,
+      "ucs_runtime_us": 5.359500000000001,
+      "astar_runtime_us": 2.186
+    },
+    {
+      "start": 10,
+      "goal": 8,
+      "ucs_runtime_us": 2.345,
+      "astar_runtime_us": 1.1515
+    },
+    {
+      "start": 10,
+      "goal": 9,
+      "ucs_runtime_us": 1.1560000000000001,
+      "astar_runtime_us": 1.1604999999999999
+    },
+    {
+      "start": 10,
+      "goal": 10,
+      "ucs_runtime_us": 0.647,
+      "astar_runtime_us": 0.647
+    },
+    {
+      "start": 10,
+      "goal": 11,
+      "ucs_runtime_us": 6.263,
+      "astar_runtime_us": 3.506
+    },
+    {
+      "start": 10,
+      "goal": 12,
+      "ucs_runtime_us": 1.616,
+      "astar_runtime_us": 1.157
+    },
+    {
+      "start": 10,
+      "goal": 13,
+      "ucs_runtime_us": 4.766500000000001,
+      "astar_runtime_us": 1.962
+    },
+    {
+      "start": 10,
+      "goal": 14,
+      "ucs_runtime_us": 4.288,
+      "astar_runtime_us": 1.968
+    },
+    {
+      "start": 10,
+      "goal": 15,
+      "ucs_runtime_us": 6.961,
+      "astar_runtime_us": 2.909
+    },
+    {
+      "start": 10,
+      "goal": 16,
+      "ucs_runtime_us": 11.589,
+      "astar_runtime_us": 4.075
+    },
+    {
+      "start": 10,
+      "goal": 17,
+      "ucs_runtime_us": 9.642,
+      "astar_runtime_us": 2.907
+    },
+    {
+      "start": 10,
+      "goal": 18,
+      "ucs_runtime_us": 13.528500000000001,
+      "astar_runtime_us": 4.098000000000001
+    },
+    {
+      "start": 10,
+      "goal": 19,
+      "ucs_runtime_us": 15.3865,
+      "astar_runtime_us": 4.912
+    },
+    {
+      "start": 11,
+      "goal": 0,
+      "ucs_runtime_us": 3.511,
+      "astar_runtime_us": 1.728
+    },
+    {
+      "start": 11,
+      "goal": 1,
+      "ucs_runtime_us": 7.236,
+      "astar_runtime_us": 3.0
+    },
+    {
+      "start": 11,
+      "goal": 2,
+      "ucs_runtime_us": 4.162999999999999,
+      "astar_runtime_us": 1.7269999999999999
+    },
+    {
+      "start": 11,
+      "goal": 3,
+      "ucs_runtime_us": 1.115,
+      "astar_runtime_us": 1.115
+    },
+    {
+      "start": 11,
+      "goal": 4,
+      "ucs_runtime_us": 8.094999999999999,
+      "astar_runtime_us": 3.5404999999999998
+    },
+    {
+      "start": 11,
+      "goal": 5,
+      "ucs_runtime_us": 10.8455,
+      "astar_runtime_us": 4.27
+    },
+    {
+      "start": 11,
+      "goal": 6,
+      "ucs_runtime_us": 12.346,
+      "astar_runtime_us": 7.705500000000001
+    },
+    {
+      "start": 11,
+      "goal": 7,
+      "ucs_runtime_us": 10.245,
+      "astar_runtime_us": 5.4430000000000005
+    },
+    {
+      "start": 11,
+      "goal": 8,
+      "ucs_runtime_us": 7.387499999999999,
+      "astar_runtime_us": 2.44
+    },
+    {
+      "start": 11,
+      "goal": 9,
+      "ucs_runtime_us": 1.762,
+      "astar_runtime_us": 1.7209999999999999
+    },
+    {
+      "start": 11,
+      "goal": 10,
+      "ucs_runtime_us": 4.683,
+      "astar_runtime_us": 2.216
+    },
+    {
+      "start": 11,
+      "goal": 11,
+      "ucs_runtime_us": 0.632,
+      "astar_runtime_us": 0.6010000000000001
+    },
+    {
+      "start": 11,
+      "goal": 12,
+      "ucs_runtime_us": 2.209,
+      "astar_runtime_us": 1.1280000000000001
+    },
+    {
+      "start": 11,
+      "goal": 13,
+      "ucs_runtime_us": 6.238,
+      "astar_runtime_us": 1.716
+    },
+    {
+      "start": 11,
+      "goal": 14,
+      "ucs_runtime_us": 5.018,
+      "astar_runtime_us": 1.639
+    },
+    {
+      "start": 11,
+      "goal": 15,
+      "ucs_runtime_us": 8.522,
+      "astar_runtime_us": 2.2350000000000003
+    },
+    {
+      "start": 11,
+      "goal": 16,
+      "ucs_runtime_us": 12.0,
+      "astar_runtime_us": 3.379
+    },
+    {
+      "start": 11,
+      "goal": 17,
+      "ucs_runtime_us": 9.277,
+      "astar_runtime_us": 2.2409999999999997
+    },
+    {
+      "start": 11,
+      "goal": 18,
+      "ucs_runtime_us": 12.986,
+      "astar_runtime_us": 3.3850000000000002
+    },
+    {
+      "start": 11,
+      "goal": 19,
+      "ucs_runtime_us": 13.468499999999999,
+      "astar_runtime_us": 4.079000000000001
+    },
+    {
+      "start": 12,
+      "goal": 0,
+      "ucs_runtime_us": 9.618,
+      "astar_runtime_us": 5.933
+    },
+    {
+      "start": 12,
+      "goal": 1,
+      "ucs_runtime_us": 11.6105,
+      "astar_runtime_us": 7.4425
+    },
+    {
+      "start": 12,
+      "goal": 2,
+      "ucs_runtime_us": 9.878,
+      "astar_runtime_us": 5.072
+    },
+    {
+      "start": 12,
+      "goal": 3,
+      "ucs_runtime_us": 6.694,
+      "astar_runtime_us": 2.402
+    },
+    {
+      "start": 12,
+      "goal": 4,
+      "ucs_runtime_us": 12.758999999999999,
+      "astar_runtime_us": 8.762
+    },
+    {
+      "start": 12,
+      "goal": 5,
+      "ucs_runtime_us": 12.7865,
+      "astar_runtime_us": 7.588
+    },
+    {
+      "start": 12,
+      "goal": 6,
+      "ucs_runtime_us": 11.483,
+      "astar_runtime_us": 5.295999999999999
+    },
+    {
+      "start": 12,
+      "goal": 7,
+      "ucs_runtime_us": 8.2585,
+      "astar_runtime_us": 3.5370000000000004
+    },
+    {
+      "start": 12,
+      "goal": 8,
+      "ucs_runtime_us": 5.77,
+      "astar_runtime_us": 2.008
+    },
+    {
+      "start": 12,
+      "goal": 9,
+      "ucs_runtime_us": 4.1049999999999995,
+      "astar_runtime_us": 1.9829999999999999
+    },
+    {
+      "start": 12,
+      "goal": 10,
+      "ucs_runtime_us": 2.418,
+      "astar_runtime_us": 1.355
+    },
+    {
+      "start": 12,
+      "goal": 11,
+      "ucs_runtime_us": 4.6450000000000005,
+      "astar_runtime_us": 1.353
+    },
+    {
+      "start": 12,
+      "goal": 12,
+      "ucs_runtime_us": 0.587,
+      "astar_runtime_us": 0.587
+    },
+    {
+      "start": 12,
+      "goal": 13,
+      "ucs_runtime_us": 1.9735,
+      "astar_runtime_us": 1.356
+    },
+    {
+      "start": 12,
+      "goal": 14,
+      "ucs_runtime_us": 1.361,
+      "astar_runtime_us": 1.355
+    },
+    {
+      "start": 12,
+      "goal": 15,
+      "ucs_runtime_us": 3.393,
+      "astar_runtime_us": 1.9649999999999999
+    },
+    {
+      "start": 12,
+      "goal": 16,
+      "ucs_runtime_us": 6.454000000000001,
+      "astar_runtime_us": 2.4770000000000003
+    },
+    {
+      "start": 12,
+      "goal": 17,
+      "ucs_runtime_us": 4.981,
+      "astar_runtime_us": 2.043
+    },
+    {
+      "start": 12,
+      "goal": 18,
+      "ucs_runtime_us": 7.6215,
+      "astar_runtime_us": 2.367
+    },
+    {
+      "start": 12,
+      "goal": 19,
+      "ucs_runtime_us": 8.581,
+      "astar_runtime_us": 3.336
+    },
+    {
+      "start": 13,
+      "goal": 0,
+      "ucs_runtime_us": 9.123999999999999,
+      "astar_runtime_us": 5.481
+    },
+    {
+      "start": 13,
+      "goal": 1,
+      "ucs_runtime_us": 11.270999999999999,
+      "astar_runtime_us": 6.7385
+    },
+    {
+      "start": 13,
+      "goal": 2,
+      "ucs_runtime_us": 9.777,
+      "astar_runtime_us": 4.6659999999999995
+    },
+    {
+      "start": 13,
+      "goal": 3,
+      "ucs_runtime_us": 6.584,
+      "astar_runtime_us": 2.7520000000000002
+    },
+    {
+      "start": 13,
+      "goal": 4,
+      "ucs_runtime_us": 12.3355,
+      "astar_runtime_us": 7.077
+    },
+    {
+      "start": 13,
+      "goal": 5,
+      "ucs_runtime_us": 11.783,
+      "astar_runtime_us": 6.62
+    },
+    {
+      "start": 13,
+      "goal": 6,
+      "ucs_runtime_us": 10.393,
+      "astar_runtime_us": 4.441000000000001
+    },
+    {
+      "start": 13,
+      "goal": 7,
+      "ucs_runtime_us": 7.553,
+      "astar_runtime_us": 3.383
+    },
+    {
+      "start": 13,
+      "goal": 8,
+      "ucs_runtime_us": 5.295,
+      "astar_runtime_us": 1.9635000000000002
+    },
+    {
+      "start": 13,
+      "goal": 9,
+      "ucs_runtime_us": 3.573,
+      "astar_runtime_us": 1.926
+    },
+    {
+      "start": 13,
+      "goal": 10,
+      "ucs_runtime_us": 1.922,
+      "astar_runtime_us": 1.513
+    },
+    {
+      "start": 13,
+      "goal": 11,
+      "ucs_runtime_us": 4.138999999999999,
+      "astar_runtime_us": 1.4975
+    },
+    {
+      "start": 13,
+      "goal": 12,
+      "ucs_runtime_us": 0.9175,
+      "astar_runtime_us": 0.9169999999999999
+    },
+    {
+      "start": 13,
+      "goal": 13,
+      "ucs_runtime_us": 0.606,
+      "astar_runtime_us": 0.606
+    },
+    {
+      "start": 13,
+      "goal": 14,
+      "ucs_runtime_us": 1.4849999999999999,
+      "astar_runtime_us": 1.4994999999999998
+    },
+    {
+      "start": 13,
+      "goal": 15,
+      "ucs_runtime_us": 2.95,
+      "astar_runtime_us": 1.9240000000000002
+    },
+    {
+      "start": 13,
+      "goal": 16,
+      "ucs_runtime_us": 5.9030000000000005,
+      "astar_runtime_us": 2.741
+    },
+    {
+      "start": 13,
+      "goal": 17,
+      "ucs_runtime_us": 4.6659999999999995,
+      "astar_runtime_us": 2.201
+    },
+    {
+      "start": 13,
+      "goal": 18,
+      "ucs_runtime_us": 7.263,
+      "astar_runtime_us": 2.766
+    },
+    {
+      "start": 13,
+      "goal": 19,
+      "ucs_runtime_us": 8.482,
+      "astar_runtime_us": 3.4240000000000004
+    },
+    {
+      "start": 14,
+      "goal": 0,
+      "ucs_runtime_us": 8.794,
+      "astar_runtime_us": 6.740500000000001
+    },
+    {
+      "start": 14,
+      "goal": 1,
+      "ucs_runtime_us": 11.178,
+      "astar_runtime_us": 7.916
+    },
+    {
+      "start": 14,
+      "goal": 2,
+      "ucs_runtime_us": 9.5115,
+      "astar_runtime_us": 5.967
+    },
+    {
+      "start": 14,
+      "goal": 3,
+      "ucs_runtime_us": 7.654,
+      "astar_runtime_us": 3.7560000000000002
+    },
+    {
+      "start": 14,
+      "goal": 4,
+      "ucs_runtime_us": 12.2085,
+      "astar_runtime_us": 9.608
+    },
+    {
+      "start": 14,
+      "goal": 5,
+      "ucs_runtime_us": 11.732999999999999,
+      "astar_runtime_us": 7.7989999999999995
+    },
+    {
+      "start": 14,
+      "goal": 6,
+      "ucs_runtime_us": 10.530000000000001,
+      "astar_runtime_us": 5.121499999999999
+    },
+    {
+      "start": 14,
+      "goal": 7,
+      "ucs_runtime_us": 8.004,
+      "astar_runtime_us": 4.3255
+    },
+    {
+      "start": 14,
+      "goal": 8,
+      "ucs_runtime_us": 7.001,
+      "astar_runtime_us": 2.647
+    },
+    {
+      "start": 14,
+      "goal": 9,
+      "ucs_runtime_us": 5.281,
+      "astar_runtime_us": 2.6460000000000004
+    },
+    {
+      "start": 14,
+      "goal": 10,
+      "ucs_runtime_us": 4.412,
+      "astar_runtime_us": 1.9460000000000002
+    },
+    {
+      "start": 14,
+      "goal": 11,
+      "ucs_runtime_us": 6.0805,
+      "astar_runtime_us": 1.829
+    },
+    {
+      "start": 14,
+      "goal": 12,
+      "ucs_runtime_us": 1.161,
+      "astar_runtime_us": 1.161
+    },
+    {
+      "start": 14,
+      "goal": 13,
+      "ucs_runtime_us": 3.246,
+      "astar_runtime_us": 1.824
+    },
+    {
+      "start": 14,
+      "goal": 14,
+      "ucs_runtime_us": 0.568,
+      "astar_runtime_us": 0.569
+    },
+    {
+      "start": 14,
+      "goal": 15,
+      "ucs_runtime_us": 1.8199999999999998,
+      "astar_runtime_us": 1.159
+    },
+    {
+      "start": 14,
+      "goal": 16,
+      "ucs_runtime_us": 3.8979999999999997,
+      "astar_runtime_us": 1.677
+    },
+    {
+      "start": 14,
+      "goal": 17,
+      "ucs_runtime_us": 2.3520000000000003,
+      "astar_runtime_us": 1.164
+    },
+    {
+      "start": 14,
+      "goal": 18,
+      "ucs_runtime_us": 4.552,
+      "astar_runtime_us": 1.609
+    },
+    {
+      "start": 14,
+      "goal": 19,
+      "ucs_runtime_us": 6.3,
+      "astar_runtime_us": 1.932
+    },
+    {
+      "start": 15,
+      "goal": 0,
+      "ucs_runtime_us": 8.024,
+      "astar_runtime_us": 6.8725000000000005
+    },
+    {
+      "start": 15,
+      "goal": 1,
+      "ucs_runtime_us": 10.458,
+      "astar_runtime_us": 7.9799999999999995
+    },
+    {
+      "start": 15,
+      "goal": 2,
+      "ucs_runtime_us": 8.714500000000001,
+      "astar_runtime_us": 6.297
+    },
+    {
+      "start": 15,
+      "goal": 3,
+      "ucs_runtime_us": 7.0875,
+      "astar_runtime_us": 4.011
+    },
+    {
+      "start": 15,
+      "goal": 4,
+      "ucs_runtime_us": 11.362,
+      "astar_runtime_us": 9.323
+    },
+    {
+      "start": 15,
+      "goal": 5,
+      "ucs_runtime_us": 10.8855,
+      "astar_runtime_us": 7.888
+    },
+    {
+      "start": 15,
+      "goal": 6,
+      "ucs_runtime_us": 9.711,
+      "astar_runtime_us": 6.275
+    },
+    {
+      "start": 15,
+      "goal": 7,
+      "ucs_runtime_us": 7.294,
+      "astar_runtime_us": 4.535
+    },
+    {
+      "start": 15,
+      "goal": 8,
+      "ucs_runtime_us": 6.587,
+      "astar_runtime_us": 3.423
+    },
+    {
+      "start": 15,
+      "goal": 9,
+      "ucs_runtime_us": 4.718,
+      "astar_runtime_us": 3.422
+    },
+    {
+      "start": 15,
+      "goal": 10,
+      "ucs_runtime_us": 3.483,
+      "astar_runtime_us": 2.153
+    },
+    {
+      "start": 15,
+      "goal": 11,
+      "ucs_runtime_us": 5.307,
+      "astar_runtime_us": 2.1220000000000003
+    },
+    {
+      "start": 15,
+      "goal": 12,
+      "ucs_runtime_us": 1.7710000000000001,
+      "astar_runtime_us": 1.501
+    },
+    {
+      "start": 15,
+      "goal": 13,
+      "ucs_runtime_us": 3.076,
+      "astar_runtime_us": 2.0669999999999997
+    },
+    {
+      "start": 15,
+      "goal": 14,
+      "ucs_runtime_us": 1.187,
+      "astar_runtime_us": 1.048
+    },
+    {
+      "start": 15,
+      "goal": 15,
+      "ucs_runtime_us": 0.6080000000000001,
+      "astar_runtime_us": 0.606
+    },
+    {
+      "start": 15,
+      "goal": 16,
+      "ucs_runtime_us": 1.0499999999999998,
+      "astar_runtime_us": 1.048
+    },
+    {
+      "start": 15,
+      "goal": 17,
+      "ucs_runtime_us": 2.493,
+      "astar_runtime_us": 1.505
+    },
+    {
+      "start": 15,
+      "goal": 18,
+      "ucs_runtime_us": 3.999,
+      "astar_runtime_us": 1.928
+    },
+    {
+      "start": 15,
+      "goal": 19,
+      "ucs_runtime_us": 5.966,
+      "astar_runtime_us": 2.69
+    },
+    {
+      "start": 16,
+      "goal": 0,
+      "ucs_runtime_us": 8.012,
+      "astar_runtime_us": 6.3495
+    },
+    {
+      "start": 16,
+      "goal": 1,
+      "ucs_runtime_us": 10.5845,
+      "astar_runtime_us": 7.484
+    },
+    {
+      "start": 16,
+      "goal": 2,
+      "ucs_runtime_us": 8.681000000000001,
+      "astar_runtime_us": 5.677
+    },
+    {
+      "start": 16,
+      "goal": 3,
+      "ucs_runtime_us": 7.0685,
+      "astar_runtime_us": 3.8539999999999996
+    },
+    {
+      "start": 16,
+      "goal": 4,
+      "ucs_runtime_us": 11.49,
+      "astar_runtime_us": 8.697
+    },
+    {
+      "start": 16,
+      "goal": 5,
+      "ucs_runtime_us": 11.036000000000001,
+      "astar_runtime_us": 7.338
+    },
+    {
+      "start": 16,
+      "goal": 6,
+      "ucs_runtime_us": 9.719,
+      "astar_runtime_us": 5.667
+    },
+    {
+      "start": 16,
+      "goal": 7,
+      "ucs_runtime_us": 7.269,
+      "astar_runtime_us": 4.452
+    },
+    {
+      "start": 16,
+      "goal": 8,
+      "ucs_runtime_us": 6.569,
+      "astar_runtime_us": 3.366
+    },
+    {
+      "start": 16,
+      "goal": 9,
+      "ucs_runtime_us": 4.707,
+      "astar_runtime_us": 3.3649999999999998
+    },
+    {
+      "start": 16,
+      "goal": 10,
+      "ucs_runtime_us": 3.606,
+      "astar_runtime_us": 2.5629999999999997
+    },
+    {
+      "start": 16,
+      "goal": 11,
+      "ucs_runtime_us": 5.375,
+      "astar_runtime_us": 2.559
+    },
+    {
+      "start": 16,
+      "goal": 12,
+      "ucs_runtime_us": 1.758,
+      "astar_runtime_us": 1.758
+    },
+    {
+      "start": 16,
+      "goal": 13,
+      "ucs_runtime_us": 3.1965000000000003,
+      "astar_runtime_us": 2.556
+    },
+    {
+      "start": 16,
+      "goal": 14,
+      "ucs_runtime_us": 1.172,
+      "astar_runtime_us": 1.1760000000000002
+    },
+    {
+      "start": 16,
+      "goal": 15,
+      "ucs_runtime_us": 0.919,
+      "astar_runtime_us": 0.919
+    },
+    {
+      "start": 16,
+      "goal": 16,
+      "ucs_runtime_us": 0.606,
+      "astar_runtime_us": 0.606
+    },
+    {
+      "start": 16,
+      "goal": 17,
+      "ucs_runtime_us": 2.473,
+      "astar_runtime_us": 1.7570000000000001
+    },
+    {
+      "start": 16,
+      "goal": 18,
+      "ucs_runtime_us": 4.112,
+      "astar_runtime_us": 2.5050000000000003
+    },
+    {
+      "start": 16,
+      "goal": 19,
+      "ucs_runtime_us": 5.626,
+      "astar_runtime_us": 2.96
+    },
+    {
+      "start": 17,
+      "goal": 0,
+      "ucs_runtime_us": 8.027,
+      "astar_runtime_us": 7.696999999999999
+    },
+    {
+      "start": 17,
+      "goal": 1,
+      "ucs_runtime_us": 10.436,
+      "astar_runtime_us": 9.308
+    },
+    {
+      "start": 17,
+      "goal": 2,
+      "ucs_runtime_us": 8.701,
+      "astar_runtime_us": 7.082
+    },
+    {
+      "start": 17,
+      "goal": 3,
+      "ucs_runtime_us": 7.0425,
+      "astar_runtime_us": 3.9840000000000004
+    },
+    {
+      "start": 17,
+      "goal": 4,
+      "ucs_runtime_us": 11.324,
+      "astar_runtime_us": 9.796999999999999
+    },
+    {
+      "start": 17,
+      "goal": 5,
+      "ucs_runtime_us": 10.893,
+      "astar_runtime_us": 9.303
+    },
+    {
+      "start": 17,
+      "goal": 6,
+      "ucs_runtime_us": 10.7025,
+      "astar_runtime_us": 7.426
+    },
+    {
+      "start": 17,
+      "goal": 7,
+      "ucs_runtime_us": 7.284,
+      "astar_runtime_us": 4.707999999999999
+    },
+    {
+      "start": 17,
+      "goal": 8,
+      "ucs_runtime_us": 7.303,
+      "astar_runtime_us": 3.6830000000000003
+    },
+    {
+      "start": 17,
+      "goal": 9,
+      "ucs_runtime_us": 5.733,
+      "astar_runtime_us": 3.674
+    },
+    {
+      "start": 17,
+      "goal": 10,
+      "ucs_runtime_us": 4.9030000000000005,
+      "astar_runtime_us": 2.259
+    },
+    {
+      "start": 17,
+      "goal": 11,
+      "ucs_runtime_us": 5.911,
+      "astar_runtime_us": 2.265
+    },
+    {
+      "start": 17,
+      "goal": 12,
+      "ucs_runtime_us": 2.637,
+      "astar_runtime_us": 1.6119999999999999
+    },
+    {
+      "start": 17,
+      "goal": 13,
+      "ucs_runtime_us": 3.78,
+      "astar_runtime_us": 2.261
+    },
+    {
+      "start": 17,
+      "goal": 14,
+      "ucs_runtime_us": 1.419,
+      "astar_runtime_us": 1.125
+    },
+    {
+      "start": 17,
+      "goal": 15,
+      "ucs_runtime_us": 3.2995,
+      "astar_runtime_us": 1.618
+    },
+    {
+      "start": 17,
+      "goal": 16,
+      "ucs_runtime_us": 4.274,
+      "astar_runtime_us": 2.0665
+    },
+    {
+      "start": 17,
+      "goal": 17,
+      "ucs_runtime_us": 0.589,
+      "astar_runtime_us": 0.589
+    },
+    {
+      "start": 17,
+      "goal": 18,
+      "ucs_runtime_us": 1.13,
+      "astar_runtime_us": 1.1280000000000001
+    },
+    {
+      "start": 17,
+      "goal": 19,
+      "ucs_runtime_us": 1.9489999999999998,
+      "astar_runtime_us": 1.421
+    },
+    {
+      "start": 18,
+      "goal": 0,
+      "ucs_runtime_us": 8.386999999999999,
+      "astar_runtime_us": 8.41
+    },
+    {
+      "start": 18,
+      "goal": 1,
+      "ucs_runtime_us": 11.2025,
+      "astar_runtime_us": 9.6265
+    },
+    {
+      "start": 18,
+      "goal": 2,
+      "ucs_runtime_us": 8.681000000000001,
+      "astar_runtime_us": 7.466
+    },
+    {
+      "start": 18,
+      "goal": 3,
+      "ucs_runtime_us": 7.0565,
+      "astar_runtime_us": 4.375
+    },
+    {
+      "start": 18,
+      "goal": 4,
+      "ucs_runtime_us": 11.605,
+      "astar_runtime_us": 9.594
+    },
+    {
+      "start": 18,
+      "goal": 5,
+      "ucs_runtime_us": 11.136,
+      "astar_runtime_us": 9.4825
+    },
+    {
+      "start": 18,
+      "goal": 6,
+      "ucs_runtime_us": 9.734,
+      "astar_runtime_us": 6.863
+    },
+    {
+      "start": 18,
+      "goal": 7,
+      "ucs_runtime_us": 7.096,
+      "astar_runtime_us": 4.853
+    },
+    {
+      "start": 18,
+      "goal": 8,
+      "ucs_runtime_us": 6.423,
+      "astar_runtime_us": 3.753
+    },
+    {
+      "start": 18,
+      "goal": 9,
+      "ucs_runtime_us": 5.210999999999999,
+      "astar_runtime_us": 3.732
+    },
+    {
+      "start": 18,
+      "goal": 10,
+      "ucs_runtime_us": 4.524,
+      "astar_runtime_us": 2.942
+    },
+    {
+      "start": 18,
+      "goal": 11,
+      "ucs_runtime_us": 5.436,
+      "astar_runtime_us": 2.8569999999999998
+    },
+    {
+      "start": 18,
+      "goal": 12,
+      "ucs_runtime_us": 2.342,
+      "astar_runtime_us": 1.821
+    },
+    {
+      "start": 18,
+      "goal": 13,
+      "ucs_runtime_us": 3.535,
+      "astar_runtime_us": 2.816
+    },
+    {
+      "start": 18,
+      "goal": 14,
+      "ucs_runtime_us": 1.457,
+      "astar_runtime_us": 1.3285
+    },
+    {
+      "start": 18,
+      "goal": 15,
+      "ucs_runtime_us": 2.988,
+      "astar_runtime_us": 1.8279999999999998
+    },
+    {
+      "start": 18,
+      "goal": 16,
+      "ucs_runtime_us": 3.999,
+      "astar_runtime_us": 2.583
+    },
+    {
+      "start": 18,
+      "goal": 17,
+      "ucs_runtime_us": 1.1969999999999998,
+      "astar_runtime_us": 1.058
+    },
+    {
+      "start": 18,
+      "goal": 18,
+      "ucs_runtime_us": 0.61,
+      "astar_runtime_us": 0.6080000000000001
+    },
+    {
+      "start": 18,
+      "goal": 19,
+      "ucs_runtime_us": 1.059,
+      "astar_runtime_us": 1.0835
+    },
+    {
+      "start": 19,
+      "goal": 0,
+      "ucs_runtime_us": 7.961,
+      "astar_runtime_us": 7.3309999999999995
+    },
+    {
+      "start": 19,
+      "goal": 1,
+      "ucs_runtime_us": 10.7045,
+      "astar_runtime_us": 8.82
+    },
+    {
+      "start": 19,
+      "goal": 2,
+      "ucs_runtime_us": 8.82,
+      "astar_runtime_us": 6.85
+    },
+    {
+      "start": 19,
+      "goal": 3,
+      "ucs_runtime_us": 7.069000000000001,
+      "astar_runtime_us": 4.321
+    },
+    {
+      "start": 19,
+      "goal": 4,
+      "ucs_runtime_us": 11.603,
+      "astar_runtime_us": 8.943000000000001
+    },
+    {
+      "start": 19,
+      "goal": 5,
+      "ucs_runtime_us": 11.107000000000001,
+      "astar_runtime_us": 8.532
+    },
+    {
+      "start": 19,
+      "goal": 6,
+      "ucs_runtime_us": 9.883000000000001,
+      "astar_runtime_us": 6.29
+    },
+    {
+      "start": 19,
+      "goal": 7,
+      "ucs_runtime_us": 7.233,
+      "astar_runtime_us": 5.087
+    },
+    {
+      "start": 19,
+      "goal": 8,
+      "ucs_runtime_us": 6.5169999999999995,
+      "astar_runtime_us": 3.9040000000000004
+    },
+    {
+      "start": 19,
+      "goal": 9,
+      "ucs_runtime_us": 5.2975,
+      "astar_runtime_us": 3.738
+    },
+    {
+      "start": 19,
+      "goal": 10,
+      "ucs_runtime_us": 4.615,
+      "astar_runtime_us": 3.155
+    },
+    {
+      "start": 19,
+      "goal": 11,
+      "ucs_runtime_us": 5.541,
+      "astar_runtime_us": 3.157
+    },
+    {
+      "start": 19,
+      "goal": 12,
+      "ucs_runtime_us": 2.46,
+      "astar_runtime_us": 2.47
+    },
+    {
+      "start": 19,
+      "goal": 13,
+      "ucs_runtime_us": 3.588,
+      "astar_runtime_us": 3.1515
+    },
+    {
+      "start": 19,
+      "goal": 14,
+      "ucs_runtime_us": 1.475,
+      "astar_runtime_us": 1.4729999999999999
+    },
+    {
+      "start": 19,
+      "goal": 15,
+      "ucs_runtime_us": 3.148,
+      "astar_runtime_us": 2.458
+    },
+    {
+      "start": 19,
+      "goal": 16,
+      "ucs_runtime_us": 4.064,
+      "astar_runtime_us": 2.912
+    },
+    {
+      "start": 19,
+      "goal": 17,
+      "ucs_runtime_us": 1.204,
+      "astar_runtime_us": 1.178
+    },
+    {
+      "start": 19,
+      "goal": 18,
+      "ucs_runtime_us": 0.923,
+      "astar_runtime_us": 0.922
+    },
+    {
+      "start": 19,
+      "goal": 19,
+      "ucs_runtime_us": 0.609,
+      "astar_runtime_us": 0.609
+    }
+  ]
+}
