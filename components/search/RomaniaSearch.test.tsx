@@ -1,5 +1,5 @@
 // components/search/RomaniaSearch.test.tsx
-import { render } from "@testing-library/react";
+import { act, render } from "@testing-library/react";
 import { fireEvent, screen, waitFor, within } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -66,6 +66,89 @@ describe("RomaniaSearch", () => {
 
     expect(emptyStatus).toHaveAttribute("role", "status");
     expect(input).toHaveAttribute("aria-expanded", "false");
+  });
+
+  // Regression: the input's onBlur used a 100ms window.setTimeout that captured
+  // selectedCity at blur time. Focusing the input and then picking a city on the
+  // map blurred first (capturing the old/empty selection), the map click updated
+  // the store, and the pending timer then overwrote the fresh label with the stale
+  // one. The fix restores the label synchronously from the current prop and drops
+  // the timer entirely, so the input must still match the store after the old
+  // timer's window has elapsed.
+  it("keeps the map-selected city in the input after the old blur timer window", async () => {
+    const user = userEvent.setup();
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
+    render(<RomaniaSearch />);
+
+    const input = screen.getByRole("combobox", { name: "STARTING POINT" });
+    await user.click(input);
+    await user.click(screen.getByRole("button", { name: "Choose Timisoara as starting point" }));
+
+    expect(useSearchStore.getState().startCity).toBe(4);
+    expect(input).toHaveValue("Timisoara");
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    });
+
+    expect(input).toHaveValue("Timisoara");
+    expect(useSearchStore.getState().startCity).toBe(4);
+  });
+
+  // Regression: options used to be native <button>s, so they were Tab stops. A
+  // Tab from the input landed on the first option and the blur timer then removed
+  // the listbox out from under the focused element. Options now use the
+  // aria-activedescendant pattern (role="option" on non-focusable elements), so
+  // Tab must skip the open listbox and land on the next field.
+  it("tabs past the open listbox to the next field", async () => {
+    const user = userEvent.setup();
+    render(<RomaniaSearch />);
+
+    const start = screen.getByRole("combobox", { name: "STARTING POINT" });
+    await user.click(start);
+    await user.clear(start);
+    await user.type(start, "a");
+
+    expect(screen.getByRole("listbox")).toBeInTheDocument();
+    expect(within(screen.getByRole("listbox")).getAllByRole("option")).toHaveLength(1);
+
+    await user.tab();
+
+    expect(document.activeElement).toBe(screen.getByRole("combobox", { name: "DESTINATION" }));
+    expect(start).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("keeps a pointer-chosen city after focus moves on and no late reset fires", async () => {
+    const user = userEvent.setup();
+    useSearchStore.setState({
+      data: null,
+      startCity: null,
+      destinationCity: null,
+      selecting: "start",
+    });
+    render(<RomaniaSearch />);
+
+    const input = screen.getByRole("combobox", { name: "STARTING POINT" });
+    await user.click(input);
+    await user.clear(input);
+    await user.type(input, "tim");
+    await user.click(screen.getByRole("option", { name: "Timisoara" }));
+
+    expect(useSearchStore.getState().startCity).toBe(4);
+    expect(input).toHaveValue("Timisoara");
+
+    await user.click(screen.getByRole("combobox", { name: "DESTINATION" }));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    });
+
+    expect(input).toHaveValue("Timisoara");
+    expect(useSearchStore.getState().startCity).toBe(4);
   });
 
   it("runs automatically after two cities are chosen on the map", async () => {
@@ -151,24 +234,25 @@ describe("RomaniaSearch", () => {
     expect(screen.queryByRole("button", { name: "Map key" })).not.toBeInTheDocument();
   });
 
-  it("uses a Departure Mono black star to enable and save dark mode", async () => {
-    const user = userEvent.setup();
+  it("renders the homepage dark-only with no theme toggle", () => {
     render(<RomaniaSearch />);
 
-    const toggle = screen.getByRole("button", { name: "Switch to dark mode" });
-    expect(toggle).toHaveTextContent("★");
-    expect(screen.queryByText(/^Frame \d+ \/ \d+$/)).not.toBeInTheDocument();
+    expect(screen.getByRole("main")).toHaveAttribute("data-theme", "dark");
     expect(screen.getByRole("button", { name: "Replay animation" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Switch to (dark|light) mode/ }),
+    ).not.toBeInTheDocument();
+  });
 
-    await user.click(toggle);
+  it("stays dark without touching the document theme when a light preference is saved", () => {
+    window.localStorage.setItem("romania-search-theme", "light");
 
-    expect(document.documentElement).toHaveAttribute("data-theme", "dark");
-    expect(document.documentElement.style.colorScheme).toBe("dark");
-    expect(window.localStorage.getItem("romania-search-theme")).toBe("dark");
-    expect(screen.getByRole("button", { name: "Switch to light mode" })).toHaveAttribute(
-      "aria-pressed",
-      "true",
-    );
+    render(<RomaniaSearch />);
+
+    expect(screen.getByRole("main")).toHaveAttribute("data-theme", "dark");
+    expect(document.documentElement).not.toHaveAttribute("data-theme");
+    expect(document.documentElement.style.colorScheme).toBe("");
+    expect(window.localStorage.getItem("romania-search-theme")).toBe("light");
   });
 
   it("minimizes playback and reopens it without an extra icon", async () => {

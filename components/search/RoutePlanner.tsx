@@ -149,10 +149,8 @@ function CitySearch({
           setIsOpen(true);
         }}
         onBlur={() => {
-          window.setTimeout(() => {
-            setIsOpen(false);
-            setQuery(selectedCity !== null ? romaniaGraph.cities[selectedCity]?.name ?? "" : "");
-          }, 100);
+          setIsOpen(false);
+          setQuery(selected?.name ?? "");
         }}
         onChange={(event) => {
           setQuery(event.target.value);
@@ -164,10 +162,9 @@ function CitySearch({
       {listboxOpen && (
         <div className={styles.searchResults} id={listId} role="listbox">
           {matches.map((city, index) => (
-            <button
+            <div
               key={city.id}
               id={`${listId}-${city.id}`}
-              type="button"
               role="option"
               aria-selected={city.id === selectedCity}
               className={index === activeIndex ? styles.activeOption : undefined}
@@ -175,7 +172,7 @@ function CitySearch({
               onClick={() => choose(city.id)}
             >
               {city.name}
-            </button>
+            </div>
           ))}
         </div>
       )}

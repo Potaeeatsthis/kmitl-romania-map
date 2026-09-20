@@ -144,11 +144,10 @@
   scrollbar-width: thin;
 }
 
-.searchResults button {
+.searchResults [role="option"] {
   width: 100%;
   min-height: 44px;
   padding: 9px 10px;
-  border: 0;
   border-radius: 5px;
   background: transparent;
   color: var(--ink);
@@ -157,15 +156,10 @@
   cursor: pointer;
 }
 
-.searchResults button:hover,
+.searchResults [role="option"]:hover,
 .searchResults .activeOption {
   background: var(--green-pale);
   color: var(--green-dark);
-}
-
-.searchResults button:focus-visible {
-  outline: 2px solid var(--green-bright);
-  outline-offset: -2px;
 }
 
 .noResults {
