@@ -59,15 +59,15 @@
   border: 1px solid var(--green-mid);
   color: var(--green-mid);
   font-size: 11px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-weight: 700;
 }
 
 .sourceTag {
   padding: 3px 10px;
   border-radius: 100px;
-  background: var(--green-mid);
-  color: #fff;
+  background: var(--action-strong);
+  color: var(--on-accent);
   font-size: 10px;
   font-weight: 600;
 }
@@ -112,7 +112,7 @@
   border-radius: 10px;
   border: 1px dashed var(--green-mid);
   background: var(--green-pale);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 20px;
   text-align: center;
   color: var(--green-dark);
@@ -120,53 +120,6 @@
 
 .kclFormula strong {
   color: var(--green-mid);
-}
-
-/* ---- legend ---- */
-
-.legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin: 10px 0 16px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.legendItem {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.legendDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
-  border: 2px solid;
-  display: inline-block;
-}
-
-.legendFocus { border-color: var(--green-dark); background: var(--surface); }
-.legendChosen { border-color: var(--green-mid); background: color-mix(in srgb, var(--green-mid) 30%, var(--surface)); }
-.legendConsidered { border-color: var(--muted); background: color-mix(in srgb, var(--green-soft) 40%, var(--surface)); }
-.legendSwatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  display: inline-block;
-}
-
-.legendHot { background: #d97a1f; }
-.legendCold { background: #1f7ea8; }
-
-.legendDotIcon {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #00ed64;
-  box-shadow: 0 0 4px #00ed64;
-  display: inline-block;
 }
 
 /* ---- tables ---- */
@@ -234,7 +187,7 @@
 .kclTermLine {
   margin: 0 0 4px;
   padding-left: 2px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 15px;
   line-height: 1.6;
   color: var(--ink);
@@ -255,7 +208,7 @@
 .kclTermSetup {
   margin: 0 0 6px;
   padding-left: 2px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 13.5px;
   color: var(--muted);
 }
@@ -268,7 +221,7 @@
   margin: 10px 0 6px;
   padding-top: 10px;
   border-top: 1px dashed var(--line);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 15px;
   color: var(--ink);
 }
@@ -338,7 +291,7 @@
 
 .derivationLine {
   margin: 0 0 8px;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 16px;
   color: var(--muted);
 }
@@ -347,7 +300,7 @@
   margin: 10px 0 0;
   padding-top: 10px;
   border-top: 1px dashed var(--line);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 17px;
   color: var(--ink);
 }
@@ -393,7 +346,7 @@
 .bracketTable {
   border-collapse: collapse;
   margin: 0 auto;
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 16px;
   white-space: nowrap;
 }
@@ -557,7 +510,7 @@
   border-radius: 8px;
   background: var(--green-pale);
   color: var(--ink);
-  font-family: var(--font-mono, monospace);
+  font-family: var(--font-interface, monospace);
   font-size: 13px;
   overflow-wrap: anywhere;
 }

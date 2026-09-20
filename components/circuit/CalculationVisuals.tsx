@@ -1,6 +1,8 @@
 // components/circuit/CalculationVisuals.tsx
 "use client";
 
+import { carriesCurrent } from "../../lib/kirchhoff";
+import { useCircuitMotion } from "./CircuitMotion";
 import styles from "./CalculationVisuals.module.css";
 
 /** Horizontal bars showing each city's voltage relative to ground. */
@@ -35,7 +37,9 @@ export function VoltageBarChart({
  * width -- so long city names or long decimals never collide with the
  * label on the opposite end. A ground symbol is only drawn when
  * `toIsGround` is true. Small dots animate along the wire, direction and
- * speed driven by the sign and magnitude of `current`.
+ * speed driven by the sign and magnitude of `current`; when `current` is zero
+ * (equal potential, or solver roundoff) the wire, resistor, and labels stay
+ * but neither the dots nor the direction arrow are drawn.
  */
 export function CircuitSchematic({
   fromLabel,
@@ -61,12 +65,17 @@ export function CircuitSchematic({
   current: number;
   compact?: boolean;
 }) {
+  // `flowsForward` is only meaningful when there is flow at all; a zero or
+  // roundoff-level current has no direction to draw.
+  const { playing } = useCircuitMotion();
+  const hasFlow = carriesCurrent(current);
   const flowsForward = current >= 0;
   const magnitude = Math.abs(current);
   const width = compact ? 260 : 300;
   const leftX = 10;
   const rightX = width - 75;
   const wireY = 68;
+  const rightSegmentStart = compact ? leftX + 130 : leftX + 157;
   // Faster / brighter dots for higher current, clamped to a sane range.
   const duration = Math.max(0.6, Math.min(3.2, 1.6 / Math.max(magnitude, 0.05)));
 
@@ -75,7 +84,11 @@ export function CircuitSchematic({
       viewBox={`0 0 ${width} 150`}
       className={[styles.schematic, compact ? styles.schematicCompact : ""].join(" ")}
       role="img"
-      aria-label={`Circuit from ${fromLabel} to ${toLabel}: resistance ${resistance} ohms, current ${magnitude.toFixed(3)} amps flowing ${flowsForward ? "toward" : "away from"} ${toLabel}`}
+      aria-label={
+        hasFlow
+          ? `Circuit from ${fromLabel} to ${toLabel}: resistance ${resistance} ohms, current ${magnitude.toFixed(3)} amps flowing ${flowsForward ? "toward" : "away from"} ${toLabel}`
+          : `Circuit from ${fromLabel} to ${toLabel}: resistance ${resistance} ohms, no current flow`
+      }
     >
       <g stroke="currentColor" strokeWidth="2" fill="none" strokeLinejoin="round" strokeLinecap="round">
         {/* source terminal (battery-style double bar) */}
@@ -108,35 +121,64 @@ export function CircuitSchematic({
         )}
       </g>
 
-      {/* flowing current dots along both straight wire segments */}
-      <g className={styles.flowDots}>
-        {[0, 0.33, 0.66].map((offset) => (
-          <circle key={`l-${offset}`} r={compact ? 2 : 2.4} className={styles.flowDot}>
-            <animateMotion
-              dur={`${duration}s`}
-              begin={`${offset * duration}s`}
-              repeatCount="indefinite"
-              keyPoints={flowsForward ? "0;1" : "1;0"}
-              keyTimes="0;1"
-              calcMode="linear"
-              path={`M ${leftX + 6},${wireY} L ${compact ? leftX + 42 : leftX + 42},${wireY}`}
+      {/* flowing current dots along both straight wire segments. A zero or
+          roundoff-level current has no flow to animate, so the wire stays
+          still. */}
+      {playing && hasFlow && (
+        <g className={styles.flowDots}>
+          {[0, 0.33, 0.66].map((offset) => (
+            <circle key={`l-${offset}`} r={compact ? 2 : 2.4} className={styles.flowDot}>
+              <animateMotion
+                dur={`${duration}s`}
+                begin={`${offset * duration}s`}
+                repeatCount="indefinite"
+                keyPoints={flowsForward ? "0;1" : "1;0"}
+                keyTimes="0;1"
+                calcMode="linear"
+                path={`M ${leftX + 6},${wireY} L ${leftX + 42},${wireY}`}
+              />
+            </circle>
+          ))}
+          {[0, 0.33, 0.66].map((offset) => (
+            <circle key={`r-${offset}`} r={compact ? 2 : 2.4} className={styles.flowDot}>
+              <animateMotion
+                dur={`${duration}s`}
+                begin={`${offset * duration}s`}
+                repeatCount="indefinite"
+                keyPoints={flowsForward ? "0;1" : "1;0"}
+                keyTimes="0;1"
+                calcMode="linear"
+                path={`M ${rightSegmentStart},${wireY} L ${rightX},${wireY}`}
+              />
+            </circle>
+          ))}
+        </g>
+      )}
+
+      {/* Paused / reduced motion: hold the dots still. The arrow in the value
+          line above still shows which way the current flows. */}
+      {!playing && hasFlow && (
+        <g className={[styles.flowDots, styles.flowDotsStatic].join(" ")} aria-hidden="true">
+          {[0.2, 0.5, 0.8].map((t) => (
+            <circle
+              key={`ls-${t}`}
+              cx={leftX + 6 + 36 * t}
+              cy={wireY}
+              r={compact ? 2 : 2.4}
+              className={styles.flowDot}
             />
-          </circle>
-        ))}
-        {[0, 0.33, 0.66].map((offset) => (
-          <circle key={`r-${offset}`} r={compact ? 2 : 2.4} className={styles.flowDot}>
-            <animateMotion
-              dur={`${duration}s`}
-              begin={`${offset * duration}s`}
-              repeatCount="indefinite"
-              keyPoints={flowsForward ? "0;1" : "1;0"}
-              keyTimes="0;1"
-              calcMode="linear"
-              path={`M ${compact ? leftX + 130 : leftX + 157},${wireY} L ${rightX},${wireY}`}
+          ))}
+          {[0.2, 0.5, 0.8].map((t) => (
+            <circle
+              key={`rs-${t}`}
+              cx={rightSegmentStart + (rightX - rightSegmentStart) * t}
+              cy={wireY}
+              r={compact ? 2 : 2.4}
+              className={styles.flowDot}
             />
-          </circle>
-        ))}
-      </g>
+          ))}
+        </g>
+      )}
 
       {/* terminal color dots: orange = source, blue = ground, green = mid-point */}
       <circle
@@ -172,7 +214,7 @@ export function CircuitSchematic({
         R = {resistance} Ω &nbsp; c = {conductance.toFixed(4)} Ω⁻¹
       </text>
       <text x={width / 2 - 20} y="118" textAnchor="middle" className={styles.schematicValueStrong}>
-        {flowsForward ? "→" : "←"} I = {magnitude.toFixed(4)} A
+        {hasFlow && (flowsForward ? "→ " : "← ")}I = {magnitude.toFixed(4)} A
       </text>
     </svg>
   );
@@ -195,7 +237,7 @@ export function CandidateBarChart({
     <div className={styles.candidateBars}>
       {winner && (
         <p className={styles.candidateWinnerBanner}>
-          ✓ Current flows to <strong>{winner.name}</strong> — lowest total resistance,{" "}
+          ✓ A* expands <strong>{winner.name}</strong> next — lowest f = g + h,{" "}
           {winner.total.toFixed(1)} Ω
         </p>
       )}
@@ -224,8 +266,8 @@ export function CandidateBarChart({
         </div>
       ))}
       <div className={styles.candidateLegend}>
-        <span><span className={styles.candidateLegendDriven} /> already driven</span>
-        <span><span className={styles.candidateLegendRemaining} /> remaining to ground</span>
+        <span><span className={styles.candidateLegendDriven} /> g: already driven</span>
+        <span><span className={styles.candidateLegendRemaining} /> h: remaining to ground</span>
       </div>
     </div>
   );

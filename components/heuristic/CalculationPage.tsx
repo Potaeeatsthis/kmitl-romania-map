@@ -3,7 +3,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState, type ReactNode } from "react";
+import { Component, Suspense, useEffect, useState, type ReactNode } from "react";
 import { parseCityParam, parseDecisionParam } from "../../lib/heuristicQuery";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { HeuristicExplanation } from "../../lib/types";
@@ -15,8 +15,36 @@ type Props = {
   title: string;
   intro: string;
   current: "circuit" | "kirchhoff-matrix" | "heuristic-steps";
-  children: (explanation: HeuristicExplanation) => ReactNode;
+  // The second argument is the validated query the stepper uses, so views can
+  // link to sibling pages without rebuilding (or losing) the route context.
+  children: (explanation: HeuristicExplanation, query: string) => ReactNode;
 };
+
+/**
+ * A view model (buildGroundedKirchhoffSystem and the pages' derivations) can
+ * throw on an explanation the parser accepted but the renderer cannot lay out.
+ * Without this boundary that throw escapes as an uncaught render error, so turn
+ * it into the same user-facing alert the fetch failure uses instead. The parent
+ * keys this by start:goal, so a new pair remounts and retries.
+ */
+class ExplanationBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
+  state: { error: string | null } = { error: null };
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error: error instanceof Error ? error.message : "Unknown error" };
+  }
+
+  render() {
+    if (this.state.error !== null) {
+      return (
+        <p className={styles.errorText} role="alert">
+          Could not calculate: {this.state.error}. Reload this page to try again.
+        </p>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function CalculationPage(props: Props) {
   return <Suspense fallback={<p className={styles.empty} role="status">Preparing calculation…</p>}><CalculationContent {...props} /></Suspense>;
@@ -95,7 +123,11 @@ function CalculationContent({ title, intro, current, children }: Props) {
       )}
       {!valid ? <p className={styles.empty}>Choose a starting point and a destination on the map first, then come back here.</p>
         : activeResult?.error ? <p className={styles.errorText} role="alert">Could not calculate: {activeResult.error}. Reload this page to try again.</p>
-        : explanation ? <div key={key}>{children(explanation)}</div>
+        : explanation ? (
+          <div key={key}>
+            <ExplanationBoundary>{children(explanation, query)}</ExplanationBoundary>
+          </div>
+        )
         : <p className={styles.empty} role="status">Preparing calculation…</p>}
     </main>
   );

@@ -74,13 +74,76 @@ function wideExplanation(start: number, goal: number, resistance: number): Heuri
   };
 }
 
+// Edges 0-1, 0-2, 1-3, 2-3. A* expands 0, then 1, then 2 (no road 1-2), then 3.
+// The route is 0-1-3, so the frontier after expanding 1 contains 2, which is
+// not a neighbour of 1. The grounded solution puts V(1) = V(3) = 0, so road
+// 1-3 carries no current.
+const branching: HeuristicExplanation = {
+  start: 0,
+  goal: 3,
+  conductances: [
+    { city_a: 0, city_b: 1, distance: 1, conductance: 1 },
+    { city_a: 0, city_b: 2, distance: 1, conductance: 1 },
+    { city_a: 1, city_b: 3, distance: 1, conductance: 1 },
+    { city_a: 2, city_b: 3, distance: 1, conductance: 1 },
+  ],
+  laplacian: [
+    [2, -1, -1, 0],
+    [-1, 2, 0, -1],
+    [-1, 0, 2, -1],
+    [0, -1, -1, 2],
+  ],
+  steps: [
+    {
+      pivot_column: 0,
+      pivot_row: 0,
+      matrix_after: [
+        [1, 0, 0, 1, 0, 0],
+        [0, 1, 0, 0, 1, 0],
+        [0, 0, 1, 0, 0, 1],
+      ],
+    },
+  ],
+  effective_resistance: 1,
+};
+
+const branchingSearch = {
+  ucs: {
+    path: [0, 1, 3],
+    explored_order: [0, 1, 2, 3],
+    trace: [],
+    cost: 2,
+    expanded: 0,
+    generated: 0,
+    peak_frontier: 0,
+    peak_records: 0,
+    peak_payload_bytes: 0,
+  },
+  astar: {
+    path: [0, 1, 3],
+    explored_order: [0, 1, 2, 3],
+    trace: [
+      { expanded_city: 0, expanded_cost: 0, frontier: [{ city: 1, cost: 1, priority: 1 }, { city: 2, cost: 1, priority: 2 }], discovered: [] },
+      { expanded_city: 1, expanded_cost: 1, frontier: [{ city: 2, cost: 1, priority: 1.5 }, { city: 3, cost: 2, priority: 2.5 }], discovered: [] },
+      { expanded_city: 2, expanded_cost: 1, frontier: [{ city: 3, cost: 2, priority: 2.5 }], discovered: [] },
+      { expanded_city: 3, expanded_cost: 2, frontier: [], discovered: [] },
+    ],
+    cost: 2,
+    expanded: 4,
+    generated: 4,
+    peak_frontier: 2,
+    peak_records: 4,
+    peak_payload_bytes: 0,
+  },
+};
+
 beforeEach(() => {
   navigation.query = "start=0&goal=2";
   vi.mocked(explainCurrentFlow).mockReset().mockResolvedValue(circuit);
   // CircuitFlowPage fetches its own A* trace independently of explainCurrentFlow;
   // give it a generic, always-valid response keyed off whatever start/goal it's
-  // called with, so tests that don't care about per-terminal detail never crash
-  // the whole tree on an unresolved mock (no error boundary catches that).
+  // called with, so tests that don't care about per-terminal detail never trip
+  // the page's error boundary on an unresolved mock.
   vi.mocked(runSearch).mockReset().mockImplementation(async (start: number, goal: number) => ({
     ucs: {
       path: [start, goal],
@@ -177,6 +240,31 @@ describe("calculation teaching pages", () => {
     }
   });
 
+  it("keeps the A* route context on the circuit view's elimination link", async () => {
+    navigation.query = "start=3&goal=12&routeStart=0&decision=0";
+    vi.mocked(explainCurrentFlow).mockResolvedValue(wideExplanation(3, 12, 133.74));
+    const { unmount } = render(<CircuitFlowPage />);
+    expect(
+      await screen.findByRole("link", { name: /Watch every pivot happen/ }),
+    ).toHaveAttribute("href", "/heuristic-steps?start=3&goal=12&routeStart=0&decision=0");
+    unmount();
+
+    // An invalid routeStart is not context, so only the explained pair survives.
+    navigation.query = "start=3&goal=12&routeStart=99&decision=0";
+    const invalid = render(<CircuitFlowPage />);
+    expect(
+      await screen.findByRole("link", { name: /Watch every pivot happen/ }),
+    ).toHaveAttribute("href", "/heuristic-steps?start=3&goal=12");
+    invalid.unmount();
+
+    // No context at all still links the explained pair.
+    navigation.query = "start=3&goal=12";
+    render(<CircuitFlowPage />);
+    expect(
+      await screen.findByRole("link", { name: /Watch every pivot happen/ }),
+    ).toHaveAttribute("href", "/heuristic-steps?start=3&goal=12");
+  });
+
   it("drops invalid route context and keeps the explained city", async () => {
     navigation.query = "start=3&goal=12&routeStart=99&decision=0";
     vi.mocked(explainCurrentFlow).mockResolvedValue(wideExplanation(3, 12, 133.74));
@@ -224,6 +312,36 @@ describe("calculation teaching pages", () => {
     expect(await screen.findByText(/No current is injected/)).toBeInTheDocument();
     expect(screen.getByRole("math", { name: "Road cost, conductance, and current formulas" })).toHaveTextContent("= 1 ÷ R = 1 ÷ 1 = 1.000000");
     expect(screen.getByRole("link", {name: "Circuit view"})).toHaveAttribute("aria-current", "page");
+    // Start equals goal: there is no queue and no road to invent.
+    expect(screen.queryByText(/next expanded/)).not.toBeInTheDocument();
+  });
+
+  it("does not draw a road when A* expands a non-adjacent frontier city next", async () => {
+    navigation.query = "start=0&goal=3";
+    vi.mocked(explainCurrentFlow).mockResolvedValue(branching);
+    vi.mocked(runSearch).mockResolvedValue(branchingSearch);
+
+    render(<CircuitFlowPage />);
+
+    expect(await screen.findByText(/no direct road from here/)).toBeInTheDocument();
+    expect(screen.queryByText(/next hop/)).not.toBeInTheDocument();
+    // The overview and the terminal-0 crop may highlight real roads (0-1, 1-3),
+    // but the non-adjacent 1-2 pair must never get a hot edge.
+    expect(document.querySelector("#circuit-edge-1-2-hot")).toBeNull();
+    expect(document.querySelector("#circuit-edge-0-1-hot")).not.toBeNull();
+  });
+
+  it("labels a zero-current road as no flow in the KCL terms", async () => {
+    navigation.query = "start=0&goal=3";
+    vi.mocked(explainCurrentFlow).mockResolvedValue(branching);
+    vi.mocked(runSearch).mockResolvedValue(branchingSearch);
+
+    render(<CircuitFlowPage />);
+
+    // Road 1-3 has equal endpoint potentials (both at ground), so its KCL term
+    // must say no flow rather than print a direction arrow with 0.000A.
+    expect(await screen.findByText("No current flows on this road")).toBeInTheDocument();
+    expect(screen.queryByText(/0\.000A out/)).not.toBeInTheDocument();
   });
 
   it("links the highlighted heuristic to the highlighted final inverse entry", async () => {
@@ -298,5 +416,18 @@ describe("calculation teaching pages", () => {
     // Source equals goal: there is no inverse diagonal cell to highlight.
     expect(screen.queryByRole("table")).not.toBeInTheDocument();
     expect(screen.queryByRole("cell", { name: /Selected h/ })).not.toBeInTheDocument();
+  });
+
+  it("turns a view-model failure into an alert instead of an uncaught render error", async () => {
+    navigation.query = "start=0&goal=2";
+    // A ragged Laplacian reaches buildGroundedKirchhoffSystem, which throws while
+    // the page is rendering. The boundary must surface the existing alert.
+    vi.mocked(explainCurrentFlow).mockResolvedValue({ ...circuit, laplacian: [[1, -1, 0]] });
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    render(<KirchhoffMatrixPage />);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Could not calculate: The Kirchhoff matrix must be a finite square matrix.",
+    );
+    consoleError.mockRestore();
   });
 });

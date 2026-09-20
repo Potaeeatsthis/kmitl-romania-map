@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import CalculationPage from "../../components/heuristic/CalculationPage";
 import CircuitMap from "../../components/circuit/CircuitMap";
 import type { CircuitMarker } from "../../components/circuit/CircuitMap";
+import CircuitLegend from "../../components/circuit/CircuitLegend";
+import { CircuitMotionControl, CircuitMotionProvider } from "../../components/circuit/CircuitMotion";
 import {
   VoltageBarChart,
   CircuitSchematic,
@@ -15,15 +17,12 @@ import {
   KclBalanceScale,
 } from "../../components/circuit/CalculationVisuals";
 import { computeViewBox } from "../../components/heuristic/RouteMap";
-import { buildGroundedKirchhoffSystem } from "../../lib/kirchhoff";
+import { buildExpansionView, edgeKey } from "../../lib/expansionView";
+import { buildGroundedKirchhoffSystem, carriesCurrent } from "../../lib/kirchhoff";
 import { romaniaGraph } from "../../lib/romaniaGraph";
 import type { HeuristicExplanation, SearchResponse, SearchStep } from "../../lib/types";
 import { runSearch } from "../../lib/wasm/client";
 import styles from "./calculation.module.css";
-
-function edgeKey(a: number, b: number): string {
-  return `${Math.min(a, b)}-${Math.max(a, b)}`;
-}
 
 function findStepIndex(trace: SearchStep[], cityId: number): number {
   return trace.findIndex((step) => step.expanded_city === cityId);
@@ -117,19 +116,21 @@ function MatrixBracket({
 
 export default function CircuitFlowPage() {
   return (
-    <CalculationPage
-      current="circuit"
-      title="The road network as a circuit"
-      intro="See how current flows from the selected city to the destination, terminal by terminal, before building the equations."
-    >
-      {(explanation) => <CircuitView explanation={explanation} />}
-    </CalculationPage>
+    <CircuitMotionProvider>
+      <CalculationPage
+        current="circuit"
+        title="The road network as a circuit"
+        intro="Turn roads into a circuit, solve for voltages, and see how the results help A* find a route."
+      >
+        {(explanation, query) => <CircuitView explanation={explanation} query={query} />}
+      </CalculationPage>
+    </CircuitMotionProvider>
   );
 }
 
 type Edge = { neighborId: number; distance: number; conductance: number };
 
-function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
+function CircuitView({ explanation, query }: { explanation: HeuristicExplanation; query: string }) {
   const [search, setSearch] = useState<SearchResponse | null>(null);
   const [searchError, setSearchError] = useState<string | null>(null);
 
@@ -241,12 +242,12 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
   );
   const startDiagonal = startNeighbors.reduce((sum, e) => sum + e.conductance, 0);
 
-  // ---- full unreduced Laplacian for Step 2's bracket matrix ----
+  // ---- full unreduced Kirchhoff matrix for Step 2's bracket matrix ----
   const fullLaplacianRows = romaniaGraph.cities.slice(0, cityCount).map((_, i) => explanation.laplacian[i]);
   const fullLabels = romaniaGraph.cities.slice(0, cityCount).map((c) => abbr(c.name));
 
   // ---- augmented system BEFORE elimination for Step 3, built straight
-  // from system.matrix (the same grounded Laplacian Rust reduced) ----
+  // from system.matrix (the same grounded Kirchhoff matrix Rust reduced) ----
   const initialAugmented: number[][] = system.matrix.map((row, i) => [
     ...row,
     ...system.cityIds.map((_, j) => (i === j ? 1 : 0)),
@@ -275,6 +276,8 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
         {startName} → {goalName}
       </p>
 
+      <CircuitMotionControl />
+
       <section className={styles.card}>
         <p className={styles.narrative}>
           Imagine the roads are wires and the cities are junctions. We push{" "}
@@ -290,8 +293,9 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
           <span className={styles.stepBadge}>1</span> Every road becomes a resistor
         </h2>
         <p className={styles.hint}>
-          Each road&apos;s length in km is treated as its resistance in ohms — a longer road
-          resists the flow of current more, just like a longer drive takes more effort.
+          A modelling choice: each road&apos;s length in km is used as its resistance in ohms.
+          This is not a real road resistance — we only want longer roads to resist more current,
+          just like a longer drive takes more effort.
         </p>
         {startNeighbors[0] && (
           <CircuitSchematic
@@ -335,16 +339,17 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
 
       <section className={styles.card}>
         <h2 className={styles.stepHeading}>
-          <span className={styles.stepBadge}>2</span> Build the circuit — the graph Laplacian
+          <span className={styles.stepBadge}>2</span> Build the circuit — the Kirchhoff matrix
         </h2>
         <p className={styles.hint}>
-          This packs every road into one big table called the Laplacian. Each city gets a row:
-          its own column adds up all its roads, and every other column marks whether a direct
-          road connects them.
+          This packs every road into one big table called the Kirchhoff matrix (the weighted
+          graph Laplacian). Each city gets a row. On the diagonal, that row adds up all its own
+          roads&apos; conductances. Off the diagonal, a directly connected city gets −c, and a
+          city with no direct road gets 0.
         </p>
 
         <p className={styles.derivationLabel}>
-          L({abbr(startName)}, {abbr(startName)}):
+          K({abbr(startName)}, {abbr(startName)}):
         </p>
         <div className={styles.derivationBlock}>
           {startNeighbors.map((edge, i) => (
@@ -355,7 +360,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
             </p>
           ))}
           <p className={styles.derivationResult}>
-            L({abbr(startName)}, {abbr(startName)}) ={" "}
+            K({abbr(startName)}, {abbr(startName)}) ={" "}
             {startNeighbors.map((e) => e.conductance.toFixed(6)).join(" + ")} ={" "}
             <strong>{startDiagonal.toFixed(6)}</strong>
           </p>
@@ -364,11 +369,11 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
         {startNeighbors[0] && (
           <>
             <p className={styles.derivationLabel}>
-              L({abbr(startName)}, {abbr(romaniaGraph.cities[startNeighbors[0].neighborId].name)}):
+              K({abbr(startName)}, {abbr(romaniaGraph.cities[startNeighbors[0].neighborId].name)}):
             </p>
             <div className={styles.derivationBlock}>
               <p className={styles.derivationResult}>
-                L({abbr(startName)}, {abbr(romaniaGraph.cities[startNeighbors[0].neighborId].name)}
+                K({abbr(startName)}, {abbr(romaniaGraph.cities[startNeighbors[0].neighborId].name)}
                 ) = −c({abbr(startName)}
                 {abbr(romaniaGraph.cities[startNeighbors[0].neighborId].name)}) = −
                 {startNeighbors[0].conductance.toFixed(6)}
@@ -379,7 +384,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
 
         <details className={styles.matrixDetails}>
           <summary className={styles.matrixSummary}>
-            Full {cityCount}×{cityCount} Laplacian
+            Full {cityCount}×{cityCount} Kirchhoff matrix
           </summary>
           <MatrixBracket
             rows={fullLaplacianRows}
@@ -394,16 +399,32 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
 
       <section className={styles.card}>
         <h2 className={styles.stepHeading}>
-          <span className={styles.stepBadge}>3</span> Ground {goalName}, solve for voltages
+          <span className={styles.stepBadge}>3</span> Ground {goalName}, then solve for the voltages
         </h2>
         <p className={styles.hint}>
-          Connecting {goalName} to the ground fixes it at 0 volts, so it&apos;s removed from the
-          table below. Solving the remaining system tells us the voltage everywhere else — how
-          "charged up" each city gets before its current drains away to {goalName}.
+          Connecting {goalName} to the ground fixes it at 0 volts. In the table that means we
+          delete {goalName}&apos;s row and its column, leaving a smaller table called{" "}
+          <strong>K_grounded</strong>. Every other city keeps the conductances of the roads that
+          touched {goalName} in its diagonal, so the rest of the network is unchanged.
+        </p>
+        <p className={styles.hint}>
+          To solve it, we write K_grounded next to a helper table called the identity table I.
+          I has 1s on its diagonal (top-left to bottom-right) and 0s everywhere else. Gauss-Jordan
+          elimination then turns <strong>[K_grounded | I]</strong> into{" "}
+          <strong>[I | K_grounded inverse]</strong>. The right half, the inverse, is the answer
+          table: find the highlighted column for {startName} and read down it to get every
+          city&apos;s voltage.
+        </p>
+        <p className={styles.hint}>
+          The cell where {startName}&apos;s own row crosses the {startName} column is the{" "}
+          <strong>source diagonal</strong>. That cell is h({startName}) — the effective
+          resistance from {startName} to {goalName}. A different city&apos;s voltage in this
+          column is only its voltage for this one source. That city&apos;s own h sits on its own
+          row-and-column crossing, not here.
         </p>
 
         <details className={styles.matrixDetails}>
-          <summary className={styles.matrixSummary}>Before elimination</summary>
+          <summary className={styles.matrixSummary}>Before: [K_grounded | I]</summary>
           <MatrixBracket
             rows={initialAugmented}
             rowLabels={reducedLabels}
@@ -415,7 +436,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
         </details>
 
         <details className={styles.matrixDetails}>
-          <summary className={styles.matrixSummary}>After {reducedN} pivots</summary>
+          <summary className={styles.matrixSummary}>After: [I | K_grounded inverse]</summary>
           <MatrixBracket
             rows={finalAugmentedRows}
             rowLabels={reducedLabels}
@@ -427,7 +448,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
         </details>
 
         <p className={styles.hint}>
-          <Link href={`/heuristic-steps?start=${explanation.start}&goal=${explanation.goal}`}>
+          <Link href={`/heuristic-steps${query}`}>
             Watch every pivot happen, one at a time →
           </Link>
         </p>
@@ -439,7 +460,10 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
         </h2>
         <p className={styles.hint}>
           The voltage left over at {startName} tells us the total resistance of the whole
-          circuit — and that number becomes the distance estimate A* uses.
+          circuit. That number is the source diagonal of the inverse table, and it becomes the
+          distance estimate h({startName}) that A* uses. Every other city also has a diagonal
+          entry in that table — that entry is that city&apos;s own estimate to {goalName}, which
+          is a different number from the voltage shown for it here.
         </p>
         <div className={styles.kclFormula}>
           h({startName}) = R<sub>eff</sub> = V<sub>{abbr(startName)}</sub> ÷ 1 A ={" "}
@@ -452,8 +476,9 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
           <span className={styles.stepBadge}>5</span> The solved circuit
         </h2>
         <p className={styles.hint}>
-          The map below shows current actually flowing along the roads A* chose, from{" "}
-          {startName} to {goalName}.
+          The map below shows the solved circuit. Current can spread across the whole network,
+          not just one route — and some roads carry no current at all. The highlighted edges are
+          the final route A* chose from {startName} to {goalName}.
         </p>
         {searchError && (
           <p className={styles.errorText}>Could not load the A* search trace: {searchError}.</p>
@@ -461,17 +486,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
         {!search && !searchError && <p className={styles.hint}>Loading…</p>}
         {search && (
           <>
-            <div className={styles.legend}>
-              <span className={styles.legendItem}>
-                <span className={[styles.legendSwatch, styles.legendHot].join(" ")} /> high voltage
-              </span>
-              <span className={styles.legendItem}>
-                <span className={[styles.legendSwatch, styles.legendCold].join(" ")} /> ground
-              </span>
-              <span className={styles.legendItem}>
-                <span className={styles.legendDotIcon} /> current
-              </span>
-            </div>
+            <CircuitLegend variant="overview" />
             <CircuitMap
               viewBox={computeViewBox(path, 80)}
               edges={explanation.conductances}
@@ -494,34 +509,48 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
 
       {search && (
         <>
-          <h2 className={styles.sectionDivider}>Tracing the current, terminal by terminal</h2>
+          <h2 className={styles.sectionDivider}>A closer look at each city on the route</h2>
           <p className={styles.dividerHint}>
-            A* moved through {startName} to {goalName} one city at a time. At each stop below,
-            it compared every road it could take next and always continued down the one with the
-            least resistance left to ground.
+            A* expands one city at a time from {startName} to {goalName}. At each step it looks
+            at every city waiting in its queue and expands the one with the lowest{" "}
+            <strong>f = g + h</strong>. Here g is the distance so far to that city, and h is the
+            estimate of the distance still left to {goalName}. The winner is often not a
+            neighbour of the city it just expanded.
           </p>
 
           {nodesToAnalyze.map((cityId, index) => {
             const isStart = cityId === explanation.start;
             const cityName = romaniaGraph.cities[cityId].name;
             const edges = (edgesByCity.get(cityId) ?? []).sort((a, b) => a.neighborId - b.neighborId);
+            const neighborIds = new Set(edges.map((edge) => edge.neighborId));
             const v = potential[cityId] ?? 0;
 
             const stepIndex = findStepIndex(trace, cityId);
-            const frontierAtStep = stepIndex >= 0 ? trace[stepIndex].frontier : [];
-            const chosenNextId = stepIndex >= 0 ? (trace[stepIndex + 1]?.expanded_city ?? null) : null;
-            const consideredNotChosen = frontierAtStep.filter((node) => node.city !== chosenNextId);
-            const sortedFrontier = [...frontierAtStep].sort((a, b) => a.priority - b.priority);
+            const view = buildExpansionView(trace, stepIndex, cityId, neighborIds);
+            const chosenNextId = view?.chosenNextId ?? null;
+            const chosenIsAdjacent = view?.chosenIsAdjacent ?? false;
+            const candidates = view?.candidates ?? [];
+            const adjacentCandidates = view?.adjacent ?? [];
+            const nonAdjacentCandidates = view?.nonAdjacent ?? [];
+            const hotEdges = view?.hotEdges ?? new Set<string>();
+            const consideredEdges = view?.consideredEdges ?? new Set<string>();
 
-            const hotEdges = new Set<string>();
-            if (chosenNextId !== null) hotEdges.add(edgeKey(cityId, chosenNextId));
-            const consideredEdges = new Set<string>();
-            consideredNotChosen.forEach((node) => consideredEdges.add(edgeKey(cityId, node.city)));
+            // A city's own h is its diagonal in the inverse grounded matrix --
+            // NOT the voltage it shows in the source column (that is only this
+            // one source's view of the city).
+            const candidateRemaining = (city: number): number => {
+              if (city === explanation.goal) return 0;
+              const reducedIndex = system.cityIds.indexOf(city);
+              if (reducedIndex < 0) return 0;
+              return Math.max(0, finalStep.matrix_after[reducedIndex][reducedN + reducedIndex]);
+            };
 
             const localMarkers: CircuitMarker[] = [
               { cityId, role: "focus" },
               ...(chosenNextId !== null ? [{ cityId: chosenNextId, role: "chosen" as const }] : []),
-              ...consideredNotChosen.map((node) => ({ cityId: node.city, role: "considered" as const })),
+              ...candidates
+                .filter((candidate) => !candidate.isChosen)
+                .map((candidate) => ({ cityId: candidate.city, role: "considered" as const })),
             ];
             const cropIds = localMarkers.map((m) => m.cityId);
 
@@ -541,7 +570,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
                 <p className={styles.narrative}>
                   {isStart
                     ? `This is where the current starts, at ${v.toFixed(1)}V above ${goalName}'s ground.`
-                    : `The current has reached ${cityName}, now sitting at ${v.toFixed(1)}V above ${goalName}'s ground.`}
+                    : `In this solved circuit, ${cityName} sits at ${v.toFixed(1)}V above ${goalName}'s ground.`}
                 </p>
 
                 <CircuitMap
@@ -553,67 +582,56 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
                   consideredEdges={consideredEdges}
                 />
 
-                <div className={styles.legend}>
-                  <span className={styles.legendItem}>
-                    <span className={[styles.legendDot, styles.legendFocus].join(" ")} /> current
-                  </span>
-                  <span className={styles.legendItem}>
-                    <span className={[styles.legendDot, styles.legendChosen].join(" ")} /> next hop
-                  </span>
-                  <span className={styles.legendItem}>
-                    <span className={[styles.legendDot, styles.legendConsidered].join(" ")} />{" "}
-                    considered
-                  </span>
-                </div>
+                <CircuitLegend variant="terminal" />
 
-                {consideredNotChosen.length > 0 && chosenNextId !== null && (
+                {chosenNextId !== null && candidates.length > 0 && (
                   <div className={styles.exploredBlock}>
                     <p className={styles.exploredTitle}>
-                      {romaniaGraph.cities[chosenNextId].name} wins — lowest total resistance
+                      {romaniaGraph.cities[chosenNextId].name} wins — lowest f = g + h
+                      {chosenIsAdjacent ? "" : " (no direct road from here)"}
                     </p>
                     <p className={styles.exploredIntro}>
-                      Every road out of {cityName} gets scored the same way: the resistance
-                      already used to get here, plus the resistance still standing between that
-                      next city and the ground. The lowest total wins.
+                      Every city waiting in the queue is scored the same way: g, the distance so
+                      far to that city, plus h, the estimate still left to {goalName}. A*
+                      expands the lowest f = g + h in the whole queue, not just the roads
+                      leaving {cityName}.
                     </p>
                     <CandidateBarChart
-                      candidates={sortedFrontier.map((node) => {
-                        const isChosen = node.city === chosenNextId;
-                        const driven = node.cost;
-                        const candidateName = romaniaGraph.cities[node.city].name;
-                        const isCandidateGoal = node.city === explanation.goal;
-                        const candidateReducedIndex = system.cityIds.indexOf(node.city);
-                        const remaining = isCandidateGoal
-                          ? 0
-                          : Math.max(
-                              0,
-                              finalStep.matrix_after[candidateReducedIndex][
-                                reducedN + candidateReducedIndex
-                              ],
-                            );
+                      candidates={candidates.map((candidate) => {
+                        const driven = candidate.cost;
+                        const remaining = candidateRemaining(candidate.city);
                         return {
-                          name: candidateName,
+                          name: romaniaGraph.cities[candidate.city].name,
                           driven,
                           remaining,
                           total: driven + remaining,
-                          isChosen,
+                          isChosen: candidate.isChosen,
                         };
                       })}
                     />
+                    {nonAdjacentCandidates.length > 0 && (
+                      <p className={styles.exploredNote}>
+                        {nonAdjacentCandidates
+                          .map((candidate) => romaniaGraph.cities[candidate.city].name)
+                          .join(", ")}{" "}
+                        {nonAdjacentCandidates.length === 1 ? "is" : "are"} also waiting in the
+                        queue with no direct road from {cityName}. Because A* compares every
+                        waiting city, the next city it expands is not always a neighbour.
+                      </p>
+                    )}
 
                     <SchematicGrid>
-                      {sortedFrontier.map((node) => {
-                        const isChosen = node.city === chosenNextId;
-                        const edge = edges.find((e) => e.neighborId === node.city);
+                      {adjacentCandidates.map((candidate) => {
+                        const edge = edges.find((e) => e.neighborId === candidate.city);
                         if (!edge) return null;
                         const vi = potential[cityId] ?? 0;
-                        const vj = potential[node.city] ?? 0;
+                        const vj = potential[candidate.city] ?? 0;
                         return (
                           <div
-                            key={node.city}
+                            key={candidate.city}
                             className={[
                               styles.schematicCard,
-                              isChosen ? styles.schematicCardChosen : "",
+                              candidate.isChosen ? styles.schematicCardChosen : "",
                             ].join(" ")}
                           >
                             <CircuitSchematic
@@ -621,9 +639,9 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
                               fromLabel={cityName}
                               fromVoltage={vi}
                               fromIsSource={isStart}
-                              toLabel={romaniaGraph.cities[node.city].name}
+                              toLabel={romaniaGraph.cities[candidate.city].name}
                               toVoltage={vj}
-                              toIsGround={node.city === explanation.goal}
+                              toIsGround={candidate.city === explanation.goal}
                               resistance={edge.distance}
                               conductance={edge.conductance}
                               current={edge.conductance * (vi - vj)}
@@ -642,8 +660,11 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
                     const vj = potential[edge.neighborId] ?? 0;
                     const value = edge.conductance * (vi - vj);
                     const neighborName = romaniaGraph.cities[edge.neighborId].name;
-                    const direction =
-                      value >= 0
+                    // Zero current (equal potential, or solver roundoff) has
+                    // no direction to report, so it gets no arrow.
+                    const direction = !carriesCurrent(value)
+                      ? "No current flows on this road"
+                      : value >= 0
                         ? `→ ${value.toFixed(3)}A out, toward ${neighborName}`
                         : `← ${Math.abs(value).toFixed(3)}A in, from ${neighborName}`;
                     return (
@@ -682,7 +703,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
 
                 <div className={styles.localMatrixBlock}>
                   <p className={styles.derivationLabel}>
-                    {cityName}&apos;s own row of the Laplacian, up close:
+                    {cityName}&apos;s own row of the Kirchhoff matrix, up close:
                   </p>
                   <p className={styles.derivationSubLabel}>Diagonal:</p>
                   <div className={styles.derivationBlock}>
@@ -694,7 +715,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
                       </p>
                     ))}
                     <p className={styles.derivationResult}>
-                      L({abbr(cityName)}, {abbr(cityName)}) ={" "}
+                      K({abbr(cityName)}, {abbr(cityName)}) ={" "}
                       {edges.map((e) => e.conductance.toFixed(6)).join(" + ")} ={" "}
                       <strong>{edges.reduce((sum, e) => sum + e.conductance, 0).toFixed(6)}</strong>
                     </p>
@@ -706,7 +727,7 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
                       const neighborName = romaniaGraph.cities[edge.neighborId].name;
                       return (
                         <p key={edge.neighborId} className={styles.derivationLine}>
-                          L({abbr(cityName)}, {abbr(neighborName)}) = −c({abbr(cityName)}
+                          K({abbr(cityName)}, {abbr(neighborName)}) = −c({abbr(cityName)}
                           {abbr(neighborName)}) = −{edge.conductance.toFixed(6)}
                         </p>
                       );
@@ -730,9 +751,11 @@ function CircuitView({ explanation }: { explanation: HeuristicExplanation }) {
             <h2>Summary</h2>
             <p className={styles.narrative}>
               We turned every road into a resistor, injected 1 amp of current at {startName}, and
-              grounded {goalName} at 0 volts. Solving the circuit gave every city a voltage — and
-              {startName}&apos;s own voltage, divided by that 1 amp, is the circuit&apos;s total
-              resistance.
+              grounded {goalName} at 0 volts. Solving the circuit gave every city a voltage. Only{" "}
+              {startName}&apos;s voltage is its own heuristic: divided by that 1 amp, it is
+              h({startName}) = the circuit&apos;s total resistance. Every other city&apos;s
+              voltage is just its value for this one source; that city&apos;s own h is a different
+              diagonal entry.
             </p>
             <div className={styles.kclFormula}>
               h({startName}) = <strong>{explanation.effective_resistance.toFixed(4)} Ω</strong>
