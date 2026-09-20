@@ -11,3 +11,6 @@ __pycache__/
 /out/
 .DS_Store
 .env.local
+# graphify local artifacts
+/.claude/settings.json.graphify-bak
+/graphify-out/cache/
