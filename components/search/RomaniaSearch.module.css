@@ -200,8 +200,36 @@
     gap: 6px;
   }
 
+  /* The playback panel owns the bottom edge and the map key sits above it, so
+     the clear action parks under the route launcher instead of being buried
+     under both. */
   .resetButton {
-    bottom: 10px;
+    top: 66px;
+    right: auto;
+    bottom: auto;
+    left: 10px;
+    height: 40px;
+    padding: 0 12px;
+    transform: none;
+    animation: none;
+  }
+
+  .resetButton:active {
+    transform: scale(0.96);
+  }
+}
+
+/* On a phone the brand and its two header actions do not fit on one line.
+   Letting the row wrap keeps every control reachable instead of overlapping
+   the title; landscape keeps the single-row desktop layout. */
+@media (max-width: 560px) {
+  .header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .headerActions {
+    margin-left: auto;
   }
 }
 

@@ -224,6 +224,16 @@ describe("RomaniaSearch", () => {
     expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
   });
 
+  it("renders the compact route launcher alongside the panel for the phone breakpoint", () => {
+    render(<RomaniaSearch />);
+
+    // The launcher's visibility is a CSS decision (it is hidden on desktop),
+    // so both must exist on first paint for the phone layout to show the
+    // compact button without a matchMedia hydration mismatch.
+    expect(screen.getByRole("button", { name: "Route" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
+  });
+
   it("keeps the map key visible without a disclosure control", () => {
     render(<RomaniaSearch />);
 

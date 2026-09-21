@@ -6,8 +6,14 @@ import { romaniaGraph } from "../../lib/romaniaGraph";
 import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./RoutePlanner.module.css";
 
+// "auto" is the first-paint state: the desktop panel is shown, while the CSS
+// breakpoint swaps in the compact launcher on phones. Keeping it a CSS decision
+// avoids a server/client matchMedia mismatch during hydration. Once the visitor
+// acts the mode becomes explicit and behaves the same at every width.
+type PlannerMode = "auto" | "open" | "closed";
+
 export default function RoutePlanner() {
-  const [isOpen, setIsOpen] = useState(true);
+  const [mode, setMode] = useState<PlannerMode>("auto");
   const startCity = useSearchStore((state) => state.startCity);
   const destinationCity = useSearchStore((state) => state.destinationCity);
   const isLoading = useSearchStore((state) => state.isLoading);
@@ -15,60 +21,70 @@ export default function RoutePlanner() {
   const setCity = useSearchStore((state) => state.setCity);
   const run = useSearchStore((state) => state.run);
 
-  if (!isOpen) {
-    return (
-      <button
-        className={styles.routeLauncher}
-        type="button"
-        onClick={() => setIsOpen(true)}
-        aria-expanded="false"
-        aria-controls="route-planner"
-      >
-        <RouteIcon />
-        Route
-      </button>
-    );
-  }
+  const showPanel = mode !== "closed";
+  const showLauncher = mode !== "open";
 
   return (
-    <aside className={styles.panel} id="route-planner">
-      <div className={styles.panelHeader}>
-        <div>
-          <p className={styles.kicker}>ROUTE</p>
-          <h2>Choose your route</h2>
-        </div>
+    <>
+      {showLauncher && (
         <button
-          className={styles.collapseButton}
+          className={styles.routeLauncher}
+          data-auto={mode === "auto" ? "true" : undefined}
           type="button"
-          onClick={() => setIsOpen(false)}
-          aria-label="Hide route planner"
-          title="Hide route planner"
+          onClick={() => setMode("open")}
+          aria-expanded="false"
+          aria-controls="route-planner"
         >
-          <CollapseIcon />
+          <RouteIcon />
+          Route
         </button>
-      </div>
+      )}
 
-      <div className={styles.routeSelector}>
-        <CitySearch
-          label="STARTING POINT"
-          selectedCity={startCity}
-          onFocus={() => useSearchStore.getState().setSelecting("start")}
-          onSelect={(cityId) => setCity("start", cityId)}
-        />
-        <CitySearch
-          label="DESTINATION"
-          selectedCity={destinationCity}
-          onFocus={() => useSearchStore.getState().setSelecting("destination")}
-          onSelect={(cityId) => setCity("destination", cityId)}
-        />
-        <p className={styles.mapHint}>Map: choose a starting point, then a destination.</p>
-        <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
-          {isLoading ? "Running Rust…" : "Run search"}
-        </button>
-      </div>
+      {showPanel && (
+        <aside
+          className={styles.panel}
+          data-auto={mode === "auto" ? "true" : undefined}
+          id="route-planner"
+        >
+          <div className={styles.panelHeader}>
+            <div>
+              <p className={styles.kicker}>ROUTE</p>
+              <h2>Choose your route</h2>
+            </div>
+            <button
+              className={styles.collapseButton}
+              type="button"
+              onClick={() => setMode("closed")}
+              aria-label="Hide route planner"
+              title="Hide route planner"
+            >
+              <CollapseIcon />
+            </button>
+          </div>
 
-      {error && <p className={styles.errorMessage} role="alert">{error}</p>}
-    </aside>
+          <div className={styles.routeSelector}>
+            <CitySearch
+              label="STARTING POINT"
+              selectedCity={startCity}
+              onFocus={() => useSearchStore.getState().setSelecting("start")}
+              onSelect={(cityId) => setCity("start", cityId)}
+            />
+            <CitySearch
+              label="DESTINATION"
+              selectedCity={destinationCity}
+              onFocus={() => useSearchStore.getState().setSelecting("destination")}
+              onSelect={(cityId) => setCity("destination", cityId)}
+            />
+            <p className={styles.mapHint}>Map: choose a starting point, then a destination.</p>
+            <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
+              {isLoading ? "Running Rust…" : "Run search"}
+            </button>
+          </div>
+
+          {error && <p className={styles.errorMessage} role="alert">{error}</p>}
+        </aside>
+      )}
+    </>
   );
 }
 

@@ -70,7 +70,53 @@
     top: auto;
     right: 10px;
     bottom: 88px;
+    /* Short landscape viewports cannot fit the full key above the playback
+       panel; cap it so the title stays on screen and the rows scroll. */
+    max-height: calc(100% - 136px);
+    overflow-y: auto;
+    scrollbar-color: var(--green-soft) transparent;
+    scrollbar-width: thin;
   }
 
   :global([data-playback-expanded="true"]) .legend { bottom: 120px; }
+
+  .legendTitle { height: 40px; padding: 0 12px; }
+
+  .legendContent { padding: 2px 12px 10px; }
+
+  .legendRow { margin-top: 6px; font-size: 8.5px; }
+}
+
+/* Short landscape leaves no vertical room for a stacked key, so the key runs
+   as one horizontal strip above the compact playback panel and scrolls
+   sideways. */
+@media (max-width: 800px) and (max-height: 600px) and (orientation: landscape) {
+  .legend {
+    top: auto;
+    right: 10px;
+    bottom: 76px;
+    left: 10px;
+    width: auto;
+    max-height: none;
+    overflow: hidden;
+  }
+
+  :global([data-playback-expanded="true"]) .legend { bottom: 76px; }
+
+  .legendTitle { height: 34px; }
+
+  .legendContent {
+    padding: 0 12px 8px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0 16px;
+    overflow-x: auto;
+    scrollbar-color: var(--green-soft) transparent;
+    scrollbar-width: thin;
+  }
+
+  .legendRow {
+    margin-top: 0;
+    white-space: nowrap;
+  }
 }

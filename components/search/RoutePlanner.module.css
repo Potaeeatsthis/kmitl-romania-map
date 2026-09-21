@@ -232,13 +232,28 @@
 }
 
 @media (max-width: 800px) {
+  /* First paint on a phone shows the compact launcher; the panel is one tap
+     away. An explicitly opened panel has no data-auto and stays visible. */
+  .panel[data-auto] {
+    display: none;
+  }
+
   .panel {
     top: 10px;
     left: 10px;
+    z-index: 30;
     width: min(320px, calc(100% - 20px));
   }
 
   .routeLauncher { top: 10px; left: 10px; }
+}
+
+/* On desktop the unopened panel is the visible state, so the launcher the
+   mobile breakpoint introduces must never appear. */
+@media (min-width: 801px) {
+  .routeLauncher[data-auto] {
+    display: none;
+  }
 }
 
 @media (max-height: 680px) {
