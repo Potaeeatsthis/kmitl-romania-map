@@ -32,6 +32,7 @@ instead, because nobody will ever arrive here with a string to search for.
 | *(no error text)* In Terrain/Satellite view, Google's own black country-border line (or a thin sliver of Google's own real road) visibly drifts from our green SVG border/route, worst near the map edges or on roads spanning more latitude | `terrain-border-mercator-mismatch` | §13 |
 | *(no error text)* The `f=` score labels under a map's "waiting in queue" city markers render in a different font from the city-name labels on the same markers | `svg-map-note-font-fallback` | §14 |
 | *(no error text)* Returning from a calculation page to the A* summary loses the city being explained — the summary stepper then shows the route start's h instead | `heuristic-roundtrip-loses-explained-city` | §15 |
+| *(no error text)* On a phone the open route planner panel covers the Clear Selection button so it cannot be tapped; on a very short viewport the map key also grows over the floating clear button and the zoom controls | `mobile-route-panel-covers-clear-button` | §16 |
 
 ## Step 2 — Apply the known fix
 
