@@ -105,7 +105,10 @@ accepts the Rust-generated sample
 announces an empty search outside the listbox
 clamps an out-of-bounds step to the last frame
 clamps frames and toggles playback safely
+clears the selected route from the open route planner panel
 closes with Escape and returns focus to the results button
+collapses the route planner into a compact map button
+cycles the route planner auto -> open -> closed -> open while keeping the selected route
 does not capture the pointer until the drag threshold is crossed
 does not select a city when the pointer drags across the map
 expanded cities include cities through the current step
@@ -122,6 +125,7 @@ omits the recalculation link on the elimination page
 presents the selected h(n) once with the overall route as separate context
 rejects malformed discovered nodes
 rejects malformed frontier nodes
+renders the compact route launcher alongside the panel for the phone breakpoint
 reports invalid JSON clearly
 reset returns to a blank state without touching speed
 resets to blank and snaps the map back to its default viewport

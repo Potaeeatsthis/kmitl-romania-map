@@ -156,21 +156,21 @@
     "semantic_hash": ""
   },
   "components/search/RomaniaSearch.test.tsx": {
-    "mtime": 1790060900.4811532,
-    "seen": 1790061236.2597766,
-    "ast_hash": "8dfc73044136eb2014b965bd358373c5",
+    "mtime": 1789917680.0319226,
+    "seen": 1789917853.6013978,
+    "ast_hash": "2eb519245cee9204db1e15efedd7118c",
     "semantic_hash": ""
   },
   "components/search/RomaniaSearch.tsx": {
-    "mtime": 1790059569.805997,
-    "seen": 1790061236.25978,
-    "ast_hash": "0ee004fb5bd2643d46b726e0e83124b2",
+    "mtime": 1789916905.812864,
+    "seen": 1789917853.6013985,
+    "ast_hash": "b2a695171c675f6d26270bd2fe75f293",
     "semantic_hash": ""
   },
   "components/search/RoutePlanner.tsx": {
-    "mtime": 1790059552.908096,
-    "seen": 1790061236.2597818,
-    "ast_hash": "81bd045f3b999d25a091195f2e3bfaeb",
+    "mtime": 1789917285.7573678,
+    "seen": 1789917853.6013992,
+    "ast_hash": "d0f00540fc462392fc195d239a9bb632",
     "semantic_hash": ""
   },
   "components/search/SearchMap.tsx": {
@@ -504,9 +504,9 @@
     "semantic_hash": ""
   },
   "scripts/verify_invariants.sh": {
-    "mtime": 1790060902.3992443,
-    "seen": 1790061236.262304,
-    "ast_hash": "705437fb4fc584a980828c0c2cd722cd",
+    "mtime": 1789916905.8658648,
+    "seen": 1789917853.6016347,
+    "ast_hash": "029596e5869c682cd6be038ab8101efd",
     "semantic_hash": ""
   },
   "scripts/verify_mutation.sh": {
@@ -672,9 +672,9 @@
     "semantic_hash": ""
   },
   ".claude/commands/diagnose.md": {
-    "mtime": 1790060918.879024,
-    "seen": 1790061236.2634208,
-    "ast_hash": "6c6f70dd27343a89ce07ec41a3c746f0",
+    "mtime": 1789916905.8019454,
+    "seen": 1789917853.6018186,
+    "ast_hash": "635aedf033e6053198f8df459d7be486",
     "semantic_hash": ""
   },
   ".claude/commands/prevent.md": {
@@ -810,9 +810,9 @@
     "semantic_hash": ""
   },
   "docs/runbook.md": {
-    "mtime": 1790061110.186823,
-    "seen": 1790061236.2642903,
-    "ast_hash": "e0b7b5c60453d7b4f1e7cae5e6b5f504",
+    "mtime": 1789916905.8208642,
+    "seen": 1789917853.601864,
+    "ast_hash": "7d867baec2a552698782e80be77c803e",
     "semantic_hash": ""
   },
   "docs/sample-trace.md": {
@@ -975,12 +975,6 @@
     "mtime": 1789916905.8708646,
     "seen": 1789917853.601817,
     "ast_hash": "c5ff7178a36244eeaf2691a05b49c41e",
-    "semantic_hash": ""
-  },
-  "docs/rootcause/mobile-route-panel-covers-clear-button.json": {
-    "mtime": 1790060916.3969069,
-    "seen": 1790061236.2601075,
-    "ast_hash": "699f8e940b0c1b15f90f694a5c239554",
     "semantic_hash": ""
   }
 }

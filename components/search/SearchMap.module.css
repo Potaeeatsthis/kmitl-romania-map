@@ -324,7 +324,13 @@
 @media (max-width: 800px) {
   .mapPanel { border-radius: 12px; }
 
-  .zoomControls { right: 10px; }
+  /* The map key and playback panel both own the bottom-right on phones, so the
+     zoom buttons sit in the free top-right corner where they stay tappable. */
+  .zoomControls {
+    top: 10px;
+    right: 10px;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

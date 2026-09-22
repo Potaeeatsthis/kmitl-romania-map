@@ -297,3 +297,21 @@
   .currentDot,
   .flowArrow { filter: none; }
 }
+
+/* The legend lives inside a padded card, so its fixed 260px groups overflow a
+   phone viewport. Let the groups shrink and wrap instead. */
+@media (max-width: 700px) {
+  .legend {
+    gap: 10px 18px;
+    padding: 10px 12px;
+  }
+
+  .legendGroup {
+    min-width: 0;
+  }
+
+  .voltageScaleBar {
+    flex-basis: 90px;
+    min-width: 70px;
+  }
+}

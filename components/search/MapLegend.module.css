@@ -70,7 +70,64 @@
     top: auto;
     right: 10px;
     bottom: 88px;
+    /* The key is bottom-anchored, so on a short viewport a tall key grows up
+       into the top controls: the reset button and the zoom stack both end 106px
+       below the content top. Cap the key to the free band between them and the
+       playback panel so its rows scroll instead of covering a control. */
+    max-height: calc(100% - 200px);
+    overflow-y: auto;
+    scrollbar-color: var(--green-soft) transparent;
+    scrollbar-width: thin;
   }
 
-  :global([data-playback-expanded="true"]) .legend { bottom: 120px; }
+  /* Expanded playback lifts the key 32px, so the free band shrinks by the same. */
+  :global([data-playback-expanded="true"]) .legend {
+    bottom: 120px;
+    max-height: calc(100% - 232px);
+  }
+
+  .legendTitle { height: 40px; padding: 0 12px; }
+
+  .legendContent { padding: 2px 12px 10px; }
+
+  .legendRow { margin-top: 6px; font-size: 8.5px; }
+}
+
+/* Short landscape leaves no vertical room for a stacked key, so the key runs
+   as one horizontal strip above the compact playback panel and scrolls
+   sideways. */
+@media (max-width: 800px) and (max-height: 600px) and (orientation: landscape) {
+  .legend {
+    top: auto;
+    right: 10px;
+    bottom: 76px;
+    left: 10px;
+    width: auto;
+    max-height: none;
+    overflow: hidden;
+  }
+
+  /* Match the expanded rule's specificity so the strip keeps its uncapped
+     height instead of inheriting the portrait band. */
+  :global([data-playback-expanded="true"]) .legend {
+    bottom: 76px;
+    max-height: none;
+  }
+
+  .legendTitle { height: 34px; }
+
+  .legendContent {
+    padding: 0 12px 8px;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 0 16px;
+    overflow-x: auto;
+    scrollbar-color: var(--green-soft) transparent;
+    scrollbar-width: thin;
+  }
+
+  .legendRow {
+    margin-top: 0;
+    white-space: nowrap;
+  }
 }
