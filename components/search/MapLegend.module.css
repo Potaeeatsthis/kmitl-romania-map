@@ -70,15 +70,21 @@
     top: auto;
     right: 10px;
     bottom: 88px;
-    /* Short landscape viewports cannot fit the full key above the playback
-       panel; cap it so the title stays on screen and the rows scroll. */
-    max-height: calc(100% - 136px);
+    /* The key is bottom-anchored, so on a short viewport a tall key grows up
+       into the top controls: the reset button and the zoom stack both end 106px
+       below the content top. Cap the key to the free band between them and the
+       playback panel so its rows scroll instead of covering a control. */
+    max-height: calc(100% - 200px);
     overflow-y: auto;
     scrollbar-color: var(--green-soft) transparent;
     scrollbar-width: thin;
   }
 
-  :global([data-playback-expanded="true"]) .legend { bottom: 120px; }
+  /* Expanded playback lifts the key 32px, so the free band shrinks by the same. */
+  :global([data-playback-expanded="true"]) .legend {
+    bottom: 120px;
+    max-height: calc(100% - 232px);
+  }
 
   .legendTitle { height: 40px; padding: 0 12px; }
 
@@ -101,7 +107,12 @@
     overflow: hidden;
   }
 
-  :global([data-playback-expanded="true"]) .legend { bottom: 76px; }
+  /* Match the expanded rule's specificity so the strip keeps its uncapped
+     height instead of inheriting the portrait band. */
+  :global([data-playback-expanded="true"]) .legend {
+    bottom: 76px;
+    max-height: none;
+  }
 
   .legendTitle { height: 34px; }
 

@@ -173,10 +173,16 @@
     padding: 10px;
   }
 
+  /* The brand and its two header actions do not fit on one line on a phone.
+     Letting the row wrap keeps every control reachable instead of overlapping
+     the title. The wrap is enabled for the whole mobile range so a longer
+     label or a larger system font wraps rather than clipping. */
   .header {
     min-height: 48px;
     margin-bottom: 10px;
     gap: 10px;
+    flex-wrap: wrap;
+    row-gap: 8px;
   }
 
   .brand {
@@ -216,20 +222,6 @@
 
   .resetButton:active {
     transform: scale(0.96);
-  }
-}
-
-/* On a phone the brand and its two header actions do not fit on one line.
-   Letting the row wrap keeps every control reachable instead of overlapping
-   the title; landscape keeps the single-row desktop layout. */
-@media (max-width: 560px) {
-  .header {
-    flex-wrap: wrap;
-    row-gap: 8px;
-  }
-
-  .headerActions {
-    margin-left: auto;
   }
 }
 

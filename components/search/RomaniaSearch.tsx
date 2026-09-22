@@ -4,13 +4,14 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import MapLegend from "./MapLegend";
 import PlaybackControls from "./PlaybackControls";
-import RoutePlanner from "./RoutePlanner";
+import RoutePlanner, { type PlannerMode } from "./RoutePlanner";
 import SearchMap from "./SearchMap";
 import { useSearchStore } from "../../stores/useSearchStore";
 import styles from "./RomaniaSearch.module.css";
 
 export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNode }) {
   const [isPlaybackMinimized, setIsPlaybackMinimized] = useState(false);
+  const [plannerMode, setPlannerMode] = useState<PlannerMode>("auto");
   const startCity = useSearchStore((state) => state.startCity);
   const destinationCity = useSearchStore((state) => state.destinationCity);
   const reset = useSearchStore((state) => state.reset);
@@ -58,9 +59,11 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
         data-playback-expanded={!isPlaybackMinimized}
       >
         <SearchMap />
-        <RoutePlanner />
+        <RoutePlanner mode={plannerMode} onModeChange={setPlannerMode} />
         <MapLegend />
-        {showReset && (
+        {/* While the route planner is explicitly open it carries its own clear
+            action, so the floating button would only sit behind the panel. */}
+        {showReset && plannerMode !== "open" && (
           <button
             className={styles.resetButton}
             type="button"

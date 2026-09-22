@@ -10,16 +10,23 @@ import styles from "./RoutePlanner.module.css";
 // breakpoint swaps in the compact launcher on phones. Keeping it a CSS decision
 // avoids a server/client matchMedia mismatch during hydration. Once the visitor
 // acts the mode becomes explicit and behaves the same at every width.
-type PlannerMode = "auto" | "open" | "closed";
+export type PlannerMode = "auto" | "open" | "closed";
 
-export default function RoutePlanner() {
-  const [mode, setMode] = useState<PlannerMode>("auto");
+export default function RoutePlanner({
+  mode,
+  onModeChange,
+}: {
+  mode: PlannerMode;
+  onModeChange: (mode: PlannerMode) => void;
+}) {
   const startCity = useSearchStore((state) => state.startCity);
   const destinationCity = useSearchStore((state) => state.destinationCity);
   const isLoading = useSearchStore((state) => state.isLoading);
   const error = useSearchStore((state) => state.error);
   const setCity = useSearchStore((state) => state.setCity);
   const run = useSearchStore((state) => state.run);
+  const reset = useSearchStore((state) => state.reset);
+  const hasSelection = startCity !== null || destinationCity !== null;
 
   const showPanel = mode !== "closed";
   const showLauncher = mode !== "open";
@@ -31,7 +38,7 @@ export default function RoutePlanner() {
           className={styles.routeLauncher}
           data-auto={mode === "auto" ? "true" : undefined}
           type="button"
-          onClick={() => setMode("open")}
+          onClick={() => onModeChange("open")}
           aria-expanded="false"
           aria-controls="route-planner"
         >
@@ -54,7 +61,7 @@ export default function RoutePlanner() {
             <button
               className={styles.collapseButton}
               type="button"
-              onClick={() => setMode("closed")}
+              onClick={() => onModeChange("closed")}
               aria-label="Hide route planner"
               title="Hide route planner"
             >
@@ -76,9 +83,24 @@ export default function RoutePlanner() {
               onSelect={(cityId) => setCity("destination", cityId)}
             />
             <p className={styles.mapHint}>Map: choose a starting point, then a destination.</p>
-            <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
-              {isLoading ? "Running Rust…" : "Run search"}
-            </button>
+            <div className={styles.actions}>
+              <button className={styles.runButton} type="button" onClick={() => void run()} disabled={isLoading}>
+                {isLoading ? "Running Rust…" : "Run search"}
+              </button>
+              {/* On a phone the open panel covers the floating clear button, so the
+                  panel carries its own clear action. "auto" keeps the desktop
+                  floating button, so this only renders once the panel is explicit. */}
+              {mode === "open" && hasSelection && (
+                <button
+                  className={styles.clearButton}
+                  type="button"
+                  onClick={reset}
+                  aria-label="Clear selection"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
 
           {error && <p className={styles.errorMessage} role="alert">{error}</p>}

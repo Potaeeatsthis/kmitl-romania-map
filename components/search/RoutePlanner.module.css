@@ -67,7 +67,8 @@
 
 .collapseButton:focus-visible,
 .routeLauncher:focus-visible,
-.runButton:focus-visible {
+.runButton:focus-visible,
+.clearButton:focus-visible {
   outline: 3px solid var(--green-bright);
   outline-offset: 3px;
 }
@@ -177,7 +178,14 @@
   line-height: 1.45;
 }
 
+.actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
 .runButton {
+  flex: 1 1 auto;
   min-height: 44px;
   border: 0;
   border-radius: 7px;
@@ -194,6 +202,24 @@
 .runButton:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.clearButton {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: 400 12px / 1 var(--font-interface);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.clearButton:hover {
+  background: var(--green-pale);
+  color: var(--green-dark);
 }
 
 .errorMessage {
