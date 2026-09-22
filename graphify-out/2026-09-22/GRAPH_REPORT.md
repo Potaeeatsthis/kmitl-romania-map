@@ -1,47 +1,47 @@
-# Graph Report - kmitl-romania-map  (2026-09-22)
+# Graph Report - kmitl-romania-map  (2026-09-20)
 
 ## Corpus Check
-- 151 files · ~944,284 words
+- 150 files · ~942,612 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 26 file(s) not represented in the graph (top: .css 18, (none) 6, .woff2 1)
 
 ## Summary
-- 1200 nodes · 2045 edges · 91 communities (78 shown, 13 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 108 edges (avg confidence: 0.87)
+- 1195 nodes · 2037 edges · 88 communities (77 shown, 11 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 106 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b7e4aa60`
+- Built from commit: `eb9d45a8`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- lib.rs
+- romania_search.py
 - verify_export.mjs
 - romania_search.cpp
 - fetch_neighboring_context.mjs
-- Romania Map Search Comparison
+- CLAUDE.md — KMITL Romania Map
 - scripts
 - Rejected — a Rust HTTP backend
-- CircuitMap.tsx
+- CircuitLegend.test.tsx
 - client.ts
-- circuit-flow/page.tsx
+- lib.rs
 - What You Must Do When Invoked
 - compilerOptions
-- trace_golden.rs
+- build.rs
 - BenchmarkCharts.tsx
 - SearchMap.tsx
 - ideas.md
 - make_graph
-- heuristic-steps/page.tsx
+- routeCountyDots.ts
 - ref_node_fs
 - cli.rs
 - search
 - package.json
-- heuristic-summary/page.tsx
+- circuit-flow/page.tsx
 - circuitLabelLayout.ts
 - verify_golden.sh
-- romania_search.py
+- CircuitMap.tsx
 - Part C: Current-Flow Heuristic
 - verify_mutation.sh
 - make_graph
@@ -49,25 +49,25 @@
 - heuristic_tests.rs
 - /diagnose — Match an error to a known rootcause, or investigate and record a new one
 - /prevent — Run every invariant check and report violations by category
-- CLAUDE.md — KMITL Romania Map
+- roadPath.ts
 - QueueEntry
 - §13 — `terrain-border-mercator-mismatch`
-- types.ts
+- CircuitMap.test.tsx
 - devDependencies
 - graphify reference: extra exports and benchmark
 - verify_all_pairs.mjs
-- CircuitMap.test.tsx
+- vitest
 - current_flow.rs
 - Part D: Comparison
 - Appendix A: Main Formulas
 - verify_frontend_sample.mjs
-- CalculationPages.test.tsx
+- PlaybackControls.tsx
 - 20. Metrics to Measure
 - Part A: Uniform-Cost Search
 - §10 — `search-ui-no-clean-slate-reset`
 - verify_env.test.sh
 - graphify reference: query, path, explain
-- runSearch
+- Browser + Rust WebAssembly Architecture
 - §3 — golden baseline diffs
 - §9 — `search-ui-third-click-no-rolling-restart`
 - Sample Search Trace
@@ -81,10 +81,10 @@
 - §4 — `clippy-needless-range-loop`
 - §5 — `shared-integration-test-dead-code`
 - §7 — `benchmark-panel-static-runtime`
-- astar_tests.rs
+- trace_golden.rs
 - pull_request_template.md
 - graphify.js
-- Runbook
+- §8 — `benchmark-ring-null-after-city-change`
 - verify_env.sh
 - verify_harness.sh
 - graphify reference: add a URL and watch a folder
@@ -100,12 +100,9 @@
 - post_tool_use.sh
 - extraction-spec.md
 - romania-search
-- README.md
-- dependencies
-- RomaniaSearch.tsx
+- RoutePlanner.tsx
 - SearchMap
-- §16 — `mobile-route-panel-covers-clear-button`
-- heuristic-summary/loading.tsx
+- BenchmarkPanel.tsx
 
 ## God Nodes (most connected - your core abstractions)
 1. `make_graph()` - 30 edges
@@ -115,9 +112,9 @@
 5. `vitest` - 20 edges
 6. `compilerOptions` - 19 edges
 7. `useSearchStore` - 18 edges
-8. `Runbook` - 17 edges
-9. `CircuitMap()` - 16 edges
-10. `runSearch()` - 16 edges
+8. `CircuitMap()` - 16 edges
+9. `runSearch()` - 16 edges
+10. `Runbook` - 16 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `12 — Calculation page fails static export` --references--> `CalculationPage()`  [INFERRED]
@@ -128,17 +125,17 @@
   docs/runbook.md → scripts/fetch_neighboring_context.mjs
 - `Diagnose` --references--> `number()`  [INFERRED]
   docs/runbook.md → app/kirchhoff-matrix/page.tsx
-- `Fix` --references--> `RomaniaSearch()`  [INFERRED]
-  docs/runbook.md → components/search/RomaniaSearch.tsx
+- `Update — the same cause on roads (2026-09-16)` --references--> `SearchTreeLines()`  [INFERRED]
+  docs/runbook.md → components/search/SearchMap.tsx
 
 ## Import Cycles
 - None detected.
 
-## Communities (91 total, 13 thin omitted)
+## Communities (88 total, 11 thin omitted)
 
-### Community 0 - "lib.rs"
-Cohesion: 0.06
-Nodes (46): city_count, Display, Error, fmt, Formatter, heapq, JsValue, pathlib (+38 more)
+### Community 0 - "romania_search.py"
+Cohesion: 0.05
+Nodes (42): city_count, dataclasses, heapq, math, pathlib, benchmark(), current_flow_heuristic(), explored_text() (+34 more)
 
 ### Community 1 - "verify_export.mjs"
 Cohesion: 0.12
@@ -152,9 +149,9 @@ Nodes (42): algorithm, chrono, cmath, cstdint, iomanip, iostream, limits, pair (
 Cohesion: 0.06
 Nodes (54): ALWAYS_VISIBLE_BOUNDS, boundsOverlap(), buildSeaPath(), CANDIDATE_LON_LAT_BOUNDS, centroid(), CLIP_BOUNDS, clipEdge(), clipPolygon() (+46 more)
 
-### Community 4 - "Romania Map Search Comparison"
-Cohesion: 0.10
-Nodes (20): C++, Comparison metrics, Complexity, Current-flow A*, Current process, Current project status, Example, Export frontend sample data (+12 more)
+### Community 4 - "CLAUDE.md — KMITL Romania Map"
+Cohesion: 0.05
+Nodes (35): Architecture — Rust compiled to WebAssembly, Bug loop protocol — mandatory, in order, every time, Build order, CLAUDE.md — KMITL Romania Map, Common commands, Definition of done, Git and PR workflow, graphify (+27 more)
 
 ### Community 5 - "scripts"
 Cohesion: 0.08
@@ -164,17 +161,17 @@ Nodes (24): scripts, build, build:wasm, dev, doctor, generate:benchmark, start, 
 Cohesion: 0.06
 Nodes (30): A* vs UCS: the answer depends on the language, API, Architecture: network dominates everything, Changes the engine would have needed, Chosen — Rust compiled to WebAssembly, Comparison, Constant regardless, Decision (+22 more)
 
-### Community 7 - "CircuitMap.tsx"
-Cohesion: 0.05
-Nodes (63): CircuitLegend(), CircuitLegendVariant, OutlineSample, OVERVIEW_OUTLINES, TERMINAL_OUTLINES, edges, markers, potential (+55 more)
+### Community 7 - "CircuitLegend.test.tsx"
+Cohesion: 0.14
+Nodes (14): CircuitLegend(), CircuitLegendVariant, OutlineSample, OVERVIEW_OUTLINES, TERMINAL_OUTLINES, edges, markers, potential (+6 more)
 
 ### Community 8 - "client.ts"
-Cohesion: 0.12
-Nodes (32): app_globals, departureMono, metadata, basePath, normalizeBasePath(), assertHeuristicExplanation(), assertSearchResponse(), isCityIndex() (+24 more)
+Cohesion: 0.09
+Nodes (42): app_globals, departureMono, metadata, navigation, §15 — `heuristic-roundtrip-loses-explained-city`, Diagnose, Fix, Prevent (+34 more)
 
-### Community 9 - "circuit-flow/page.tsx"
-Cohesion: 0.20
-Nodes (14): app_circuit_flow_calculation_module, abbr(), CircuitView(), Edge, findStepIndex(), SummaryView(), CandidateBarChart(), CircuitSchematic() (+6 more)
+### Community 9 - "lib.rs"
+Cohesion: 0.19
+Nodes (19): Display, Error, fmt, Formatter, JsValue, prelude, HeuristicError, explain_current_flow_json() (+11 more)
 
 ### Community 10 - "What You Must Do When Invoked"
 Cohesion: 0.08
@@ -184,17 +181,17 @@ Nodes (24): For /graphify add and --watch, For /graphify query, For the commit h
 Cohesion: 0.09
 Nodes (21): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+13 more)
 
-### Community 12 - "trace_golden.rs"
-Cohesion: 0.16
-Nodes (18): env, fs, PathBuf, CITIES, CITY_COUNT, main(), parse_values(), Vec (+10 more)
+### Community 12 - "build.rs"
+Cohesion: 0.24
+Nodes (9): env, fs, CITIES, CITY_COUNT, main(), parse_values(), Vec, validate_city_order() (+1 more)
 
 ### Community 13 - "BenchmarkCharts.tsx"
 Cohesion: 0.12
 Nodes (18): AllPairsResult, AllPairsRuntime, benchmark, BenchmarkCharts(), BenchmarkResults, DivergingRow(), formatCost(), formatMetric() (+10 more)
 
 ### Community 14 - "SearchMap.tsx"
-Cohesion: 0.08
-Nodes (26): BASE_MAP_EXTENT, clampMapViewport(), clampMapZoom(), ExpandedTreeLines(), getEffectiveMapExtent(), getMapViewBox(), getTouchDistance(), GraphLine() (+18 more)
+Cohesion: 0.10
+Nodes (23): BASE_MAP_EXTENT, clampMapViewport(), clampMapZoom(), ExpandedTreeLines(), GraphLine(), INITIAL_MAP_VIEWPORT, labelOffsets, MapExtent (+15 more)
 
 ### Community 15 - "ideas.md"
 Cohesion: 0.29
@@ -204,9 +201,9 @@ Nodes (6): 1. Project Overview, 2. Graph Representation, 6. What Is A*?, Appendi
 Cohesion: 0.19
 Nodes (19): explain_current_flow, make_graph(), current_flow_rejects_a_directed_graph(), current_flow_rejects_a_duplicate_edge(), current_flow_rejects_a_mismatched_reverse_weight(), current_flow_rejects_a_self_loop(), current_flow_rejects_invalid_start_and_goal(), current_flow_reports_a_disconnected_resistive_graph() (+11 more)
 
-### Community 17 - "heuristic-steps/page.tsx"
-Cohesion: 0.21
-Nodes (13): HeuristicStepsPage(), app_heuristic_steps_page_module, StepsView(), KirchhoffView(), name(), number(), CalculationPage(), buildGroundedKirchhoffSystem() (+5 more)
+### Community 17 - "routeCountyDots.ts"
+Cohesion: 0.23
+Nodes (14): countyPolygons, distanceToPolyline(), distanceToSegment(), getBounds(), getRouteCountyDots(), getRoutePolyline(), orientation(), pointInPolygon() (+6 more)
 
 ### Community 18 - "ref_node_fs"
 Cohesion: 0.16
@@ -217,16 +214,16 @@ Cohesion: 0.12
 Nodes (23): black_box, current_flow_for_goal, current_flow_heuristic, instant, io, benchmark(), BENCHMARK_RUNS, explored_text() (+15 more)
 
 ### Community 20 - "search"
-Cohesion: 0.31
-Nodes (10): CONSISTENCY_SCALE_EDGES, MAX_LEGITIMATE_PATH_COST, reconstruct_path(), Graph, Result, SearchResult, Vec, search() (+2 more)
+Cohesion: 0.22
+Nodes (17): CONSISTENCY_SCALE_EDGES, MAX_LEGITIMATE_PATH_COST, reconstruct_path(), Graph, Result, SearchResult, Vec, search() (+9 more)
 
 ### Community 21 - "package.json"
-Cohesion: 0.17
-Nodes (11): engines, node, name, private, version, jsdom, react-dom, @types/node (+3 more)
+Cohesion: 0.12
+Nodes (16): dependencies, next, react, react-dom, zustand, engines, node, name (+8 more)
 
-### Community 22 - "heuristic-summary/page.tsx"
-Cohesion: 0.17
-Nodes (15): Edge, HeuristicSummaryPage(), CalculationContent(), ExplanationBoundary, Props, CalculationStage, CalculationStepper(), components_heuristic_calculationstepper_module (+7 more)
+### Community 22 - "circuit-flow/page.tsx"
+Cohesion: 0.05
+Nodes (64): app_circuit_flow_calculation_module, abbr(), CircuitFlowPage(), CircuitView(), Edge, findStepIndex(), HeuristicStepsPage(), app_heuristic_steps_page_module (+56 more)
 
 ### Community 23 - "circuitLabelLayout.ts"
 Cohesion: 0.15
@@ -236,9 +233,9 @@ Nodes (18): ANGLE_OFFSETS_DEG, candidatePenalty(), Circle, clamp(), clampCenter(
 Cohesion: 0.22
 Nodes (11): scripts_lib_rust_build_sh, bad(), mask(), pass(), verify_golden.sh script, bad(), pass(), verify_invariants.sh script (+3 more)
 
-### Community 25 - "romania_search.py"
-Cohesion: 0.19
-Nodes (14): dataclasses, math, benchmark(), current_flow_heuristic(), explored_text(), main(), path_text(), search() (+6 more)
+### Community 25 - "CircuitMap.tsx"
+Cohesion: 0.17
+Nodes (15): adaptiveEdgeGap(), buildFlowArrowPath(), buildResistorSymbol(), CircuitMap(), edgeKey(), EdgeTier, FALLBACK_VIEWBOX, LabelMeta (+7 more)
 
 ### Community 26 - "Part C: Current-Flow Heuristic"
 Cohesion: 0.15
@@ -253,12 +250,12 @@ Cohesion: 0.31
 Nodes (9): common, invalid_inputs_return_errors_instead_of_panicking(), Graph, Result, SearchResult, trace_records_one_complete_frame_per_expansion(), ucs(), ucs_finds_the_known_optimal_route() (+1 more)
 
 ### Community 29 - "BenchmarkPanel.test.tsx"
-Cohesion: 0.12
-Nodes (16): components_benchmark_benchmarkpanel_module, ResultsStatus, statusLabels, mockedRunSearch, sample, mockedRunSearch, sample, components_search_searchmap_module (+8 more)
+Cohesion: 0.15
+Nodes (13): mockedRunSearch, sample, mockedRunSearch, sample, components_search_searchmap_module, public_data_arad_bucharest_search, @testing-library/dom, @testing-library/user-event (+5 more)
 
 ### Community 30 - "heuristic_tests.rs"
-Cohesion: 0.18
-Nodes (10): heuristics, independent_shortest_costs, independent_shortest_costs(), path_cost(), Graph, Option, Vec, current_flow_table_is_admissible_and_zero_at_every_goal() (+2 more)
+Cohesion: 0.20
+Nodes (9): heuristics, independent_shortest_costs, independent_shortest_costs(), path_cost(), Graph, Option, Vec, current_flow_table_is_admissible_and_zero_at_every_goal() (+1 more)
 
 ### Community 31 - "/diagnose — Match an error to a known rootcause, or investigate and record a new one"
 Cohesion: 0.18
@@ -268,9 +265,9 @@ Nodes (10): /diagnose — Match an error to a known rootcause, or investigate an
 Cohesion: 0.18
 Nodes (10): Check 1 — Structural invariants I1 and I4, Check 2 — Three-language parity (I2), Check 3 — Heuristic correctness (I3), Check 4 — Golden baseline, Check 5 — Harness wiring, Check 6 — Frontend types and build, Check 7 — Manual review, not automated, Everything at once (+2 more)
 
-### Community 33 - "CLAUDE.md — KMITL Romania Map"
-Cohesion: 0.15
-Nodes (13): Architecture — Rust compiled to WebAssembly, Bug loop protocol — mandatory, in order, every time, Build order, CLAUDE.md — KMITL Romania Map, Common commands, Definition of done, Git and PR workflow, Invariants — violating these is a review failure (+5 more)
+### Community 33 - "roadPath.ts"
+Cohesion: 0.31
+Nodes (10): roadGeometry, RoadPoint, cityById, cityPosition(), getRoadPathD(), getRoadPoints(), offsetPolyline(), pathDCache (+2 more)
 
 ### Community 34 - "QueueEntry"
 Cohesion: 0.21
@@ -280,9 +277,9 @@ Nodes (11): BinaryHeap, Eq, Ord, Ordering, PartialEq, PartialOrd, SearchStep, Se
 Cohesion: 0.40
 Nodes (5): §13 — `terrain-border-mercator-mismatch`, Diagnose, Fix, Prevent, Symptom
 
-### Community 36 - "types.ts"
-Cohesion: 0.33
-Nodes (7): buildExpansionView(), edgeKey(), ExpansionCandidate, ExpansionView, EliminationStep, FrontierNode, SearchStep
+### Community 36 - "CircuitMap.test.tsx"
+Cohesion: 0.11
+Nodes (9): bounds, consideredEdges, cropIds, edges, hotEdges, markers, ParsedRect, potential (+1 more)
 
 ### Community 37 - "devDependencies"
 Cohesion: 0.18
@@ -296,13 +293,13 @@ Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only
 Cohesion: 0.18
 Nodes (9): ref_node_assert, ref_node_child_process, committed, generated, keys, repo, committed, generated (+1 more)
 
-### Community 40 - "CircuitMap.test.tsx"
-Cohesion: 0.07
-Nodes (23): bounds, consideredEdges, cropIds, edges, hotEdges, markers, ParsedRect, potential (+15 more)
+### Community 40 - "vitest"
+Cohesion: 0.15
+Nodes (14): CircuitMotion, CircuitMotionContext, CircuitMotionControl(), CircuitMotionProvider(), getReducedMotion(), components_circuit_circuitmotion_module, subscribeToReducedMotion(), PlayingProbe() (+6 more)
 
 ### Community 41 - "current_flow.rs"
-Cohesion: 0.27
-Nodes (13): ConductanceEdge, current_flow_for_goal(), current_flow_heuristic(), EliminationStep, explain_current_flow(), HeuristicError, HeuristicExplanation, HeuristicResult (+5 more)
+Cohesion: 0.24
+Nodes (13): ConductanceEdge, current_flow_for_goal(), current_flow_heuristic(), EliminationStep, explain_current_flow(), HeuristicExplanation, HeuristicResult, Graph (+5 more)
 
 ### Community 42 - "Part D: Comparison"
 Cohesion: 0.25
@@ -316,9 +313,9 @@ Nodes (8): A*, Admissibility, Appendix A: Main Formulas, Current-Flow Heuristic,
 Cohesion: 0.15
 Nodes (10): cityPositions, engine, geoKeyMatches, geoSource, graphRoadMatches, graphTsSource, repo, resultKeys (+2 more)
 
-### Community 45 - "CalculationPages.test.tsx"
-Cohesion: 0.22
-Nodes (7): CircuitFlowPage(), KirchhoffMatrixPage(), branching, branchingSearch, circuit, goalRemoved, navigation
+### Community 45 - "PlaybackControls.tsx"
+Cohesion: 0.25
+Nodes (5): Check 8 — Do the checks above actually catch anything?, Frontend tests — the rule, components_search_playbackcontrols_module, PlaybackControls(), getTimelineLength()
 
 ### Community 46 - "20. Metrics to Measure"
 Cohesion: 0.29
@@ -329,8 +326,8 @@ Cohesion: 0.29
 Nodes (7): 3. What Is UCS?, 4. How UCS Works, 5. UCS Properties, Advantages, Limitations, Part A: Uniform-Cost Search, UCS Pseudocode
 
 ### Community 48 - "§10 — `search-ui-no-clean-slate-reset`"
-Cohesion: 0.50
-Nodes (4): §10 — `search-ui-no-clean-slate-reset`, Diagnose, Prevent, Symptom
+Cohesion: 0.29
+Nodes (7): §10 — `search-ui-no-clean-slate-reset`, 12 — Calculation page fails static export, §6 — `mutation-false-pass-broken-gate`, Diagnose, Prevent, Runbook, Symptom
 
 ### Community 49 - "verify_env.test.sh"
 Cohesion: 0.47
@@ -340,9 +337,9 @@ Nodes (8): assert_line(), bad(), copy_doctor(), expect(), node_line(), pass(), v
 Cohesion: 0.33
 Nodes (5): For /graphify explain, For /graphify path, graphify reference: query, path, explain, Step 0 — Constrained query expansion (REQUIRED before traversal), Step 1 — Traversal
 
-### Community 51 - "runSearch"
+### Community 51 - "Browser + Rust WebAssembly Architecture"
 Cohesion: 0.29
-Nodes (8): §15 — `heuristic-roundtrip-loses-explained-city`, Diagnose, Fix, Prevent, Symptom, loadWasm(), publicUrl(), runSearch()
+Nodes (6): Benchmark data flow, Browser + Rust WebAssembly Architecture, Call sequence, Directory structure, Ownership boundaries, Runtime flow
 
 ### Community 52 - "§3 — golden baseline diffs"
 Cohesion: 0.33
@@ -369,8 +366,8 @@ Cohesion: 0.40
 Nodes (5): §11 — `search-map-zoom-blocks-city-clicks`, Diagnose, Fix, Prevent, Symptom
 
 ### Community 58 - "useSearchStore"
-Cohesion: 0.16
-Nodes (13): BenchmarkPanel(), HeuristicExplainLink(), components_search_heuristicexplainlink_module, RomaniaSearch(), Benchmark data flow, Browser + Rust WebAssembly Architecture, Call sequence, Directory structure (+5 more)
+Cohesion: 0.18
+Nodes (12): BenchmarkPanel(), HeuristicExplainLink(), components_search_heuristicexplainlink_module, ITEMS, MapLegend(), components_search_maplegend_module, components_search_romaniasearch_module, RomaniaSearch() (+4 more)
 
 ### Community 59 - "§14 — `svg-map-note-font-fallback`"
 Cohesion: 0.40
@@ -396,9 +393,9 @@ Nodes (5): §5 — `shared-integration-test-dead-code`, Diagnose, Fix, Prevent, 
 Cohesion: 0.40
 Nodes (5): §7 — `benchmark-panel-static-runtime`, Diagnose, Fix, Prevent, Symptom
 
-### Community 65 - "astar_tests.rs"
-Cohesion: 0.54
-Nodes (7): current_flow_astar(), current_flow_astar_finds_the_known_optimal_route(), current_flow_astar_is_optimal_for_every_city_pair(), Graph, Result, SearchResult, ucs()
+### Community 65 - "trace_golden.rs"
+Cohesion: 0.36
+Nodes (9): PathBuf, astar_trace_matches_the_committed_golden(), compare(), golden_path(), render(), ROUTES, SearchResult, String (+1 more)
 
 ### Community 66 - "pull_request_template.md"
 Cohesion: 0.40
@@ -408,9 +405,9 @@ Nodes (4): Checks, If this fixes a bug, Invariants, What this changes
 Cohesion: 0.40
 Nodes (3): IMPORTANT: keep the reminder string free of backticks and $(...) constructs., ref_fs, ref_path
 
-### Community 68 - "Runbook"
-Cohesion: 0.29
-Nodes (7): 12 — Calculation page fails static export, §6 — `mutation-false-pass-broken-gate`, §8 — `benchmark-ring-null-after-city-change`, Diagnose, Fix, Runbook, Symptom
+### Community 68 - "§8 — `benchmark-ring-null-after-city-change`"
+Cohesion: 0.50
+Nodes (4): §8 — `benchmark-ring-null-after-city-change`, Diagnose, Fix, Symptom
 
 ### Community 69 - "verify_env.sh"
 Cohesion: 0.87
@@ -432,41 +429,37 @@ Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify refer
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
-### Community 86 - "dependencies"
-Cohesion: 0.40
-Nodes (5): dependencies, next, react, react-dom, zustand
-
-### Community 87 - "RomaniaSearch.tsx"
-Cohesion: 0.15
-Nodes (11): ITEMS, MapLegend(), components_search_maplegend_module, components_search_romaniasearch_module, CitySearch(), components_search_routeplanner_module, normalizeCityName(), PlannerMode (+3 more)
+### Community 87 - "RoutePlanner.tsx"
+Cohesion: 0.29
+Nodes (5): CitySearch(), components_search_routeplanner_module, normalizeCityName(), PlannerMode, Fix
 
 ### Community 88 - "SearchMap"
-Cohesion: 0.19
-Nodes (13): Check 8 — Do the checks above actually catch anything?, Frontend tests — the rule, components_search_playbackcontrols_module, PlaybackControls(), SearchMap(), getExpandedCities(), getExpandedPathPrefix(), getFinalPath() (+5 more)
+Cohesion: 0.25
+Nodes (12): getEffectiveMapExtent(), getMapViewBox(), getTouchDistance(), roadLabelPosition(), SearchMap(), getExpandedCities(), getExpandedPathPrefix(), getFinalPath() (+4 more)
 
-### Community 89 - "§16 — `mobile-route-panel-covers-clear-button`"
-Cohesion: 0.50
-Nodes (4): §16 — `mobile-route-panel-covers-clear-button`, Diagnose, Prevent, Symptom
+### Community 93 - "BenchmarkPanel.tsx"
+Cohesion: 0.40
+Nodes (3): components_benchmark_benchmarkpanel_module, ResultsStatus, statusLabels
 
 ## Knowledge Gaps
-- **459 isolated node(s):** `post_tool_use.sh script`, `$schema`, `plugin`, `Edge`, `Edge` (+454 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 598 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **13 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **457 isolated node(s):** `post_tool_use.sh script`, `$schema`, `plugin`, `Edge`, `Edge` (+452 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 596 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **11 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Runbook` connect `Runbook` to `§16 — `mobile-route-panel-covers-clear-button``, `§7 — `benchmark-panel-static-runtime``, `§13 — `terrain-border-mercator-mismatch``, `§10 — `search-ui-no-clean-slate-reset``, `runSearch`, `§3 — golden baseline diffs`, `README.md`, `§9 — `search-ui-third-click-no-rolling-restart``, `§11 — `search-map-zoom-blocks-city-clicks``, `§14 — `svg-map-note-font-fallback``, `§1 — `empty-cargo-manifest``, `§2 — `dead-posttooluse-hook``, `§4 — `clippy-needless-range-loop``, `§5 — `shared-integration-test-dead-code``?**
-  _High betweenness centrality (0.065) - this node is a cross-community bridge._
-- **Why does `§13 — `terrain-border-mercator-mismatch`` connect `§13 — `terrain-border-mercator-mismatch`` to `Runbook`, `SearchMap.tsx`?**
+- **Why does `Runbook` connect `§10 — `search-ui-no-clean-slate-reset`` to `§7 — `benchmark-panel-static-runtime``, `§13 — `terrain-border-mercator-mismatch``, `CLAUDE.md — KMITL Romania Map`, `§8 — `benchmark-ring-null-after-city-change``, `client.ts`, `§3 — golden baseline diffs`, `§9 — `search-ui-third-click-no-rolling-restart``, `§11 — `search-map-zoom-blocks-city-clicks``, `§14 — `svg-map-note-font-fallback``, `§1 — `empty-cargo-manifest``, `§2 — `dead-posttooluse-hook``, `§4 — `clippy-needless-range-loop``, `§5 — `shared-integration-test-dead-code``?**
+  _High betweenness centrality (0.064) - this node is a cross-community bridge._
+- **Why does `§13 — `terrain-border-mercator-mismatch`` connect `§13 — `terrain-border-mercator-mismatch`` to `§10 — `search-ui-no-clean-slate-reset``, `SearchMap.tsx`?**
   _High betweenness centrality (0.032) - this node is a cross-community bridge._
-- **Why does `vitest` connect `CircuitMap.test.tsx` to `types.ts`, `CircuitMap.tsx`, `client.ts`, `CalculationPages.test.tsx`, `heuristic-steps/page.tsx`, `package.json`, `heuristic-summary/page.tsx`, `circuitLabelLayout.ts`, `SearchMap`, `BenchmarkPanel.test.tsx`?**
+- **Why does `vitest` connect `vitest` to `roadPath.ts`, `CircuitMap.test.tsx`, `CircuitLegend.test.tsx`, `client.ts`, `routeCountyDots.ts`, `package.json`, `circuit-flow/page.tsx`, `circuitLabelLayout.ts`, `SearchMap`, `BenchmarkPanel.test.tsx`?**
   _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Are the 28 inferred relationships involving `make_graph()` (e.g. with `main()` and `main()`) actually correct?**
   _`make_graph()` has 28 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 16 inferred relationships involving `search()` (e.g. with `benchmark()` and `timed_median_us()`) actually correct?**
   _`search()` has 16 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `post_tool_use.sh script`, `$schema`, `plugin` to the rest of the system?**
-  _459 weakly-connected nodes found - possible documentation gaps or missing edges._
-- **Should `lib.rs` be split into smaller, more focused modules?**
-  _Cohesion score 0.05844155844155844 - nodes in this community are weakly interconnected._
+  _457 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Should `romania_search.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.053544494720965306 - nodes in this community are weakly interconnected._
