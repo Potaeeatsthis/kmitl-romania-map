@@ -514,3 +514,27 @@
   font-size: 13px;
   overflow-wrap: anywhere;
 }
+
+@media (max-width: 700px) {
+  .card {
+    padding: 20px 16px;
+  }
+
+  .kclFormula {
+    padding: 16px 14px;
+    font-size: 17px;
+  }
+
+  .derivationBlock {
+    padding: 14px 16px;
+  }
+
+  .matrixBracketOuter {
+    padding: 0 10px;
+  }
+
+  .bracketTable th,
+  .bracketTable td {
+    padding: 8px 10px;
+  }
+}

@@ -269,6 +269,30 @@
   .animationControls { gap: 6px; }
 }
 
+/* Short landscape cannot spare a second row for the scrubber, so the whole
+   transport collapses onto one line. */
+@media (max-width: 800px) and (max-height: 600px) and (orientation: landscape) {
+  .animationControls {
+    grid-template-areas: "minimize controls scrubber";
+    grid-template-columns: 32px auto minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .frameScrubber {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .frameScrubber > span,
+  .frameScrubber output {
+    display: none;
+  }
+
+  .frameScrubber input {
+    grid-column: auto;
+    height: 24px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .playbackMinimized { animation: none; }
   .playbackMinimized,

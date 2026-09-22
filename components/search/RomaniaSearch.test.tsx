@@ -224,6 +224,80 @@ describe("RomaniaSearch", () => {
     expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
   });
 
+  it("renders the compact route launcher alongside the panel for the phone breakpoint", () => {
+    render(<RomaniaSearch />);
+
+    // The launcher's visibility is a CSS decision (it is hidden on desktop),
+    // so both must exist on first paint for the phone layout to show the
+    // compact button without a matchMedia hydration mismatch.
+    expect(screen.getByRole("button", { name: "Route" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
+  });
+
+  it("cycles the route planner auto -> open -> closed -> open while keeping the selected route", async () => {
+    const user = userEvent.setup();
+    render(<RomaniaSearch />);
+
+    // auto (first paint): the launcher advertises the panel it controls, and the
+    // already-selected route is shown in the panel. The floating reset is the
+    // single clear action in this state.
+    const launcher = screen.getByRole("button", { name: "Route" });
+    expect(launcher).toHaveAttribute("aria-expanded", "false");
+    expect(launcher).toHaveAttribute("aria-controls", "route-planner");
+    expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "STARTING POINT" })).toHaveValue("Arad");
+    expect(screen.getByRole("combobox", { name: "DESTINATION" })).toHaveValue("Bucharest");
+    expect(screen.getAllByRole("button", { name: "Clear selection" })).toHaveLength(1);
+
+    // open: the launcher hands off to the panel, which now owns the clear action
+    // because it covers the floating button on a phone. The selected route is
+    // untouched by the transition.
+    await user.click(launcher);
+    expect(screen.queryByRole("button", { name: "Route" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "STARTING POINT" })).toHaveValue("Arad");
+    expect(screen.getByRole("combobox", { name: "DESTINATION" })).toHaveValue("Bucharest");
+    expect(screen.getAllByRole("button", { name: "Clear selection" })).toHaveLength(1);
+
+    // closed: the panel unmounts and the launcher returns, still collapsed. The
+    // route survives the collapse.
+    await user.click(screen.getByRole("button", { name: "Hide route planner" }));
+    expect(screen.queryByRole("heading", { name: "Choose your route" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Route" })).toHaveAttribute("aria-expanded", "false");
+    expect(useSearchStore.getState()).toMatchObject({ startCity: 0, destinationCity: 12 });
+    expect(screen.getAllByRole("button", { name: "Clear selection" })).toHaveLength(1);
+
+    // open again: the panel comes back with the same selected route.
+    await user.click(screen.getByRole("button", { name: "Route" }));
+    expect(screen.getByRole("heading", { name: "Choose your route" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "STARTING POINT" })).toHaveValue("Arad");
+    expect(screen.getByRole("combobox", { name: "DESTINATION" })).toHaveValue("Bucharest");
+    expect(screen.getAllByRole("button", { name: "Clear selection" })).toHaveLength(1);
+  });
+
+  it("clears the selected route from the open route planner panel", async () => {
+    const user = userEvent.setup();
+    render(<RomaniaSearch />);
+
+    await user.click(screen.getByRole("button", { name: "Route" }));
+
+    // While open the panel is the only clear action -- the floating reset is not
+    // mounted, so the control can never sit behind the panel or be duplicated.
+    const clear = screen.getByRole("button", { name: "Clear selection" });
+    expect(screen.getAllByRole("button", { name: "Clear selection" })).toHaveLength(1);
+
+    await user.click(clear);
+
+    expect(useSearchStore.getState()).toMatchObject({
+      startCity: null,
+      destinationCity: null,
+      data: null,
+    });
+    expect(screen.queryByRole("button", { name: "Clear selection" })).not.toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "STARTING POINT" })).toHaveValue("");
+    expect(screen.getByRole("combobox", { name: "DESTINATION" })).toHaveValue("");
+  });
+
   it("keeps the map key visible without a disclosure control", () => {
     render(<RomaniaSearch />);
 

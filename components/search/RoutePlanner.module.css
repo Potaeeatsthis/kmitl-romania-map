@@ -67,7 +67,8 @@
 
 .collapseButton:focus-visible,
 .routeLauncher:focus-visible,
-.runButton:focus-visible {
+.runButton:focus-visible,
+.clearButton:focus-visible {
   outline: 3px solid var(--green-bright);
   outline-offset: 3px;
 }
@@ -177,7 +178,14 @@
   line-height: 1.45;
 }
 
+.actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
 .runButton {
+  flex: 1 1 auto;
   min-height: 44px;
   border: 0;
   border-radius: 7px;
@@ -194,6 +202,24 @@
 .runButton:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+}
+
+.clearButton {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: 400 12px / 1 var(--font-interface);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.clearButton:hover {
+  background: var(--green-pale);
+  color: var(--green-dark);
 }
 
 .errorMessage {
@@ -232,13 +258,28 @@
 }
 
 @media (max-width: 800px) {
+  /* First paint on a phone shows the compact launcher; the panel is one tap
+     away. An explicitly opened panel has no data-auto and stays visible. */
+  .panel[data-auto] {
+    display: none;
+  }
+
   .panel {
     top: 10px;
     left: 10px;
+    z-index: 30;
     width: min(320px, calc(100% - 20px));
   }
 
   .routeLauncher { top: 10px; left: 10px; }
+}
+
+/* On desktop the unopened panel is the visible state, so the launcher the
+   mobile breakpoint introduces must never appear. */
+@media (min-width: 801px) {
+  .routeLauncher[data-auto] {
+    display: none;
+  }
 }
 
 @media (max-height: 680px) {

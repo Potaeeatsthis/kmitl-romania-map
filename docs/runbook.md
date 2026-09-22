@@ -836,3 +836,75 @@ elimination page` pins the page-specific action. Their names are pinned in the
 frontend test inventory in `scripts/verify_invariants.sh`, so deleting or
 renaming them fails `npm run verify:invariants` and CI's **Invariants, parity,
 correctness** job.
+
+---
+
+## §16 — `mobile-route-panel-covers-clear-button`
+
+Rootcause file: [`rootcause/mobile-route-panel-covers-clear-button.json`](rootcause/mobile-route-panel-covers-clear-button.json)
+
+### Symptom
+
+**There is no error message.** On a phone, after picking a start and destination,
+opening the route planner (the compact `Route` launcher) hides the `Clear
+Selection` button completely: the panel paints over it and tapping where it sits
+hits the panel's `STARTING POINT` label instead. On a very short viewport
+(320x480) the bottom-anchored map key grows up over the floating clear button and
+the zoom stack while the panel is closed.
+
+### Diagnose
+
+```bash
+grep -n "resetButton" -A 8 components/search/RomaniaSearch.module.css   # top:66px, z-index 20
+grep -n "^\.panel {" -A 10 components/search/RoutePlanner.module.css     # top:10px, z-index 30
+```
+
+At 320x568 the floating clear button sits at `top: 66px; left: 10px` (under the
+launcher), while the open planner panel occupies `top: 10px; left: 10px` at
+`z-index: 30`. The panel's height is content-driven (up to `calc(100% - 104px)`),
+so the fixed offset lands inside it and the panel's higher stacking order wins.
+Read the computed boxes in a real browser to confirm: with a route selected and
+the planner open, `document.elementFromPoint()` at the clear button's centre
+returns the panel's `STARTING POINT` label, and a Playwright `click()` on the
+button times out.
+
+### Fix
+
+The planner `mode` state moved from `RoutePlanner` up to `RomaniaSearch`, so the
+two can coordinate:
+
+- `mode === "open"` (the visitor tapped the launcher): `RomaniaSearch` does **not**
+  render the floating reset, and `RoutePlanner` renders a `Clear` button inside
+  the panel's action row next to `Run search`.
+- `mode` is `auto`/`closed`: the floating reset renders as before (bottom-centre
+  on desktop, under the launcher on a phone).
+
+Exactly one clear control is mounted in every state, so the action is never
+occluded and never duplicated. The same change widened the header wrap rule from
+`max-width: 560px` to the mobile range (`max-width: 800px`) so the brand row
+wraps rather than clips when the header actions grow.
+
+The short-viewport overlap is a second, independent cause. The map key is
+bottom-anchored and grows upward, and its mobile `max-height` of
+`calc(100% - 136px)` only budgeted for the bottom playback panel. At 320x480 the
+key reached `y=172` (relative to the map) while the clear button and the zoom
+stack both end at `y=106`, so it covered each by 38-39px. `MapLegend.module.css`
+now reserves the top control row as well: `max-height: calc(100% - 200px)`, or
+`calc(100% - 232px)` while playback is expanded (the key is 32px higher). The key
+scrolls inside that band instead of covering the clear or zoom controls. The
+short-landscape strip is uncapped by design, so its expanded rule restates
+`max-height: none` to win back the specificity the new expanded band introduced.
+
+### Prevent
+
+`components/search/RomaniaSearch.test.tsx` pins both halves separately:
+*"cycles the route planner auto -> open -> closed -> open while keeping the
+selected route"* proves the selected route survives every transition and that
+exactly one clear action is mounted per state; *"clears the selected route from
+the open route planner panel"* proves the panel's own action empties the route.
+Both names are pinned in the frontend test inventory in
+`scripts/verify_invariants.sh`.
+
+jsdom has no layout, so no vitest case can see the overlap itself; this is the
+`automation_gap` recorded in the rootcause file. The browser probe below is the
+check that actually reproduces it.
