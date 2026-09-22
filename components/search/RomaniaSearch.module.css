@@ -119,13 +119,20 @@
   display: grid;
   place-items: center;
   border-radius: 8px;
-  color: var(--muted);
-  transition: color 150ms ease, background 150ms ease;
+  transition: background 150ms ease;
 }
 
 .repoLink:hover {
-  color: var(--green-bright);
   background: var(--green-pale);
+}
+
+.repoDisc {
+  fill: var(--run-surface);
+}
+
+/* Same hover green the run-search button uses. */
+.repoLink:hover .repoDisc {
+  fill: var(--run-surface-hover);
 }
 
 .repoLink:focus-visible {
