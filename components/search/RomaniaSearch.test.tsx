@@ -173,6 +173,14 @@ describe("RomaniaSearch", () => {
     expect(useSearchStore.getState().isPlaying).toBe(true);
   });
 
+  it("links to the GitHub repository from the header", () => {
+    render(<RomaniaSearch />);
+
+    const link = screen.getByRole("link", { name: "Source code on GitHub" });
+
+    expect(link).toHaveAttribute("href", "https://github.com/Potaeeatsthis/kmitl-romania-map");
+  });
+
   it("starts with nothing selected and no reset button", () => {
     useSearchStore.setState({
       data: null,

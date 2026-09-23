@@ -112,6 +112,34 @@
   letter-spacing: 0.12em;
 }
 
+.repoLink {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  transition: background 150ms ease;
+}
+
+.repoLink:hover {
+  background: var(--green-pale);
+}
+
+.repoDisc {
+  fill: var(--run-surface);
+}
+
+/* Same hover green the run-search button uses. */
+.repoLink:hover .repoDisc {
+  fill: var(--run-surface-hover);
+}
+
+.repoLink:focus-visible {
+  outline: 3px solid var(--green-bright);
+  outline-offset: 3px;
+}
+
 .headerActions {
   min-width: 0;
   display: flex;

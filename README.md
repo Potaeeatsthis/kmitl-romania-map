@@ -7,10 +7,17 @@ algorithm on the classic 20-city Romania road map.
 - **Heuristic search:** A* with a current-flow effective-resistance heuristic
 - **Languages:** Python, C++, and Rust
 
+**Live demo:** <https://potaeeatsthis.github.io/kmitl-romania-map/>
+
 The detailed project idea and mathematics are available in
 [`docs/ideas.md`](docs/ideas.md).
 
 ## Current project status
+
+The web application is built and deployed. It runs the Rust engine as WebAssembly in the
+browser, animates UCS and current-flow A* over the map for any of the 400 start/goal pairs,
+and reports the benchmark comparison. Four further pages walk through how the heuristic is
+calculated.
 
 The Rust engine and the standalone Python and C++ reference programs:
 
@@ -43,6 +50,9 @@ The Rust engine and the standalone Python and C++ reference programs:
 | `docs/ARCHITECTURE.md` | Runtime flow and ownership boundaries |
 | `docs/ARCHITECTURE_DECISION.md` | Why Rust → WebAssembly, and why the alternatives are closed |
 | `docs/runbook.md` | Known failures: symptom → diagnose → fix → prevent |
+| `docs/rootcause/` | One JSON record per diagnosed bug |
+| `docs/sample-trace.md` | The recorded Arad → Bucharest search trace |
+| `.github/workflows/` | `ci.yml` (the required checks), `deploy.yml` (GitHub Pages), `mutation.yml` (weekly harness audit) |
 | `scripts/` | The verification harness that `npm run verify` and CI both call |
 | `tests/golden/` | Recorded CLI output; `wasm/tests/golden/` records the search trace |
 | `.claude/` | The PostToolUse hook and the `/diagnose` and `/prevent` commands |
@@ -261,6 +271,17 @@ npm run verify:mutation     # inject 14 known bugs; assert a gate goes red for e
 
 Project rules, invariants and the build order live in [`CLAUDE.md`](CLAUDE.md). When
 something breaks, `/diagnose` matches it against [`docs/runbook.md`](docs/runbook.md).
+
+## Deploy
+
+`.github/workflows/deploy.yml` publishes to GitHub Pages: it triggers when CI completes for a
+push to `master`, checks out the exact revision CI verified, builds the Wasm bundle and the
+static export, and publishes. There is no manual dispatch — redeploy by re-running CI on
+`master`.
+
+The Pages base path has exactly one source, `NEXT_PUBLIC_BASE_PATH`, set only by that
+workflow from the repository name. After `npm run build`, `npm run verify:export` checks the
+static export is servable under that prefix.
 
 ## Example
 

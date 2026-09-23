@@ -48,6 +48,28 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
             <h1 className={styles.title}>Romania Search</h1>
             <p className={styles.productTag}>PATHFINDING VISUALIZER</p>
           </div>
+          <a
+            className={styles.repoLink}
+            href="https://github.com/Potaeeatsthis/kmitl-romania-map"
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Source code on GitHub"
+            title="Source code on GitHub"
+          >
+            <svg
+              viewBox="0 0 16 16"
+              width="24"
+              height="24"
+              shapeRendering="crispEdges"
+              aria-hidden="true"
+              focusable="false"
+            >
+              {/* Pixel-art GitHub mark: one path draws the disc and the octocat,
+                  and the even-odd rule turns the octocat into a hole, so it tracks
+                  whatever sits behind the icon instead of pinning a dark color. */}
+              <path className={styles.repoDisc} fillRule="evenodd" d="M5 0h6v1h-6ZM3 1h10v1h-10ZM2 2h12v1h-12ZM1 3h14v1h-14ZM1 4h14v1h-14ZM0 5h16v1h-16ZM0 6h16v1h-16ZM0 7h16v1h-16ZM0 8h16v1h-16ZM0 9h16v1h-16ZM0 10h16v1h-16ZM1 11h14v1h-14ZM1 12h14v1h-14ZM2 13h12v1h-12ZM3 14h10v1h-10ZM5 15h6v1h-6ZM4 2h2v1h-2ZM10 2h2v1h-2ZM4 3h2v1h-2ZM10 3h2v1h-2ZM4 4h8v1h-8ZM3 5h10v1h-10ZM3 6h10v1h-10ZM3 7h10v1h-10ZM4 8h8v1h-8ZM5 9h6v1h-6ZM3 10h1v1h-1ZM5 10h6v1h-6ZM3 11h8v1h-8ZM6 12h4v1h-4ZM6 13h4v1h-4ZM6 14h4v1h-4Z" />
+            </svg>
+          </a>
         </div>
         <div className={styles.headerActions}>
           {headerAction}
