@@ -61,7 +61,7 @@ shared parser so the producer and consumer of those query parameters cannot drif
 kmitl-romania-map/
 ├── app/                              Next.js App Router
 │   ├── page.tsx                      / — RomaniaSearch + BenchmarkPanel
-│   ├── layout.tsx                    self-hosted font and theme-boot script
+│   ├── layout.tsx                    self-hosted font; server-rendered dark theme
 │   ├── heuristic-summary/            A* decision walkthrough (+ loading.tsx)
 │   ├── circuit-flow/                 roads-as-resistors walkthrough (+ loading.tsx)
 │   ├── kirchhoff-matrix/             grounded matrix page
@@ -91,7 +91,6 @@ kmitl-romania-map/
 │   └── useSearchStore.ts             Selection, result, and playback state (Zustand)
 ├── public/
 │   ├── data/                         Committed datasets (see Benchmark data flow)
-│   ├── theme-boot.js                 Pre-paint theme script
 │   └── wasm/                         wasm-pack output; gitignored, built by build:wasm
 ├── wasm/                             Rust WebAssembly crate
 │   ├── Cargo.toml

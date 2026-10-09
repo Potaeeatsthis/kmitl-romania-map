@@ -266,9 +266,9 @@
   font-weight: 700;
 }
 
-/* --green-mid flips to #eee in dark mode, so the white numeral vanishes;
+/* --green-mid is #eee in the dark-only palette, so the white numeral vanishes;
    --run-text is the palette's dark-on-light-chip token (same pair the
-   heuristic-steps answer cells use). Light mode keeps white on #00684a. */
+   heuristic-steps answer cells use). */
 :global(html[data-theme="dark"]) .stepBadge {
   color: var(--run-text);
 }
