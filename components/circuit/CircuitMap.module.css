@@ -54,8 +54,7 @@
   --country-outline: #47594f;
   --wire-faint: #3d4d45;
   /* Dark-only: leader lines read as soft off-white; pill outlines slightly
-     dimmer off-white so they separate the pill from the map without glare.
-     Light mode leaves both unset, falling back to --line. */
+     dimmer off-white so they separate the pill from the map without glare. */
   --leader-line: #cdd8d2;
   --pill-border: #8b9c93;
 }

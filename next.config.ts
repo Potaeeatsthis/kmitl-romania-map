@@ -16,13 +16,13 @@ const nextConfig: NextConfig = {
   // production and none of it in development.
   //
   // It is read from one environment variable rather than written here, because
-  // lib/wasm/client.ts and app/layout.tsx build the wasm module URL and the
-  // theme-boot script URL by hand -- Next does not rewrite runtime strings, so
-  // those files have to add the prefix themselves. lib/basePath.ts decodes the
-  // variable once so all of them agree. Writing the path in each place would make
-  // it several encodings of one value, which is the drift this project refuses
-  // everywhere else. Set the variable and they move together; leave it unset and
-  // `next dev` is unchanged, which is why basePath was not simply hardcoded at step 6.
+  // lib/wasm/client.ts builds the wasm module URL by hand -- Next does not rewrite
+  // runtime strings, so that file has to add the prefix itself. lib/basePath.ts
+  // decodes the variable once so all consumers agree. Writing the path in each
+  // place would make it several encodings of one value, which is the drift this
+  // project refuses everywhere else. Set the variable and they move together;
+  // leave it unset and `next dev` is unchanged, which is why basePath was not
+  // simply hardcoded at step 6.
   //
   // Only .github/workflows/deploy.yml sets it. scripts/verify_export.mjs then checks
   // the built output actually carries the prefix, because a wrong value here still

@@ -14,10 +14,9 @@
 //   3. every root-relative src/href carries the base path. This is the one that catches
 //      next.config.ts and lib/wasm/client.ts disagreeing about NEXT_PUBLIC_BASE_PATH,
 //      which is the whole reason they were collapsed onto one variable.
-//   4. the theme-boot script resolves under the prefix. next/script does not rewrite
-//      its src with basePath, so app/layout.tsx builds that URL by hand. It appears
-//      both as a preload <link href> and inside the self.__next_s bootstrap array, and
-//      both have to point at out/theme-boot.js.
+//   4. the exported HTML is server-rendered dark (<html data-theme="dark">).
+//      Dark is the only theme; with no theme-boot script the attribute has to
+//      be in the static markup or the page paints light until hydration.
 //   5. every url() inside the exported CSS resolves to a file that shipped. The
 //      @font-face url lives in CSS, which the src/href scan never sees; a hand-written
 //      /fonts/... would 404 under Pages exactly the same way.
@@ -118,24 +117,14 @@ if (refs.length === 0) {
   }
 }
 
-// 4 -- the theme script resolves under the prefix
-const themeRefs = [...html.matchAll(/(["'])(\/[^"']*theme-boot\.js)\1/g)].map((m) => m[2]);
-const expectedTheme = `${basePath}/theme-boot.js`;
-const wrongTheme = [...new Set(themeRefs)].filter((r) => r !== expectedTheme);
-if (themeRefs.length === 0) {
-  bad("out/index.html never references theme-boot.js", [
-    "The beforeInteractive theme script was renamed or removed, so the page",
-    "would paint the default theme and flash on load.",
+// 4 -- the HTML is dark before any script runs
+if (!/<html[^>]*\sdata-theme="dark"/.test(html)) {
+  bad('out/index.html does not render <html data-theme="dark">', [
+    "Dark is the only theme and there is no theme-boot script to add it after paint,",
+    "so the attribute has to be in the static markup app/layout.tsx emits.",
   ]);
-} else if (wrongTheme.length > 0) {
-  bad(`theme-boot.js is not referenced as ${expectedTheme}`, [
-    "next/script does not rewrite its src with basePath; app/layout.tsx has to.",
-    ...wrongTheme.slice(0, 5),
-  ]);
-} else if (sizeOf("out/theme-boot.js") === null) {
-  bad("out/theme-boot.js is missing from the export");
 } else {
-  pass(`theme-boot.js is referenced as ${expectedTheme} and exported`);
+  pass('out/index.html renders <html data-theme="dark">');
 }
 
 // 5 -- every url() in the exported CSS resolves to a file that shipped
