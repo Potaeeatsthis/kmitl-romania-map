@@ -58,13 +58,6 @@
   font-family: var(--font-interface);
 }
 
-/* The global selection rule is keyed off the root theme, which the homepage
-   deliberately leaves alone; scope the dark selection to this surface. */
-.page ::selection {
-  color: #1b1919;
-  background: #00ed64;
-}
-
 .header {
   width: 100%;
   max-width: 1680px;

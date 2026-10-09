@@ -1,5 +1,5 @@
 .svg {
-  /* ---- self-contained theme tokens: light ---- */
+  /* ---- self-contained theme tokens: fallback base ---- */
   --ink: #102a1e;
   --muted: #526d60;
   --green: #137a47;

@@ -18,9 +18,9 @@ export default function RomaniaSearch({ headerAction }: { headerAction?: ReactNo
   const showReset = startCity !== null || destinationCity !== null;
 
   return (
-    // The homepage is a dark-only surface, scoped to this subtree. It never
-    // reads or writes the document theme, so other routes keep their own
-    // light/dark behavior (see public/theme-boot.js).
+    // The homepage carries its own dark surface tokens, scoped to this subtree,
+    // so it stays dark under the dark-only document theme regardless of any
+    // stored preference. It never reads or writes the document theme.
     <main className={styles.page} data-theme="dark">
       <header className={styles.header}>
         <div className={styles.brand}>

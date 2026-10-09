@@ -4,10 +4,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
-import Script from "next/script";
 import localFont from "next/font/local";
-
-import { basePath } from "../lib/basePath";
 
 // next/font/local emits the @font-face and its hashed file into _next/static/media,
 // so the URL is build-managed instead of a hand-written /fonts/... that GitHub Pages
@@ -31,11 +28,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={departureMono.variable}>
-      <body suppressHydrationWarning>
-        {children}
-        <Script src={`${basePath}/theme-boot.js`} strategy="beforeInteractive" />
-      </body>
+    // Dark is the only theme. The attribute is server-rendered so the CSS module
+    // overrides under html[data-theme="dark"] apply on first paint, with no
+    // beforeInteractive script to remove a light flash.
+    <html
+      lang="en"
+      data-theme="dark"
+      suppressHydrationWarning
+      className={departureMono.variable}
+    >
+      <body suppressHydrationWarning>{children}</body>
     </html>
   );
 }
